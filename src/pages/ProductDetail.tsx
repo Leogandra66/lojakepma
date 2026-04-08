@@ -60,15 +60,11 @@ export default function ProductDetail() {
           </div>
         ) : product ? (
           <div className="grid gap-8 md:grid-cols-2">
-            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Package className="h-20 w-20 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery
+              images={productImages}
+              fallbackUrl={product.image_url}
+              productName={product.name}
+            />
 
             <div className="flex flex-col gap-4">
               {product.category && (
