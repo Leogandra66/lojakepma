@@ -14,7 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_preorder: boolean
+          order_id: string
+          preorder_estimated_delivery: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_preorder?: boolean
+          order_id: string
+          preorder_estimated_delivery?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_preorder?: boolean
+          order_id?: string
+          preorder_estimated_delivery?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          has_preorder_items: boolean
+          id: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          has_preorder_items?: boolean
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          has_preorder_items?: boolean
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          infinitypay_id: string | null
+          infinitypay_link: string | null
+          order_id: string
+          paid_at: string | null
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          infinitypay_id?: string | null
+          infinitypay_link?: string | null
+          order_id: string
+          paid_at?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          infinitypay_id?: string | null
+          infinitypay_link?: string | null
+          order_id?: string
+          paid_at?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          preorder_estimated_delivery: string | null
+          price: number
+          status: Database["public"]["Enums"]["product_status"]
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          preorder_estimated_delivery?: string | null
+          price: number
+          status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          preorder_estimated_delivery?: string | null
+          price?: number
+          status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          cpf: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          cpf?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          cpf?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +240,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      order_status:
+        | "pending_payment"
+        | "paid"
+        | "partial_paid"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+      payment_type: "full" | "preorder_deposit" | "preorder_balance"
+      product_status: "in_stock" | "preorder" | "unavailable"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +376,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: [
+        "pending_payment",
+        "paid",
+        "partial_paid",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      payment_type: ["full", "preorder_deposit", "preorder_balance"],
+      product_status: ["in_stock", "preorder", "unavailable"],
+    },
   },
 } as const
