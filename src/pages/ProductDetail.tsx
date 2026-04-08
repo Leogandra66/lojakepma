@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductImageGallery from "@/components/ProductImageGallery";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Package, Clock, CalendarDays } from "lucide-react";
