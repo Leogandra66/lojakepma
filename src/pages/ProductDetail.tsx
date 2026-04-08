@@ -24,6 +24,20 @@ export default function ProductDetail() {
     enabled: !!id,
   });
 
+  const { data: productImages = [] } = useQuery({
+    queryKey: ["product-images", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("*")
+        .eq("product_id", id!)
+        .order("position");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
   const isAvailable = product && product.status !== "unavailable";
 
   return (
