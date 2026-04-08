@@ -13,6 +13,9 @@ import Checkout from "./pages/Checkout";
 import PaymentReturn from "./pages/PaymentReturn";
 import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminProducts from "./pages/admin/AdminProducts";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,17 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/pagamento/retorno" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route path="produtos" element={<AdminProducts />} />
+                <Route index element={<AdminProducts />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
