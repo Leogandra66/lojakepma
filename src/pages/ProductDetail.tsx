@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductImageGallery from "@/components/ProductImageGallery";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Package, Clock, CalendarDays } from "lucide-react";
@@ -19,6 +20,20 @@ export default function ProductDetail() {
       const { data, error } = await supabase.from("products").select("*").eq("id", id!).single();
       if (error) throw error;
       return data as Product;
+    },
+    enabled: !!id,
+  });
+
+  const { data: productImages = [] } = useQuery({
+    queryKey: ["product-images", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("*")
+        .eq("product_id", id!)
+        .order("position");
+      if (error) throw error;
+      return data;
     },
     enabled: !!id,
   });
@@ -45,15 +60,11 @@ export default function ProductDetail() {
           </div>
         ) : product ? (
           <div className="grid gap-8 md:grid-cols-2">
-            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Package className="h-20 w-20 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery
+              images={productImages}
+              fallbackUrl={product.image_url}
+              productName={product.name}
+            />
 
             <div className="flex flex-col gap-4">
               {product.category && (
