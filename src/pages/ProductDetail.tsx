@@ -105,7 +105,10 @@ export default function ProductDetail() {
               )}
 
               {product.description && (
-                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-2">
+                  <p className="font-semibold text-sm">Descrição / Especificações:</p>
+                  <pre className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">{product.description}</pre>
+                </div>
               )}
 
               {isAvailable ? (
