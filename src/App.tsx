@@ -33,7 +33,7 @@ const App = () => (
               <Route path="/carrinho" element={<Cart />} />
               <Route path="/entrar" element={<Auth />} />
               <Route path="/checkout" element={<Checkout />} />
-              <Route path="/pagamento/retorno" element={<PaymentReturn />} />
+              <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
               <Route
                 path="/admin"
