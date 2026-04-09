@@ -29,7 +29,7 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
 
   if (allImages.length === 0) {
     return (
-      <div className="aspect-square overflow-hidden rounded-lg bg-muted flex items-center justify-center">
+      <div className="aspect-[4/5] overflow-hidden rounded-lg bg-muted flex items-center justify-center">
         <Package className="h-20 w-20 text-muted-foreground" />
       </div>
     );
