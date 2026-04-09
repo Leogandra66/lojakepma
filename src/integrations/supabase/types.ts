@@ -98,6 +98,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          capture_method: string | null
           created_at: string
           id: string
           infinitypay_id: string | null
@@ -105,10 +106,14 @@ export type Database = {
           order_id: string
           paid_at: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
+          receipt_url: string | null
+          slug: string | null
           status: string
+          transaction_nsu: string | null
         }
         Insert: {
           amount: number
+          capture_method?: string | null
           created_at?: string
           id?: string
           infinitypay_id?: string | null
@@ -116,10 +121,14 @@ export type Database = {
           order_id: string
           paid_at?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
+          receipt_url?: string | null
+          slug?: string | null
           status?: string
+          transaction_nsu?: string | null
         }
         Update: {
           amount?: number
+          capture_method?: string | null
           created_at?: string
           id?: string
           infinitypay_id?: string | null
@@ -127,7 +136,10 @@ export type Database = {
           order_id?: string
           paid_at?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
+          receipt_url?: string | null
+          slug?: string | null
           status?: string
+          transaction_nsu?: string | null
         }
         Relationships: [
           {

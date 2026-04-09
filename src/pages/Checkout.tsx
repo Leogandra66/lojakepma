@@ -69,9 +69,23 @@ export default function Checkout() {
       });
       if (paymentErr) throw paymentErr;
 
-      // Call InfinityPay edge function
+      // Build items for InfinitePay (prices in cents)
+      const infinityItems = items.map((item) => {
+        const isPreorder = item.product.status === "preorder";
+        const unitPrice = isPreorder ? item.product.price * 0.4 : item.product.price;
+        return {
+          quantity: item.quantity,
+          price: Math.round(unitPrice * 100), // convert to cents
+          description: item.product.name,
+        };
+      });
+
+      const origin = window.location.origin;
+      const redirectUrl = `${origin}/pagamento-concluido`;
+
+      // Call edge function
       const { data: paymentData, error: payErr } = await supabase.functions.invoke("create-payment", {
-        body: { orderId: order.id, amount: amountDueNow },
+        body: { orderId: order.id, items: infinityItems, redirectUrl },
       });
 
       if (payErr) throw payErr;
