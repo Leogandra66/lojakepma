@@ -10,16 +10,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderId, amount } = await req.json();
+    const { orderId, items, redirectUrl } = await req.json();
 
-    if (!orderId || !amount) {
-      return new Response(JSON.stringify({ error: "orderId and amount are required" }), {
+    if (!orderId || !items || !Array.isArray(items) || items.length === 0) {
+      return new Response(JSON.stringify({ error: "orderId and items are required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const INFINITYPAY_API_KEY = Deno.env.get("INFINITYPAY_API_KEY");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,47 +37,42 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get the origin for the return URL
-    const origin = req.headers.get("origin") || "https://id-preview--8950058c-5f95-4283-ad3a-220724166484.lovable.app";
-    const returnUrl = `${origin}/pagamento/retorno?order_id=${orderId}&status=approved`;
+    // Build InfinitePay payload
+    const payload = {
+      handle: "lmgbrasil",
+      items: items.map((item: { quantity: number; price: number; description: string }) => ({
+        quantity: item.quantity,
+        price: item.price, // already in cents
+        description: item.description,
+      })),
+      order_nsu: orderId,
+      redirect_url: redirectUrl,
+    };
 
-    let paymentUrl = "";
-    let infinitypayId = "";
+    // Call InfinitePay checkout links API
+    const response = await fetch("https://api.infinitepay.io/invoices/public/checkout/links", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-    if (INFINITYPAY_API_KEY) {
-      // Real InfinityPay API call
-      const response = await fetch("https://api.infinitypay.io/v2/payments", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${INFINITYPAY_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100), // cents
-          currency: "BRL",
-          description: `Pedido #${orderId.slice(0, 8)}`,
-          return_url: returnUrl,
-        }),
-      });
+    const paymentData = await response.json();
 
-      const paymentData = await response.json();
-      if (!response.ok) {
-        throw new Error(`InfinityPay error [${response.status}]: ${JSON.stringify(paymentData)}`);
-      }
-
-      paymentUrl = paymentData.payment_url || paymentData.url || "";
-      infinitypayId = paymentData.id || "";
-    } else {
-      // Dev mode: simulate payment URL
-      paymentUrl = returnUrl;
-      infinitypayId = `dev_${Date.now()}`;
+    if (!response.ok) {
+      console.error("InfinitePay error:", JSON.stringify(paymentData));
+      throw new Error(`InfinitePay error [${response.status}]: ${JSON.stringify(paymentData)}`);
     }
 
-    // Update payment record
+    // The API should return a checkout URL
+    const paymentUrl = paymentData.url || paymentData.payment_url || paymentData.checkout_url || "";
+
+    // Update payment record with InfinitePay info
     await supabase
       .from("payments")
       .update({
-        infinitypay_id: infinitypayId,
+        infinitypay_id: paymentData.id || paymentData.slug || null,
         infinitypay_link: paymentUrl,
       })
       .eq("order_id", orderId)
