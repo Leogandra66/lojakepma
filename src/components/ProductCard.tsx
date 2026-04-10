@@ -45,9 +45,12 @@ export default function ProductCard({ product }: { product: Product }) {
               R$ {product.price.toFixed(2).replace(".", ",")}
             </span>
             {product.status === "preorder" && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                40% no pedido · 60% na entrega
-              </p>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                <p>40% no pedido · 60% na entrega</p>
+                {product.preorder_estimated_delivery && (
+                  <p className="mt-0.5">Previsão: {new Date(product.preorder_estimated_delivery).toLocaleDateString("pt-BR")}</p>
+                )}
+              </div>
             )}
           </div>
           {isAvailable && (
