@@ -25,7 +25,7 @@ export default function PaymentReturn() {
 
       try {
         // Update payment record with InfinitePay return data
-        await supabase
+        const { error: paymentError } = await supabase
           .from("payments")
           .update({
             receipt_url: receiptUrl,
@@ -34,15 +34,23 @@ export default function PaymentReturn() {
             transaction_nsu: transactionNsu,
             status: "paid",
             paid_at: new Date().toISOString(),
-          } as any)
+          })
           .eq("order_id", orderNsu)
           .eq("status", "pending");
 
+        if (paymentError) {
+          console.error("Error updating payment:", paymentError);
+        }
+
         // Update order status
-        await supabase
+        const { error: orderError } = await supabase
           .from("orders")
-          .update({ status: "paid" } as any)
+          .update({ status: "paid" })
           .eq("id", orderNsu);
+
+        if (orderError) {
+          console.error("Error updating order:", orderError);
+        }
       } catch (err) {
         console.error("Error saving payment info:", err);
       } finally {
