@@ -21,10 +21,6 @@ export default function Index() {
     },
   });
 
-  const inStock = products?.filter((p) => p.status === "in_stock") ?? [];
-  const preorder = products?.filter((p) => p.status === "preorder") ?? [];
-  const unavailable = products?.filter((p) => p.status === "unavailable") ?? [];
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -50,34 +46,8 @@ export default function Index() {
             <p className="text-sm text-muted-foreground mt-2">Os produtos aparecerão aqui quando forem adicionados.</p>
           </div>
         ) : (
-          <div className="space-y-12">
-            {inStock.length > 0 && (
-              <section>
-                <h2 className="font-heading text-2xl font-bold mb-6">Em Estoque</h2>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {inStock.map((p) => <ProductCard key={p.id} product={p} />)}
-                </div>
-              </section>
-            )}
-
-            {preorder.length > 0 && (
-              <section>
-                <h2 className="font-heading text-2xl font-bold mb-6">Disponível por Encomenda</h2>
-                <p className="text-sm text-muted-foreground mb-4">40% no ato da compra · 60% na entrega do produto</p>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {preorder.map((p) => <ProductCard key={p.id} product={p} />)}
-                </div>
-              </section>
-            )}
-
-            {unavailable.length > 0 && (
-              <section>
-                <h2 className="font-heading text-2xl font-bold mb-6 text-muted-foreground">Indisponíveis</h2>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {unavailable.map((p) => <ProductCard key={p.id} product={p} />)}
-                </div>
-              </section>
-            )}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {products?.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </main>
