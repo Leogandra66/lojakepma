@@ -140,6 +140,14 @@ export default function AdminProducts() {
     setImageDialogOpen(true);
   }
 
+  function handleStatusChange(v: ProductForm["status"]) {
+    const updates: Partial<ProductForm> = { status: v };
+    if (v === "unavailable" || v === "preorder") {
+      updates.stock_quantity = "0";
+    }
+    setForm({ ...form, ...updates });
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.price) {
@@ -265,7 +273,7 @@ export default function AdminProducts() {
                 <Label>Status</Label>
                 <Select
                   value={form.status}
-                  onValueChange={(v) => setForm({ ...form, status: v as ProductForm["status"] })}
+                  onValueChange={(v) => handleStatusChange(v as ProductForm["status"])}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -282,6 +290,7 @@ export default function AdminProducts() {
                   min="0"
                   value={form.stock_quantity}
                   onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
+                  disabled={form.status === "unavailable" || form.status === "preorder"}
                 />
               </div>
             </div>
@@ -295,6 +304,15 @@ export default function AdminProducts() {
                 />
               </div>
             )}
+
+            {/* Image Manager inline - only for existing products */}
+            {editingProduct && (
+              <div className="border-t pt-4">
+                <Label className="text-base font-semibold mb-2 block">Imagens do Produto</Label>
+                <AdminImageManager product={editingProduct} />
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
