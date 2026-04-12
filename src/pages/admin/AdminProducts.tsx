@@ -265,7 +265,14 @@ export default function AdminProducts() {
               </div>
               <div>
                 <Label>Categoria</Label>
-                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                  <SelectContent>
+                    {["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "F Mini"].map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
