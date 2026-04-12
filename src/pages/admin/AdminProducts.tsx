@@ -34,6 +34,7 @@ interface ProductForm {
   status: "in_stock" | "preorder" | "unavailable";
   stock_quantity: string;
   preorder_estimated_delivery: string;
+  video_url: string;
 }
 
 const emptyForm: ProductForm = {
@@ -44,6 +45,7 @@ const emptyForm: ProductForm = {
   status: "in_stock",
   stock_quantity: "0",
   preorder_estimated_delivery: "",
+  video_url: "",
 };
 
 export default function AdminProducts() {
@@ -75,6 +77,7 @@ export default function AdminProducts() {
         category: data.category || null,
         status: data.status,
         stock_quantity: parseInt(data.stock_quantity) || 0,
+        video_url: data.video_url || null,
         preorder_estimated_delivery: data.status === "preorder" && data.preorder_estimated_delivery
           ? data.preorder_estimated_delivery
           : null,
@@ -131,6 +134,7 @@ export default function AdminProducts() {
       status: product.status,
       stock_quantity: String(product.stock_quantity),
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
+      video_url: (product as any).video_url || "",
     });
     setDialogOpen(true);
   }
@@ -311,6 +315,14 @@ export default function AdminProducts() {
                 />
               </div>
             )}
+            <div>
+              <Label>Vídeo do YouTube (URL)</Label>
+              <Input
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={form.video_url}
+                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+              />
+            </div>
 
             {/* Image Manager inline - only for existing products */}
             {editingProduct && (
