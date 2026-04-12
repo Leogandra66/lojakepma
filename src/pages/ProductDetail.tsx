@@ -111,6 +111,24 @@ export default function ProductDetail() {
                 </div>
               )}
 
+              {(product as any).video_url && (() => {
+                const url = (product as any).video_url as string;
+                const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+                const videoId = match?.[1];
+                if (!videoId) return null;
+                return (
+                  <div className="rounded-lg overflow-hidden border border-border">
+                    <iframe
+                      className="w-full aspect-video"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title={`Vídeo - ${product.name}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                );
+              })()}
+
               {isAvailable ? (
                 <Button size="lg" className="btn-gold rounded-full w-fit gap-2 mt-4" onClick={() => addItem(product)}>
                   <ShoppingCart className="h-5 w-5" />
