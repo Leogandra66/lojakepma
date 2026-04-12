@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCoupons from "./pages/admin/AdminCoupons";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
                 }
               >
                 <Route path="produtos" element={<AdminProducts />} />
+                <Route path="cupons" element={<AdminCoupons />} />
                 <Route index element={<AdminProducts />} />
               </Route>
               <Route path="*" element={<NotFound />} />
