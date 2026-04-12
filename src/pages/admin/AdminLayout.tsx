@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Package, ArrowLeft } from "lucide-react";
+import { Package, ArrowLeft, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Produtos", path: "/admin/produtos", icon: Package },
+  { label: "Cupons", path: "/admin/cupons", icon: Ticket },
 ];
 
 export default function AdminLayout() {
