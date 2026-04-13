@@ -37,9 +37,6 @@ export default function ProductCard({ product }: { product: Product }) {
           {statusBadge(product)}
           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">Frete Grátis</span>
         </div>
-        {product.category && (
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">{product.category}</span>
-        )}
         <div className="mt-auto flex items-end justify-between pt-2">
           <div>
             <span className="font-heading text-xl font-bold text-foreground">
