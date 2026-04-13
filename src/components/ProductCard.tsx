@@ -29,14 +29,14 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         )}
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <Link to={`/produto/${product.id}`} className="font-heading text-base font-semibold leading-tight hover:text-primary transition-colors">
-            {product.name}
-          </Link>
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <Link to={`/produto/${product.id}`} className="font-heading text-base font-semibold leading-tight hover:text-primary transition-colors">
+          {product.name}
+        </Link>
+        <div className="flex flex-wrap items-center gap-1.5">
           {statusBadge(product)}
+          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">Frete Grátis</span>
         </div>
-        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full w-fit">Frete Grátis</span>
         {product.category && (
           <span className="text-xs text-muted-foreground uppercase tracking-wider">{product.category}</span>
         )}
