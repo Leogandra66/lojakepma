@@ -36,6 +36,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </Link>
           {statusBadge(product)}
         </div>
+        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full w-fit">Frete Grátis</span>
         {product.category && (
           <span className="text-xs text-muted-foreground uppercase tracking-wider">{product.category}</span>
         )}
