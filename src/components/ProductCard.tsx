@@ -20,9 +20,9 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className={`card-product flex flex-col ${!isAvailable ? "opacity-60" : ""}`}>
-      <Link to={`/produto/${product.id}`} className="block aspect-[4/5] overflow-hidden bg-muted">
+      <Link to={`/produto/${product.id}`} className="block aspect-square overflow-hidden bg-white rounded-t-lg">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain transition-transform duration-500 hover:scale-105" />
+          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-4 transition-transform duration-500 hover:scale-105" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Package className="h-12 w-12 text-muted-foreground" />
