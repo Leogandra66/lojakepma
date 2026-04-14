@@ -42,6 +42,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <span className="font-heading text-xl font-bold text-foreground">
               R$ {product.price.toFixed(2).replace(".", ",")}
             </span>
+            <p className="text-[10px] text-muted-foreground leading-tight">no PIX ou em até 12x no cartão</p>
             {product.status === "preorder" && (
               <div className="text-xs text-muted-foreground mt-0.5">
                 <p>40% no pedido · 60% na entrega</p>
