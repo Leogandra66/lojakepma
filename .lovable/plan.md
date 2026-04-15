@@ -1,34 +1,37 @@
 
 
-# Plano: Importar Produtos do Site loja.kepmabrasil.com.br
+# Plano: Cupons vinculados a produtos específicos
 
 ## Resumo
 
-Vou extrair os dados de todos os produtos listados no site atual da Kepma Brasil e inserir no banco de dados da nova loja. Isso inclui nome, preço, imagem e categoria de cada produto.
-
-## Produtos identificados no site
-
-| Produto | Preço | Categoria |
-|---------|-------|-----------|
-| Violão Kepma EDC Plus K1 WAM | R$ 2.590,00 | EDC Plus |
-| Violão Kepma F0B Fênix Elfin CRM | R$ 3.600,00 | F0B Fênix |
-| Violão Kepma EDC Plus acústico | R$ 1.890,00 | EDC Plus |
-| Violão Kepma F0B Fênix CRM - Acústico | R$ 2.800,00 | F0B Fênix |
-| Violão Kepma EAC Plus K10 BKM | R$ 2.590,00 | EDC Plus |
-| Violão Kepma F0B Fênix CRM - Acústico (variante) | R$ 2.800,00 | F0B Fênix |
-| Violão Kepma F0 Pro NM - Eletrônica Elfin | R$ 5.900,00 | F0 Pro |
-| Violão Kepma A1E D WS | R$ 12.500,00 | A1 |
-| Violão Kepma F0B Fênix Elfin NM | R$ 3.600,00 | F0B Fênix |
+Permitir que o admin escolha se um cupom vale para **todos os produtos** ou apenas para **produtos específicos**. Ao criar/editar um cupom, haverá a opção de selecionar os produtos elegíveis.
 
 ## O que será feito
 
-1. **Criar um script** que insere os 9 produtos no banco de dados via migration SQL, com nome, preço, imagem (URL do CDN original), categoria e status `in_stock`
-2. **Evitar duplicatas** — verificar os 4 produtos que já existem no banco e não duplicá-los (atualizar se necessário)
-3. **Buscar descrições** — acessar as páginas individuais de cada produto para extrair a descrição completa, quando disponível
+### 1. Nova tabela no banco de dados
+Criar uma tabela `coupon_products` para vincular cupons a produtos específicos:
+- `coupon_id` (uuid) — referência ao cupom
+- `product_id` (uuid) — referência ao produto
+- RLS: admins podem gerenciar, leitura pública
+
+Se a tabela estiver vazia para um cupom, ele vale para todos os produtos.
+
+### 2. Atualizar formulário de cupons (AdminCoupons.tsx)
+- Adicionar um switch "Aplicar a todos os produtos" (padrão: sim)
+- Quando desativado, exibir lista de produtos com checkboxes para seleção
+- Ao salvar, gravar os vínculos na tabela `coupon_products`
+
+### 3. Atualizar validação do cupom no checkout
+- Ao aplicar um cupom, verificar se existem registros em `coupon_products`
+- Se existirem, o desconto só se aplica aos produtos vinculados no carrinho
+- Se não existirem, o cupom vale para todos (comportamento atual)
+
+### 4. Exibir informação na tabela de cupons
+- Adicionar coluna "Produtos" na listagem, mostrando "Todos" ou a quantidade de produtos vinculados
 
 ## Detalhes técnicos
 
-- Inserção via migration SQL usando `INSERT ... ON CONFLICT` para evitar duplicatas
-- As imagens usarão as URLs do CDN da Loja Integrada (cdn.awsli.com.br) por enquanto — depois podem ser migradas para o storage próprio
-- Todos os produtos serão inseridos com `status = 'in_stock'` e `stock_quantity = 10` como padrão
+- Migration SQL para criar `coupon_products` com unique constraint `(coupon_id, product_id)` e RLS policies
+- Query de produtos existentes no formulário via `useQuery`
+- Lógica de desconto parcial no checkout: calcular subtotal apenas dos itens elegíveis
 
