@@ -77,7 +77,11 @@ export default function AdminImageManager({ product }: { product: Product }) {
           .from("product-images")
           .getPublicUrl(filePath);
 
-        const nextPosition = currentCount + i + 1;
+        // Calculate next position based on max existing position to avoid duplicates
+        const maxPosition = images && images.length > 0
+          ? Math.max(...images.map(img => img.position))
+          : 0;
+        const nextPosition = maxPosition + i + 1;
 
         const { error: insertError } = await supabase.from("product_images").insert({
           product_id: product.id,
