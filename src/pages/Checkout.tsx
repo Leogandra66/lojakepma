@@ -15,6 +15,7 @@ interface AppliedCoupon {
   code: string;
   discount_type: "percentage" | "fixed";
   discount_value: number;
+  eligible_product_ids: string[] | null; // null = all products
 }
 
 export default function Checkout() {
@@ -29,15 +30,21 @@ export default function Checkout() {
   const depositAmount = preorderTotal * 0.4;
   const subtotal = regularTotal + depositAmount;
 
-  // Calculate discount
+  // Calculate discount — only on eligible items if coupon is product-specific
   let discountAmount = 0;
   if (appliedCoupon) {
-    if (appliedCoupon.discount_type === "percentage") {
-      discountAmount = totalPrice * (appliedCoupon.discount_value / 100);
-    } else {
-      discountAmount = appliedCoupon.discount_value;
+    let discountBase = totalPrice;
+    if (appliedCoupon.eligible_product_ids) {
+      discountBase = items
+        .filter((i) => appliedCoupon.eligible_product_ids!.includes(i.product.id))
+        .reduce((sum, i) => sum + i.product.price * i.quantity, 0);
     }
-    // Discount cannot exceed the amount due
+
+    if (appliedCoupon.discount_type === "percentage") {
+      discountAmount = discountBase * (appliedCoupon.discount_value / 100);
+    } else {
+      discountAmount = Math.min(appliedCoupon.discount_value, discountBase);
+    }
     discountAmount = Math.min(discountAmount, subtotal);
   }
 
@@ -70,22 +77,39 @@ export default function Checkout() {
         return;
       }
 
-      // Check expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
         toast.error("Este cupom expirou");
         return;
       }
 
-      // Check usage limit
       if (data.max_uses && data.used_count >= data.max_uses) {
         toast.error("Este cupom atingiu o limite de usos");
         return;
       }
 
-      // Check min order value
       if (data.min_order_value && totalPrice < Number(data.min_order_value)) {
         toast.error(`Pedido mínimo de R$ ${Number(data.min_order_value).toFixed(2).replace(".", ",")} para este cupom`);
         return;
+      }
+
+      // Check product-specific eligibility
+      const { data: cpData } = await supabase
+        .from("coupon_products")
+        .select("product_id")
+        .eq("coupon_id", data.id);
+
+      const linkedProductIds = (cpData ?? []).map((cp: any) => cp.product_id);
+      let eligibleIds: string[] | null = null;
+
+      if (linkedProductIds.length > 0) {
+        // Check if any cart item is eligible
+        const cartProductIds = items.map((i) => i.product.id);
+        const eligible = linkedProductIds.filter((id: string) => cartProductIds.includes(id));
+        if (eligible.length === 0) {
+          toast.error("Este cupom não se aplica a nenhum produto do seu carrinho");
+          return;
+        }
+        eligibleIds = linkedProductIds;
       }
 
       setAppliedCoupon({
@@ -93,6 +117,7 @@ export default function Checkout() {
         code: data.code,
         discount_type: data.discount_type as "percentage" | "fixed",
         discount_value: Number(data.discount_value),
+        eligible_product_ids: eligibleIds,
       });
       setCouponCode("");
       toast.success("Cupom aplicado!");
@@ -106,7 +131,6 @@ export default function Checkout() {
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      // Create order
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -122,12 +146,10 @@ export default function Checkout() {
 
       if (orderErr) throw orderErr;
 
-      // Increment coupon used_count
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
       }
 
-      // Create order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.product.id,
@@ -141,7 +163,6 @@ export default function Checkout() {
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
-      // Create payment record
       const paymentType = hasPreorderItems && regularTotal === 0 ? "preorder_deposit" : "full";
       const { error: paymentErr } = await supabase.from("payments").insert({
         order_id: order.id,
@@ -151,7 +172,6 @@ export default function Checkout() {
       });
       if (paymentErr) throw paymentErr;
 
-      // Build items for InfinitePay (prices in cents)
       const infinityItems = items.map((item) => {
         const isPreorder = item.product.status === "preorder";
         const unitPrice = isPreorder ? item.product.price * 0.4 : item.product.price;
@@ -162,7 +182,6 @@ export default function Checkout() {
         };
       });
 
-      // If there's a discount, add as negative line item
       if (discountAmount > 0) {
         infinityItems.push({
           quantity: 1,
