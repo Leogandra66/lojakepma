@@ -55,14 +55,27 @@ export default function AdminImageManager({ product }: { product: Product }) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const currentCount = images?.length ?? 0;
-    if (currentCount + files.length > 6) {
-      toast.error("Máximo de 6 imagens por produto");
-      return;
-    }
-
     setUploading(true);
     try {
+      const { data: existingImages, error: fetchError } = await supabase
+        .from("product_images")
+        .select("position")
+        .eq("product_id", product.id);
+
+      if (fetchError) throw fetchError;
+
+      const occupiedPositions = new Set((existingImages ?? []).map((image) => image.position));
+      const availablePositions = Array.from({ length: 6 }, (_, index) => index + 1).filter(
+        (position) => !occupiedPositions.has(position)
+      );
+
+      if (files.length > availablePositions.length) {
+        toast.error("Máximo de 6 imagens por produto");
+        return;
+      }
+
+      const hadNoImages = (existingImages?.length ?? 0) === 0;
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.name.split(".").pop();
@@ -77,11 +90,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
           .from("product-images")
           .getPublicUrl(filePath);
 
-        // Calculate next position based on max existing position to avoid duplicates
-        const maxPosition = images && images.length > 0
-          ? Math.max(...images.map(img => img.position))
-          : 0;
-        const nextPosition = maxPosition + i + 1;
+        const nextPosition = availablePositions[i];
 
         const { error: insertError } = await supabase.from("product_images").insert({
           product_id: product.id,
@@ -90,8 +99,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
         });
         if (insertError) throw insertError;
 
-        // Also update product main image_url if this is the first image
-        if (currentCount === 0 && i === 0) {
+        if (hadNoImages && i === 0) {
           await supabase
             .from("products")
             .update({ image_url: urlData.publicUrl })
