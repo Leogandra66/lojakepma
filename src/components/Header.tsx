@@ -17,6 +17,11 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <Link to="/historia" className="hidden sm:block">
+            <Button variant="ghost" size="sm" className="font-body text-sm">
+              História
+            </Button>
+          </Link>
           <Link to="/carrinho" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
