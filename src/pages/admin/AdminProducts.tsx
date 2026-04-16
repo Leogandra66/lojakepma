@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Images } from "lucide-react";
+import { Plus, Pencil, Trash2, Images, Copy } from "lucide-react";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
