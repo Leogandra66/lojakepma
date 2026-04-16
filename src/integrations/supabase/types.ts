@@ -274,6 +274,7 @@ export type Database = {
       }
       products: {
         Row: {
+          active: boolean
           category: string | null
           created_at: string
           description: string | null
@@ -288,6 +289,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          active?: boolean
           category?: string | null
           created_at?: string
           description?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          active?: boolean
           category?: string | null
           created_at?: string
           description?: string | null

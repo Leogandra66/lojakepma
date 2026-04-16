@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Images, Copy } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
@@ -128,6 +129,18 @@ export default function AdminProducts() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("products").update({ active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("products").delete().eq("id", id);
@@ -211,6 +224,7 @@ export default function AdminProducts() {
                 <TableHead>Preço</TableHead>
                 <TableHead>Estoque</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -225,6 +239,12 @@ export default function AdminProducts() {
                     <Badge variant={statusVariant[p.status]}>
                       {statusLabels[p.status]}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={(p as any).active !== false}
+                      onCheckedChange={(checked) => toggleActiveMutation.mutate({ id: p.id, active: checked })}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
@@ -256,6 +276,7 @@ export default function AdminProducts() {
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Nenhum produto cadastrado
                   </TableCell>
+
                 </TableRow>
               )}
             </TableBody>
