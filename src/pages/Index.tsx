@@ -21,7 +21,8 @@ export default function Index() {
         .from("products")
         .select("*")
         .order("status", { ascending: true })
-        .order("name");
+        .order("name")
+        .eq("active", true);
       if (error) throw error;
       return data as Product[];
     },
