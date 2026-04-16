@@ -228,6 +228,9 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
+                      <Button variant="ghost" size="icon" onClick={() => cloneMutation.mutate(p)} title="Clonar">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => openImages(p)} title="Imagens">
                         <Images className="h-4 w-4" />
                       </Button>
