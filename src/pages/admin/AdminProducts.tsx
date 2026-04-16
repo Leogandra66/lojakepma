@@ -105,6 +105,29 @@ export default function AdminProducts() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const cloneMutation = useMutation({
+    mutationFn: async (product: Product) => {
+      const payload = {
+        name: `${product.name} CÓPIA`,
+        description: product.description || null,
+        price: product.price,
+        category: product.category || null,
+        status: "unavailable" as const,
+        stock_quantity: 0,
+        video_url: (product as any).video_url || null,
+        preorder_estimated_delivery: null,
+      };
+      const { error } = await supabase.from("products").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Produto clonado com sucesso!");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("products").delete().eq("id", id);
