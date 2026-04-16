@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import Index from "./pages/Index";
+import HistoriaKepma from "./pages/HistoriaKepma";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
@@ -30,6 +31,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/historia" element={<HistoriaKepma />} />
               <Route path="/produto/:id" element={<ProductDetail />} />
               <Route path="/carrinho" element={<Cart />} />
               <Route path="/entrar" element={<Auth />} />
