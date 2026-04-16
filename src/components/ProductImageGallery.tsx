@@ -83,9 +83,9 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
         </div>
       )}
 
-      {/* Zoom dialog */}
+      {/* Zoom dialog – fundo preto para destacar a imagem */}
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-2 flex items-center justify-center bg-background/95 backdrop-blur-sm">
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] p-2 flex items-center justify-center bg-black border-black">
           <DialogTitle className="sr-only">{productName}</DialogTitle>
           <img
             src={selectedImage.image_url}

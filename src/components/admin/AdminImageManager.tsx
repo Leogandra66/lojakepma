@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Upload, Trash2, GripVertical } from "lucide-react";
+import { compressImage } from "@/lib/imageUtils";
 
 interface ProductImage {
   id: string;
@@ -77,13 +78,22 @@ export default function AdminImageManager({ product }: { product: Product }) {
       const hadNoImages = (existingImages?.length ?? 0) === 0;
 
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const ext = file.name.split(".").pop();
+        const original = files[i];
+        // Comprime mantendo alta qualidade (WebP 92%, máx 2000px no maior lado)
+        const file = await compressImage(original, {
+          maxDimension: 2000,
+          quality: 0.92,
+          mimeType: "image/webp",
+        });
+        const ext = file.name.split(".").pop() || "webp";
         const filePath = `${product.id}/${Date.now()}-${i}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from("product-images")
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            contentType: file.type,
+            cacheControl: "31536000",
+          });
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
