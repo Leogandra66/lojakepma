@@ -1,37 +1,29 @@
 
 
-# Plano: Cupons vinculados a produtos específicos
+## Plan: Otimizar imagens no upload com compressão client-side
 
-## Resumo
+### Problema
+As imagens são enviadas no tamanho original (podem ter 5-10MB+), o que atrasa o carregamento do site. Não há nenhuma compressão ou redimensionamento antes do upload.
 
-Permitir que o admin escolha se um cupom vale para **todos os produtos** ou apenas para **produtos específicos**. Ao criar/editar um cupom, haverá a opção de selecionar os produtos elegíveis.
+### Solução
+Adicionar uma função de compressão no frontend usando Canvas API antes do upload. A imagem será redimensionada para no máximo 1600x1600px e convertida para WebP com qualidade 85% — mantendo excelente qualidade visual para tela enquanto reduz drasticamente o tamanho do arquivo (tipicamente 80-90% menor).
 
-## O que será feito
+### O que será feito
 
-### 1. Nova tabela no banco de dados
-Criar uma tabela `coupon_products` para vincular cupons a produtos específicos:
-- `coupon_id` (uuid) — referência ao cupom
-- `product_id` (uuid) — referência ao produto
-- RLS: admins podem gerenciar, leitura pública
+1. **Criar utilitário de compressão** (`src/lib/imageUtils.ts`)
+   - Função `compressImage(file: File)` que usa Canvas API nativo do browser
+   - Redimensiona para max 1600x1600px mantendo proporção
+   - Converte para WebP com qualidade 85%
+   - Retorna um novo File pronto para upload
 
-Se a tabela estiver vazia para um cupom, ele vale para todos os produtos.
+2. **Atualizar o upload no AdminImageManager**
+   - Importar e aplicar `compressImage()` antes de cada `supabase.storage.upload()`
+   - Alterar a extensão do arquivo salvo para `.webp`
+   - Manter o fluxo existente intacto
 
-### 2. Atualizar formulário de cupons (AdminCoupons.tsx)
-- Adicionar um switch "Aplicar a todos os produtos" (padrão: sim)
-- Quando desativado, exibir lista de produtos com checkboxes para seleção
-- Ao salvar, gravar os vínculos na tabela `coupon_products`
-
-### 3. Atualizar validação do cupom no checkout
-- Ao aplicar um cupom, verificar se existem registros em `coupon_products`
-- Se existirem, o desconto só se aplica aos produtos vinculados no carrinho
-- Se não existirem, o cupom vale para todos (comportamento atual)
-
-### 4. Exibir informação na tabela de cupons
-- Adicionar coluna "Produtos" na listagem, mostrando "Todos" ou a quantidade de produtos vinculados
-
-## Detalhes técnicos
-
-- Migration SQL para criar `coupon_products` com unique constraint `(coupon_id, product_id)` e RLS policies
-- Query de produtos existentes no formulário via `useQuery`
-- Lógica de desconto parcial no checkout: calcular subtotal apenas dos itens elegíveis
+### Detalhes técnicos
+- Usa `HTMLCanvasElement` e `toBlob('image/webp', 0.85)` — sem dependências externas
+- 1600px é suficiente para telas retina em cards e zoom
+- WebP oferece ~30-50% menor que JPEG na mesma qualidade
+- Imagens existentes não são afetadas, apenas novos uploads
 
