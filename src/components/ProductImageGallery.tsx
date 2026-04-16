@@ -85,34 +85,13 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
 
       {/* Zoom dialog */}
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="h-[96vh] w-[98vw] max-w-[98vw] overflow-hidden p-0 bg-background/95 backdrop-blur-sm">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-2 flex items-center justify-center bg-background/95 backdrop-blur-sm">
           <DialogTitle className="sr-only">{productName}</DialogTitle>
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
-              <p className="truncate text-sm font-medium">{productName}</p>
-              <a
-                href={selectedImage.image_url}
-                target="_blank"
-                rel="noreferrer"
-                className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Abrir original
-              </a>
-            </div>
-
-            <div className="flex-1 overflow-auto">
-              <div className="flex min-h-full min-w-full items-start justify-center p-4">
-                <img
-                  src={selectedImage.image_url}
-                  alt={`${productName} - Imagem ampliada`}
-                  className="block h-auto w-auto max-h-none max-w-none"
-                  loading="eager"
-                  decoding="sync"
-                  style={{ imageRendering: "auto" }}
-                />
-              </div>
-            </div>
-          </div>
+          <img
+            src={selectedImage.image_url}
+            alt={`${productName} - Imagem ampliada`}
+            className="max-h-[90vh] max-w-full object-contain"
+          />
         </DialogContent>
       </Dialog>
     </div>
