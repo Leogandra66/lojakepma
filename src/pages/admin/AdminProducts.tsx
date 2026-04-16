@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Images } from "lucide-react";
+import { Plus, Pencil, Trash2, Images, Copy } from "lucide-react";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
@@ -101,6 +101,29 @@ export default function AdminProducts() {
       setEditingProduct(null);
       setForm(emptyForm);
       toast.success(editingProduct ? "Produto atualizado!" : "Produto criado!");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const cloneMutation = useMutation({
+    mutationFn: async (product: Product) => {
+      const payload = {
+        name: `${product.name} CÓPIA`,
+        description: product.description || null,
+        price: product.price,
+        category: product.category || null,
+        status: "unavailable" as const,
+        stock_quantity: 0,
+        video_url: (product as any).video_url || null,
+        preorder_estimated_delivery: null,
+      };
+      const { error } = await supabase.from("products").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Produto clonado com sucesso!");
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -205,6 +228,9 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
+                      <Button variant="ghost" size="icon" onClick={() => cloneMutation.mutate(p)} title="Clonar">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => openImages(p)} title="Imagens">
                         <Images className="h-4 w-4" />
                       </Button>
