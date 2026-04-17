@@ -26,6 +26,7 @@ const MAX_ZOOM = 5;
 const ZOOM_STEP = 0.5;
 
 export default function ProductImageGallery({ images, fallbackUrl, productName }: ProductImageGalleryProps) {
+  const isMobile = useIsMobile();
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
 
   const allImages = sortedImages.length > 0
