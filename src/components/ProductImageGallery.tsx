@@ -116,10 +116,13 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Main image – clickable for zoom */}
+      {/* Main image – clickable for zoom (desktop only) */}
       <button
-        onClick={() => setZoomOpen(true)}
-        className="relative group aspect-square overflow-hidden rounded-lg bg-white flex items-center justify-center cursor-zoom-in"
+        onClick={() => !isMobile && setZoomOpen(true)}
+        className={cn(
+          "relative group aspect-square overflow-hidden rounded-lg bg-white flex items-center justify-center",
+          isMobile ? "cursor-default" : "cursor-zoom-in"
+        )}
       >
         <img
           src={selectedImage.image_url}
@@ -128,9 +131,11 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
           loading="eager"
           decoding="sync"
         />
-        <span className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ZoomIn className="h-4 w-4 text-foreground" />
-        </span>
+        {!isMobile && (
+          <span className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ZoomIn className="h-4 w-4 text-foreground" />
+          </span>
+        )}
       </button>
 
       {/* Thumbnails */}
