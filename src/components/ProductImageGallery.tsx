@@ -115,19 +115,19 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex w-full min-w-0 flex-col gap-3">
       {/* Main image – clickable for zoom (desktop only) */}
       <button
         onClick={() => !isMobile && setZoomOpen(true)}
         className={cn(
-          "relative group aspect-square overflow-hidden rounded-lg bg-white flex items-center justify-center",
+          "relative block w-full aspect-square overflow-hidden rounded-lg bg-white",
           isMobile ? "cursor-default" : "cursor-zoom-in"
         )}
       >
         <img
           src={selectedImage.image_url}
           alt={`${productName} - Imagem ${selectedIndex + 1}`}
-          className="max-h-full max-w-full object-contain transition-opacity duration-200"
+          className="h-full w-full object-contain transition-opacity duration-200"
           loading="eager"
           decoding="sync"
         />

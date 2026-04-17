@@ -60,13 +60,15 @@ export default function ProductDetail() {
           </div>
         ) : product ? (
           <div className="grid gap-8 md:grid-cols-2">
-            <ProductImageGallery
-              images={productImages}
-              fallbackUrl={product.image_url}
-              productName={product.name}
-            />
+            <div className="min-w-0">
+              <ProductImageGallery
+                images={productImages}
+                fallbackUrl={product.image_url}
+                productName={product.name}
+              />
+            </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-4">
               {product.category && (
                 <span className="text-xs uppercase tracking-widest text-muted-foreground">{product.category}</span>
               )}
