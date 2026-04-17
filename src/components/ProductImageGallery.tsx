@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, MouseEvent, WheelEvent } from "react";
 import { Package, ZoomIn, Plus, Minus, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
