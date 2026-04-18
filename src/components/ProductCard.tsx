@@ -42,7 +42,7 @@ export default function ProductCard({ product }: { product: Product }) {
             {isAvailable ? (
               <>
                 <span className="font-heading text-xl font-bold text-foreground">
-                  R$ {product.price.toFixed(2).replace(".", ",")}
+                  R$ {product.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <p className="text-[10px] text-muted-foreground leading-tight">no PIX ou em até 12x no cartão</p>
               </>

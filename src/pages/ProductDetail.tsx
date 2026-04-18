@@ -87,7 +87,7 @@ export default function ProductDetail() {
               {isAvailable && (
                 <>
                   <p className="font-heading text-4xl font-bold text-foreground">
-                    R$ {product.price.toFixed(2).replace(".", ",")}
+                    R$ {product.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                   <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-2 py-1 rounded-full w-fit">Frete Grátis</span>
                 </>
