@@ -39,11 +39,17 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="mt-auto flex items-end justify-between pt-2">
           <div>
-            <span className="font-heading text-xl font-bold text-foreground">
-              R$ {product.price.toFixed(2).replace(".", ",")}
-            </span>
-            <p className="text-[10px] text-muted-foreground leading-tight">no PIX ou em até 12x no cartão</p>
-            {product.status === "preorder" && (
+            {isAvailable ? (
+              <>
+                <span className="font-heading text-xl font-bold text-foreground">
+                  R$ {product.price.toFixed(2).replace(".", ",")}
+                </span>
+                <p className="text-[10px] text-muted-foreground leading-tight">no PIX ou em até 12x no cartão</p>
+              </>
+            ) : (
+              <span className="text-sm text-muted-foreground">Produto indisponível</span>
+            )}
+            {product.status === "preorder" && isAvailable && (
               <div className="text-xs text-muted-foreground mt-0.5">
                 <p>40% no pedido · 60% na entrega</p>
                 {product.preorder_estimated_delivery && (

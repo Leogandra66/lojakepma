@@ -84,12 +84,16 @@ export default function ProductDetail() {
                 <span className="badge-unavailable w-fit">Indisponível</span>
               )}
 
-              <p className="font-heading text-4xl font-bold text-foreground">
-                R$ {product.price.toFixed(2).replace(".", ",")}
-              </p>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-2 py-1 rounded-full w-fit">Frete Grátis</span>
+              {isAvailable && (
+                <>
+                  <p className="font-heading text-4xl font-bold text-foreground">
+                    R$ {product.price.toFixed(2).replace(".", ",")}
+                  </p>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 px-2 py-1 rounded-full w-fit">Frete Grátis</span>
+                </>
+              )}
 
-              {product.status === "preorder" && (
+              {product.status === "preorder" && isAvailable && (
                 <div className="rounded-lg border border-border bg-secondary/50 p-4 space-y-2">
                   <p className="font-semibold text-sm">Condições de encomenda:</p>
                   <p className="text-sm text-muted-foreground">
