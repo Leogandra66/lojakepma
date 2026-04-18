@@ -201,9 +201,13 @@ export default function AdminProducts() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
+  const filteredProducts = products?.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-heading text-3xl font-bold">Produtos</h1>
           <p className="text-muted-foreground text-sm mt-1">Gerencie o catálogo de produtos da loja</p>
@@ -211,6 +215,16 @@ export default function AdminProducts() {
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" /> Novo Produto
         </Button>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar produto pelo nome..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       {isLoading ? (
