@@ -244,7 +244,7 @@ export default function AdminProducts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products?.map((p) => (
+              {filteredProducts?.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
                   <TableCell>{p.category || "—"}</TableCell>
@@ -286,10 +286,10 @@ export default function AdminProducts() {
                   </TableCell>
                 </TableRow>
               ))}
-              {products?.length === 0 && (
+              {filteredProducts?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum produto cadastrado
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? "Nenhum produto encontrado" : "Nenhum produto cadastrado"}
                   </TableCell>
 
                 </TableRow>
