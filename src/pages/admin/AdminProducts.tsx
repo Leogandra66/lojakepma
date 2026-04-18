@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Images, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Images, Copy, Search } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
@@ -56,6 +56,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -200,9 +201,13 @@ export default function AdminProducts() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
+  const filteredProducts = products?.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-heading text-3xl font-bold">Produtos</h1>
           <p className="text-muted-foreground text-sm mt-1">Gerencie o catálogo de produtos da loja</p>
@@ -210,6 +215,16 @@ export default function AdminProducts() {
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" /> Novo Produto
         </Button>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar produto pelo nome..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       {isLoading ? (
@@ -229,7 +244,7 @@ export default function AdminProducts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products?.map((p) => (
+              {filteredProducts?.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
                   <TableCell>{p.category || "—"}</TableCell>
@@ -271,10 +286,10 @@ export default function AdminProducts() {
                   </TableCell>
                 </TableRow>
               ))}
-              {products?.length === 0 && (
+              {filteredProducts?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum produto cadastrado
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? "Nenhum produto encontrado" : "Nenhum produto cadastrado"}
                   </TableCell>
 
                 </TableRow>
