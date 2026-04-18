@@ -56,6 +56,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
