@@ -66,12 +66,12 @@ export default function AdminImageManager({ product }: { product: Product }) {
       if (fetchError) throw fetchError;
 
       const occupiedPositions = new Set((existingImages ?? []).map((image) => image.position));
-      const availablePositions = Array.from({ length: 6 }, (_, index) => index + 1).filter(
+      const availablePositions = Array.from({ length: 8 }, (_, index) => index + 1).filter(
         (position) => !occupiedPositions.has(position)
       );
 
       if (files.length > availablePositions.length) {
-        toast.error("Máximo de 6 imagens por produto");
+        toast.error("Máximo de 8 imagens por produto");
         return;
       }
 
