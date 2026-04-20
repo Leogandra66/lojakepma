@@ -188,7 +188,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
       ) : (
         <div className="text-center py-8 text-muted-foreground border rounded-lg">
           <p>Nenhuma imagem cadastrada</p>
-          <p className="text-xs mt-1">Envie até 6 imagens para este produto</p>
+          <p className="text-xs mt-1">Envie até 8 imagens para este produto</p>
         </div>
       )}
     </div>
