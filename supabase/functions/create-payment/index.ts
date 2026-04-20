@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     }
 
     // Build InfinitePay payload
+    const webhookUrl = `${supabaseUrl}/functions/v1/infinitepay-webhook`;
     const payload = {
       handle: "lmgbrasil",
       items: items.map((item: { quantity: number; price: number; description: string }) => ({
@@ -47,6 +48,7 @@ Deno.serve(async (req) => {
       })),
       order_nsu: orderId,
       redirect_url: redirectUrl,
+      webhook_url: webhookUrl,
     };
 
     // Call InfinitePay checkout links API
