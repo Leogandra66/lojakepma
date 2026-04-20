@@ -66,12 +66,12 @@ export default function AdminImageManager({ product }: { product: Product }) {
       if (fetchError) throw fetchError;
 
       const occupiedPositions = new Set((existingImages ?? []).map((image) => image.position));
-      const availablePositions = Array.from({ length: 6 }, (_, index) => index + 1).filter(
+      const availablePositions = Array.from({ length: 8 }, (_, index) => index + 1).filter(
         (position) => !occupiedPositions.has(position)
       );
 
       if (files.length > availablePositions.length) {
-        toast.error("Máximo de 6 imagens por produto");
+        toast.error("Máximo de 8 imagens por produto");
         return;
       }
 
@@ -129,13 +129,13 @@ export default function AdminImageManager({ product }: { product: Product }) {
   }
 
   const currentCount = images?.length ?? 0;
-  const canUpload = currentCount < 6;
+  const canUpload = currentCount < 8;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {currentCount}/6 imagens
+          {currentCount}/8 imagens
         </p>
         {canUpload && (
           <div>
@@ -188,7 +188,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
       ) : (
         <div className="text-center py-8 text-muted-foreground border rounded-lg">
           <p>Nenhuma imagem cadastrada</p>
-          <p className="text-xs mt-1">Envie até 6 imagens para este produto</p>
+          <p className="text-xs mt-1">Envie até 8 imagens para este produto</p>
         </div>
       )}
     </div>
