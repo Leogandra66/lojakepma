@@ -129,7 +129,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
   }
 
   const currentCount = images?.length ?? 0;
-  const canUpload = currentCount < 6;
+  const canUpload = currentCount < 8;
 
   return (
     <div className="space-y-4">
