@@ -1,37 +1,57 @@
 
+Agora com a documentação clara, vamos implementar o webhook da InfinitePay de forma simples e direta.
 
-# Plano: Cupons vinculados a produtos específicos
+## Análise
 
-## Resumo
+A InfinitePay envia um POST para a `webhook_url` quando o pagamento é aprovado, com payload contendo `transaction_nsu`, `order_nsu` (= nosso `orderId`), `invoice_slug`, `paid_amount`, `capture_method`, `receipt_url` e `items`.
 
-Permitir que o admin escolha se um cupom vale para **todos os produtos** ou apenas para **produtos específicos**. Ao criar/editar um cupom, haverá a opção de selecionar os produtos elegíveis.
+**Pontos importantes:**
+- Não há mecanismo de assinatura/secret descrito — só precisamos responder 200 rápido
+- O `order_nsu` é o nosso `orderId` (já enviamos isso em `create-payment`)
+- A documentação só menciona evento de **aprovação** (não há failed/refunded explícito)
+- A URL pública do webhook precisa ser uma Edge Function — `https://lojakepma.lovable.app/webhook` é uma rota do site React, que não recebe POST. Vou esclarecer isso abaixo.
 
-## O que será feito
+## Plano
 
-### 1. Nova tabela no banco de dados
-Criar uma tabela `coupon_products` para vincular cupons a produtos específicos:
-- `coupon_id` (uuid) — referência ao cupom
-- `product_id` (uuid) — referência ao produto
-- RLS: admins podem gerenciar, leitura pública
+### 1. Criar Edge Function `infinitepay-webhook`
+Arquivo: `supabase/functions/infinitepay-webhook/index.ts`
+- Pública (`verify_jwt = false`)
+- Recebe POST com o payload da InfinitePay
+- Localiza pagamento por `transaction_nsu` (fallback: `order_id` via `order_nsu`)
+- Atualiza `payments`: `status='paid'`, `paid_at=now()`, `transaction_nsu`, `slug`, `capture_method`, `receipt_url`
+- Atualiza `orders.status='paid'`
+- Loga payload completo para debug
+- Sempre responde rápido: 200 em sucesso, 400 só em payload claramente inválido
 
-Se a tabela estiver vazia para um cupom, ele vale para todos os produtos.
+### 2. Atualizar `create-payment` para enviar `webhook_url`
+Arquivo: `supabase/functions/create-payment/index.ts`
+- Adicionar `webhook_url` no payload enviado para a InfinitePay, apontando para a Edge Function:
+  ```
+  https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/infinitepay-webhook
+  ```
 
-### 2. Atualizar formulário de cupons (AdminCoupons.tsx)
-- Adicionar um switch "Aplicar a todos os produtos" (padrão: sim)
-- Quando desativado, exibir lista de produtos com checkboxes para seleção
-- Ao salvar, gravar os vínculos na tabela `coupon_products`
+### 3. Registrar função em `supabase/config.toml`
+```toml
+[functions.infinitepay-webhook]
+verify_jwt = false
+```
 
-### 3. Atualizar validação do cupom no checkout
-- Ao aplicar um cupom, verificar se existem registros em `coupon_products`
-- Se existirem, o desconto só se aplica aos produtos vinculados no carrinho
-- Se não existirem, o cupom vale para todos (comportamento atual)
+## Sobre a URL `https://lojakepma.lovable.app/webhook`
 
-### 4. Exibir informação na tabela de cupons
-- Adicionar coluna "Produtos" na listagem, mostrando "Todos" ou a quantidade de produtos vinculados
+Essa URL é uma rota do seu site React (frontend), que **não consegue receber POST nem processar requisições de servidor**. O webhook precisa apontar para uma Edge Function (backend). Vou usar:
 
-## Detalhes técnicos
+```
+https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/infinitepay-webhook
+```
 
-- Migration SQL para criar `coupon_products` com unique constraint `(coupon_id, product_id)` e RLS policies
-- Query de produtos existentes no formulário via `useQuery`
-- Lógica de desconto parcial no checkout: calcular subtotal apenas dos itens elegíveis
+Essa será a URL configurada automaticamente no payload de criação do pagamento — você não precisa colar nada no painel da InfinitePay, pois enviamos via API a cada checkout.
 
+## Arquivos
+- **novo:** `supabase/functions/infinitepay-webhook/index.ts`
+- **editar:** `supabase/functions/create-payment/index.ts` (adicionar `webhook_url`)
+- **editar:** `supabase/config.toml` (registrar função sem JWT)
+
+## Próximos passos após implementação
+1. Faça um pagamento de teste com cartão
+2. Verificamos os logs da função `infinitepay-webhook` para confirmar recebimento e mapeamento
+3. Confirmamos que `payments.status` mudou para `paid` e `orders.status` também
