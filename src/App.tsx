@@ -19,6 +19,9 @@ import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
+import AdminPayments from "./pages/admin/AdminPayments";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
@@ -61,6 +64,9 @@ const App = () => (
               >
                 <Route path="produtos" element={<AdminProducts />} />
                 <Route path="cupons" element={<AdminCoupons />} />
+                <Route path="pedidos" element={<AdminOrders />} />
+                <Route path="pedidos/:id" element={<AdminOrderDetail />} />
+                <Route path="pagamentos" element={<AdminPayments />} />
                 <Route index element={<AdminProducts />} />
               </Route>
               <Route path="*" element={<NotFound />} />

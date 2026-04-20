@@ -1,10 +1,12 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Package, ArrowLeft, Ticket } from "lucide-react";
+import { Package, ArrowLeft, Ticket, ShoppingBag, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Produtos", path: "/admin/produtos", icon: Package },
+  { label: "Pedidos", path: "/admin/pedidos", icon: ShoppingBag },
+  { label: "Pagamentos", path: "/admin/pagamentos", icon: CreditCard },
   { label: "Cupons", path: "/admin/cupons", icon: Ticket },
 ];
 
@@ -30,7 +32,7 @@ export default function AdminLayout() {
                 to={item.path}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                  location.pathname === item.path
+                  location.pathname.startsWith(item.path)
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
