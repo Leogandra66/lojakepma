@@ -135,7 +135,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {currentCount}/6 imagens
+          {currentCount}/8 imagens
         </p>
         {canUpload && (
           <div>
