@@ -144,15 +144,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const { data: imagesFromDb, isLoading } = useQuery({
     queryKey: ["product-images", product.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_images")
-        .select("*")
-        .eq("product_id", product.id)
-        .order("position");
-      if (error) throw error;
-      return data as ProductImage[];
-    },
+    queryFn: async () => fetchProductImages(product.id),
   });
 
   const images = localOrder ?? imagesFromDb;
@@ -166,6 +158,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (image: ProductImage) => {
+      await ensureSequentialProductImagePositions(product.id);
+
       // 1. Deleta do storage (se for arquivo nosso)
       const url = image.image_url;
       if (url.includes("/product-images/")) {
@@ -181,13 +175,10 @@ export default function AdminImageManager({ product }: { product: Product }) {
       if (error) throw error;
 
       // 3. Renormaliza as positions restantes
-      const remaining = (imagesFromDb ?? [])
-        .filter((img) => img.id !== image.id)
-        .sort((a, b) => a.position - b.position)
-        .map((img) => img.id);
+      const remaining = (await fetchProductImagePositions(product.id)).map((img) => img.id);
 
       if (remaining.length > 0) {
-        await renormalizePositions(product.id, remaining);
+        await renormalizePositions(remaining);
       }
 
       // 4. Sincroniza imagem principal do produto
@@ -206,7 +197,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const reorderMutation = useMutation({
     mutationFn: async (orderedIds: string[]) => {
-      await renormalizePositions(product.id, orderedIds);
+      await ensureSequentialProductImagePositions(product.id);
+      await renormalizePositions(orderedIds);
       await syncMainImage(product.id);
     },
     onSuccess: () => {
@@ -222,7 +214,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const setMainMutation = useMutation({
     mutationFn: async (imageId: string) => {
-      const current = imagesFromDb ?? [];
+      await ensureSequentialProductImagePositions(product.id);
+      const current = await fetchProductImages(product.id);
       const target = current.find((i) => i.id === imageId);
       if (!target) return;
       // Reordena: target primeiro, depois os demais na ordem atual
@@ -233,7 +226,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
           .sort((a, b) => a.position - b.position)
           .map((i) => i.id),
       ];
-      await renormalizePositions(product.id, ordered);
+      await renormalizePositions(ordered);
       await syncMainImage(product.id);
     },
     onSuccess: () => {
