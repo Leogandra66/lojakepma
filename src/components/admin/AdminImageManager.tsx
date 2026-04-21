@@ -25,55 +25,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-
-interface ProductImage {
-  id: string;
-  image_url: string;
-  position: number;
-  product_id: string;
-}
+import {
+  ensureSequentialProductImagePositions,
+  fetchProductImages,
+  fetchProductImagePositions,
+  type ProductImage,
+  renormalizePositions,
+  syncMainImage,
+} from "./productImageManagerUtils";
 
 const MAX_IMAGES = 8;
-
-/**
- * Sincroniza o campo products.image_url com a imagem de menor posição.
- * Se não houver imagens, limpa o campo.
- */
-async function syncMainImage(productId: string) {
-  const { data, error } = await supabase
-    .from("product_images")
-    .select("image_url, position")
-    .eq("product_id", productId)
-    .order("position", { ascending: true })
-    .limit(1);
-  if (error) throw error;
-  const mainUrl = data && data.length > 0 ? data[0].image_url : null;
-  await supabase.from("products").update({ image_url: mainUrl }).eq("id", productId);
-}
-
-/**
- * Renormaliza positions para 1..N na ordem fornecida.
- * Usa offset temporário para evitar conflito com unique constraint (caso exista).
- */
-async function renormalizePositions(productId: string, orderedIds: string[]) {
-  const OFFSET = 1000;
-  // Step 1: move tudo para fora do range
-  for (let i = 0; i < orderedIds.length; i++) {
-    const { error } = await supabase
-      .from("product_images")
-      .update({ position: OFFSET + i + 1 })
-      .eq("id", orderedIds[i]);
-    if (error) throw error;
-  }
-  // Step 2: aplica positions finais 1..N
-  for (let i = 0; i < orderedIds.length; i++) {
-    const { error } = await supabase
-      .from("product_images")
-      .update({ position: i + 1 })
-      .eq("id", orderedIds[i]);
-    if (error) throw error;
-  }
-}
 
 interface SortableImageProps {
   image: ProductImage;
@@ -183,15 +144,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const { data: imagesFromDb, isLoading } = useQuery({
     queryKey: ["product-images", product.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_images")
-        .select("*")
-        .eq("product_id", product.id)
-        .order("position");
-      if (error) throw error;
-      return data as ProductImage[];
-    },
+    queryFn: async () => fetchProductImages(product.id),
   });
 
   const images = localOrder ?? imagesFromDb;
@@ -205,6 +158,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (image: ProductImage) => {
+      await ensureSequentialProductImagePositions(product.id);
+
       // 1. Deleta do storage (se for arquivo nosso)
       const url = image.image_url;
       if (url.includes("/product-images/")) {
@@ -220,13 +175,10 @@ export default function AdminImageManager({ product }: { product: Product }) {
       if (error) throw error;
 
       // 3. Renormaliza as positions restantes
-      const remaining = (imagesFromDb ?? [])
-        .filter((img) => img.id !== image.id)
-        .sort((a, b) => a.position - b.position)
-        .map((img) => img.id);
+      const remaining = (await fetchProductImagePositions(product.id)).map((img) => img.id);
 
       if (remaining.length > 0) {
-        await renormalizePositions(product.id, remaining);
+        await renormalizePositions(remaining);
       }
 
       // 4. Sincroniza imagem principal do produto
@@ -245,7 +197,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const reorderMutation = useMutation({
     mutationFn: async (orderedIds: string[]) => {
-      await renormalizePositions(product.id, orderedIds);
+      await ensureSequentialProductImagePositions(product.id);
+      await renormalizePositions(orderedIds);
       await syncMainImage(product.id);
     },
     onSuccess: () => {
@@ -261,7 +214,8 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
   const setMainMutation = useMutation({
     mutationFn: async (imageId: string) => {
-      const current = imagesFromDb ?? [];
+      await ensureSequentialProductImagePositions(product.id);
+      const current = await fetchProductImages(product.id);
       const target = current.find((i) => i.id === imageId);
       if (!target) return;
       // Reordena: target primeiro, depois os demais na ordem atual
@@ -272,7 +226,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
           .sort((a, b) => a.position - b.position)
           .map((i) => i.id),
       ];
-      await renormalizePositions(product.id, ordered);
+      await renormalizePositions(ordered);
       await syncMainImage(product.id);
     },
     onSuccess: () => {
@@ -307,13 +261,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
     setUploading(true);
     try {
-      // Sempre relê o estado atual no momento do upload
-      const { data: existing, error: fetchError } = await supabase
-        .from("product_images")
-        .select("id, position")
-        .eq("product_id", product.id)
-        .order("position");
-      if (fetchError) throw fetchError;
+      const existing = await ensureSequentialProductImagePositions(product.id);
 
       const currentCount = existing?.length ?? 0;
       const slotsAvailable = MAX_IMAGES - currentCount;
