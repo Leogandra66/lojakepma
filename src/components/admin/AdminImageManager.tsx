@@ -25,55 +25,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-
-interface ProductImage {
-  id: string;
-  image_url: string;
-  position: number;
-  product_id: string;
-}
+import {
+  ensureSequentialProductImagePositions,
+  fetchProductImages,
+  fetchProductImagePositions,
+  type ProductImage,
+  renormalizePositions,
+  syncMainImage,
+} from "./productImageManagerUtils";
 
 const MAX_IMAGES = 8;
-
-/**
- * Sincroniza o campo products.image_url com a imagem de menor posição.
- * Se não houver imagens, limpa o campo.
- */
-async function syncMainImage(productId: string) {
-  const { data, error } = await supabase
-    .from("product_images")
-    .select("image_url, position")
-    .eq("product_id", productId)
-    .order("position", { ascending: true })
-    .limit(1);
-  if (error) throw error;
-  const mainUrl = data && data.length > 0 ? data[0].image_url : null;
-  await supabase.from("products").update({ image_url: mainUrl }).eq("id", productId);
-}
-
-/**
- * Renormaliza positions para 1..N na ordem fornecida.
- * Usa offset temporário para evitar conflito com unique constraint (caso exista).
- */
-async function renormalizePositions(productId: string, orderedIds: string[]) {
-  const OFFSET = 1000;
-  // Step 1: move tudo para fora do range
-  for (let i = 0; i < orderedIds.length; i++) {
-    const { error } = await supabase
-      .from("product_images")
-      .update({ position: OFFSET + i + 1 })
-      .eq("id", orderedIds[i]);
-    if (error) throw error;
-  }
-  // Step 2: aplica positions finais 1..N
-  for (let i = 0; i < orderedIds.length; i++) {
-    const { error } = await supabase
-      .from("product_images")
-      .update({ position: i + 1 })
-      .eq("id", orderedIds[i]);
-    if (error) throw error;
-  }
-}
 
 interface SortableImageProps {
   image: ProductImage;
