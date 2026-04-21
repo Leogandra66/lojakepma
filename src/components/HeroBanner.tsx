@@ -17,11 +17,6 @@ export default function HeroBanner() {
         <p className="max-w-xl text-base text-primary-foreground/70 sm:text-lg">
           A maior marca de violões da China desembarca no Brasil trazendo o que existe de mais moderno em tecnologia na produção de violões premium.
         </p>
-        <Link to="#produtos">
-          <Button size="lg" className="btn-gold rounded-full px-8 text-base gap-2">
-            Ver Produtos <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
       </div>
     </section>
   );
