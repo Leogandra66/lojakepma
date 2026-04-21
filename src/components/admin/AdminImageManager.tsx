@@ -261,13 +261,7 @@ export default function AdminImageManager({ product }: { product: Product }) {
 
     setUploading(true);
     try {
-      // Sempre relê o estado atual no momento do upload
-      const { data: existing, error: fetchError } = await supabase
-        .from("product_images")
-        .select("id, position")
-        .eq("product_id", product.id)
-        .order("position");
-      if (fetchError) throw fetchError;
+      const existing = await ensureSequentialProductImagePositions(product.id);
 
       const currentCount = existing?.length ?? 0;
       const slotsAvailable = MAX_IMAGES - currentCount;
