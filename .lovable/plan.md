@@ -1,57 +1,34 @@
 
-Agora com a documentação clara, vamos implementar o webhook da InfinitePay de forma simples e direta.
 
-## Análise
+## Corrigir erro de upload de imagens (limite de 6)
 
-A InfinitePay envia um POST para a `webhook_url` quando o pagamento é aprovado, com payload contendo `transaction_nsu`, `order_nsu` (= nosso `orderId`), `invoice_slug`, `paid_amount`, `capture_method`, `receipt_url` e `items`.
+### Problema
+Existe uma restrição no banco (`position_range`) que limita o número de imagens por produto a no máximo **6**. Por isso, ao tentar subir uma 7ª imagem no produto "Violão Kepma F1 OM BS Acústico" (que já tem 6), o sistema retorna o erro `violates check constraint "position_range"`.
 
-**Pontos importantes:**
-- Não há mecanismo de assinatura/secret descrito — só precisamos responder 200 rápido
-- O `order_nsu` é o nosso `orderId` (já enviamos isso em `create-payment`)
-- A documentação só menciona evento de **aprovação** (não há failed/refunded explícito)
-- A URL pública do webhook precisa ser uma Edge Function — `https://lojakepma.lovable.app/webhook` é uma rota do site React, que não recebe POST. Vou esclarecer isso abaixo.
+Além disso, é o motivo de o sistema não conseguir adicionar/substituir imagens nesses produtos cheios.
 
-## Plano
+### Solução
 
-### 1. Criar Edge Function `infinitepay-webhook`
-Arquivo: `supabase/functions/infinitepay-webhook/index.ts`
-- Pública (`verify_jwt = false`)
-- Recebe POST com o payload da InfinitePay
-- Localiza pagamento por `transaction_nsu` (fallback: `order_id` via `order_nsu`)
-- Atualiza `payments`: `status='paid'`, `paid_at=now()`, `transaction_nsu`, `slug`, `capture_method`, `receipt_url`
-- Atualiza `orders.status='paid'`
-- Loga payload completo para debug
-- Sempre responde rápido: 200 em sucesso, 400 só em payload claramente inválido
+**1. Remover a restrição rígida do banco**
+Migration SQL para remover a constraint `position_range` da tabela `product_images`. Sem ela, será possível ter quantas imagens forem necessárias por produto. A unicidade `(product_id, position)` continua garantindo que não haja posições duplicadas.
 
-### 2. Atualizar `create-payment` para enviar `webhook_url`
-Arquivo: `supabase/functions/create-payment/index.ts`
-- Adicionar `webhook_url` no payload enviado para a InfinitePay, apontando para a Edge Function:
-  ```
-  https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/infinitepay-webhook
-  ```
-
-### 3. Registrar função em `supabase/config.toml`
-```toml
-[functions.infinitepay-webhook]
-verify_jwt = false
+```sql
+ALTER TABLE public.product_images DROP CONSTRAINT IF EXISTS position_range;
 ```
 
-## Sobre a URL `https://lojakepma.lovable.app/webhook`
+**2. Manter a renormalização automática**
+A lógica atual em `productImageManagerUtils.ts` (que já normaliza posições 1..N após cada operação) continuará funcionando e fica ainda mais robusta sem a barreira de 6.
 
-Essa URL é uma rota do seu site React (frontend), que **não consegue receber POST nem processar requisições de servidor**. O webhook precisa apontar para uma Edge Function (backend). Vou usar:
+**3. Opcional — Aviso visual no admin**
+Adicionar uma pequena mensagem informativa no `AdminImageManager.tsx` recomendando até ~10 imagens por produto (apenas como boa prática de UX/performance, sem bloquear).
 
-```
-https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/infinitepay-webhook
-```
+### Resultado esperado
+- Possível subir, deletar, reordenar e substituir imagens livremente.
+- Produtos podem ter qualquer quantidade de imagens.
+- Sem mais erro `position_range`.
+- A imagem principal continua sincronizada automaticamente com a posição 1.
 
-Essa será a URL configurada automaticamente no payload de criação do pagamento — você não precisa colar nada no painel da InfinitePay, pois enviamos via API a cada checkout.
+### Arquivos afetados
+- **Migration nova** (remoção da constraint `position_range`)
+- `src/components/AdminImageManager.tsx` (apenas se aprovar o aviso visual opcional)
 
-## Arquivos
-- **novo:** `supabase/functions/infinitepay-webhook/index.ts`
-- **editar:** `supabase/functions/create-payment/index.ts` (adicionar `webhook_url`)
-- **editar:** `supabase/config.toml` (registrar função sem JWT)
-
-## Próximos passos após implementação
-1. Faça um pagamento de teste com cartão
-2. Verificamos os logs da função `infinitepay-webhook` para confirmar recebimento e mapeamento
-3. Confirmamos que `payments.status` mudou para `paid` e `orders.status` também
