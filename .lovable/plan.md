@@ -1,34 +1,65 @@
+## Gerar feed XML de catálogo para Meta / Instagram Shopping
 
+### Objetivo
+Criar uma URL pública e estável que retorna o catálogo da loja em **XML no formato Meta Product Feed (RSS 2.0 com namespace `g:`)**. Essa URL é o que você vai colar no Meta Commerce Manager para alimentar o catálogo do Instagram Shopping da @kepmabrasil.
 
-## Corrigir erro de upload de imagens (limite de 6)
+### O que será criado
 
-### Problema
-Existe uma restrição no banco (`position_range`) que limita o número de imagens por produto a no máximo **6**. Por isso, ao tentar subir uma 7ª imagem no produto "Violão Kepma F1 OM BS Acústico" (que já tem 6), o sistema retorna o erro `violates check constraint "position_range"`.
+**1. Edge function pública: `meta-catalog-feed`**
+- URL final: `https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/meta-catalog-feed`
+- Sem autenticação (público — `verify_jwt = false`), porque a Meta precisa conseguir ler o feed sem login.
+- Lê todos os produtos com `active = true` direto do banco.
+- Retorna `Content-Type: application/xml`.
+- Cache de 1 hora (`Cache-Control: public, max-age=3600`) para não sobrecarregar.
 
-Além disso, é o motivo de o sistema não conseguir adicionar/substituir imagens nesses produtos cheios.
+**2. Formato do XML (padrão exigido pela Meta)**
 
-### Solução
-
-**1. Remover a restrição rígida do banco**
-Migration SQL para remover a constraint `position_range` da tabela `product_images`. Sem ela, será possível ter quantas imagens forem necessárias por produto. A unicidade `(product_id, position)` continua garantindo que não haja posições duplicadas.
-
-```sql
-ALTER TABLE public.product_images DROP CONSTRAINT IF EXISTS position_range;
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+  <channel>
+    <title>Kepma Brasil</title>
+    <link>https://loja.kepmabrasil.com.br</link>
+    <description>Catálogo oficial Kepma Brasil</description>
+    <item>
+      <g:id>{product.id}</g:id>
+      <g:title>{product.name}</g:title>
+      <g:description>{product.description}</g:description>
+      <g:link>https://loja.kepmabrasil.com.br/produto/{product.id}</g:link>
+      <g:image_link>{product.image_url}</g:image_link>
+      <g:availability>in stock | out of stock</g:availability>
+      <g:price>3600.00 BRL</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Kepma</g:brand>
+      <g:product_type>{product.category}</g:product_type>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <!-- ... um <item> por produto ... -->
+  </channel>
+</rss>
 ```
 
-**2. Manter a renormalização automática**
-A lógica atual em `productImageManagerUtils.ts` (que já normaliza posições 1..N após cada operação) continuará funcionando e fica ainda mais robusta sem a barreira de 6.
+**3. Regras de mapeamento dos campos**
+- `availability`: `in stock` se `status = 'in_stock'` e `stock_quantity > 0`, senão `out of stock`.
+- `price`: sempre `"{valor} BRL"` (ex: `"3600.00 BRL"`).
+- `image_link`: usa `image_url` principal. Imagens adicionais de `product_images` viram `<g:additional_image_link>` (até 10).
+- Caracteres especiais em título/descrição são escapados (`&`, `<`, `>`, `"`, `'`).
+- Produtos com `active = false` são ignorados.
+- `identifier_exists = no` (não temos GTIN/MPN cadastrados).
 
-**3. Opcional — Aviso visual no admin**
-Adicionar uma pequena mensagem informativa no `AdminImageManager.tsx` recomendando até ~10 imagens por produto (apenas como boa prática de UX/performance, sem bloquear).
+### O que VOCÊ precisa fazer depois (eu não consigo)
+1. No **Meta Business Suite** → desconectar o catálogo da outra loja que está hoje vinculado ao Instagram @kepmabrasil.
+2. Em **Commerce Manager → Catálogos → Criar catálogo → Fonte de dados → Feed de dados agendado**.
+3. Colar a URL: `https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/meta-catalog-feed`.
+4. Configurar atualização automática (diária recomendada).
+5. Conectar o catálogo ao Instagram da @kepmabrasil.
+6. Aguardar aprovação do Instagram Shopping pela Meta.
 
-### Resultado esperado
-- Possível subir, deletar, reordenar e substituir imagens livremente.
-- Produtos podem ter qualquer quantidade de imagens.
-- Sem mais erro `position_range`.
-- A imagem principal continua sincronizada automaticamente com a posição 1.
+### Detalhes técnicos
+- **Arquivos novos**: `supabase/functions/meta-catalog-feed/index.ts` e bloco `[functions.meta-catalog-feed] verify_jwt = false` em `supabase/config.toml`.
+- **Sem mudanças no banco**, sem novas dependências, sem alterações no frontend.
+- **Sem segredos novos** — usa apenas `SUPABASE_URL` e `SUPABASE_ANON_KEY` que já existem.
+- **Custo**: praticamente zero (uma chamada por hora no máximo, vinda dos crawlers da Meta).
 
-### Arquivos afetados
-- **Migration nova** (remoção da constraint `position_range`)
-- `src/components/AdminImageManager.tsx` (apenas se aprovar o aviso visual opcional)
-
+### Resultado
+Após a aprovação, você vai ter o feed gerando automaticamente. Toda vez que cadastrar/editar um produto no admin, ele aparece no XML na próxima leitura da Meta — sem trabalho manual.
