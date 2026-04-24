@@ -2,3 +2,6 @@ project_id = "futrahzhqdvqwvuxlbqf"
 
 [functions.infinitepay-webhook]
 verify_jwt = false
+
+[functions.meta-catalog-feed]
+verify_jwt = false
