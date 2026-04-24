@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/types";
@@ -8,11 +8,22 @@ import HeroBanner from "@/components/HeroBanner";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const CATEGORIES = ["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "F Mini"];
+const PAGE_SIZE = 12;
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
@@ -28,9 +39,38 @@ export default function Index() {
     },
   });
 
-  const filtered = selectedCategory
-    ? products?.filter((p) => p.category === selectedCategory)
-    : products;
+  const filtered = useMemo(
+    () =>
+      selectedCategory
+        ? products?.filter((p) => p.category === selectedCategory)
+        : products,
+    [products, selectedCategory],
+  );
+
+  const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered?.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const getPageNumbers = (): (number | "ellipsis")[] => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | "ellipsis")[] = [1];
+    if (safePage > 3) pages.push("ellipsis");
+    const start = Math.max(2, safePage - 1);
+    const end = Math.min(totalPages - 1, safePage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (safePage < totalPages - 2) pages.push("ellipsis");
+    pages.push(totalPages);
+    return pages;
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -82,9 +122,61 @@ export default function Index() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered?.map((p) => <ProductCard key={p.id} product={p} />)}
-          </div>
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {paginated?.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+
+            {totalPages > 1 && (
+              <Pagination className="mt-10">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#produtos"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (safePage > 1) goToPage(safePage - 1);
+                      }}
+                      className={safePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {getPageNumbers().map((page, idx) =>
+                    page === "ellipsis" ? (
+                      <PaginationItem key={`ellipsis-${idx}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#produtos"
+                          isActive={page === safePage}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            goToPage(page);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#produtos"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (safePage < totalPages) goToPage(safePage + 1);
+                      }}
+                      className={safePage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
         )}
       </main>
 
