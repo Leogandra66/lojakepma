@@ -75,7 +75,7 @@ export default function ProductDetail() {
               <h1 className="font-heading text-3xl font-bold">{product.name}</h1>
 
               {product.status === "in_stock" && (
-                <span className="badge-instock w-fit"><Package className="inline h-3 w-3 mr-1" />Em estoque ({product.stock_quantity} unidades)</span>
+                <span className="badge-instock w-fit"><Package className="inline h-3 w-3 mr-1" />Em estoque</span>
               )}
               {product.status === "preorder" && (
                 <span className="badge-preorder w-fit"><Clock className="inline h-3 w-3 mr-1" />Venda por encomenda</span>
