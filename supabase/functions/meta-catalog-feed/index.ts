@@ -82,7 +82,9 @@ Deno.serve(async (req) => {
         const mainImage = absoluteImage(p.image_url ?? imagesByProduct[p.id]?.[0] ?? "");
         if (!mainImage) return ""; // Meta exige image_link
 
-        const inStock = p.status === "in_stock" && (p.stock_quantity ?? 0) > 0;
+        const hasQty = (p.stock_quantity ?? 0) > 0;
+        const inStock =
+          (p.status === "in_stock" || p.status === "preorder") && hasQty;
         const availability = inStock ? "in stock" : "out of stock";
 
         // Imagens adicionais: tira a primeira (já é a principal) e limita a 10
