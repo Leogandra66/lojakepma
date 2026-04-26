@@ -357,13 +357,17 @@ export default function AdminProducts() {
                 </Select>
               </div>
               <div>
-                <Label>Quantidade em Estoque</Label>
+                <Label>
+                  {form.status === "preorder"
+                    ? "Quantidade para Encomenda"
+                    : "Quantidade em Estoque"}
+                </Label>
                 <Input
                   type="number"
                   min="0"
                   value={form.stock_quantity}
                   onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
-                  disabled={form.status === "unavailable" || form.status === "preorder"}
+                  disabled={form.status === "unavailable"}
                 />
               </div>
             </div>
