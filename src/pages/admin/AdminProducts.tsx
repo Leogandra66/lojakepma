@@ -183,7 +183,7 @@ export default function AdminProducts() {
 
   function handleStatusChange(v: ProductForm["status"]) {
     const updates: Partial<ProductForm> = { status: v };
-    if (v === "unavailable" || v === "preorder") {
+    if (v === "unavailable") {
       updates.stock_quantity = "0";
     }
     setForm({ ...form, ...updates });
@@ -357,13 +357,17 @@ export default function AdminProducts() {
                 </Select>
               </div>
               <div>
-                <Label>Quantidade em Estoque</Label>
+                <Label>
+                  {form.status === "preorder"
+                    ? "Quantidade para Encomenda"
+                    : "Quantidade em Estoque"}
+                </Label>
                 <Input
                   type="number"
                   min="0"
                   value={form.stock_quantity}
                   onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
-                  disabled={form.status === "unavailable" || form.status === "preorder"}
+                  disabled={form.status === "unavailable"}
                 />
               </div>
             </div>

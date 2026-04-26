@@ -28,8 +28,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
-        if (product.status === "in_stock" && existing.quantity >= product.stock_quantity) {
-          toast.error("Quantidade máxima em estoque atingida");
+        if (
+          (product.status === "in_stock" || product.status === "preorder") &&
+          existing.quantity >= product.stock_quantity
+        ) {
+          const msg =
+            product.status === "preorder"
+              ? "Quantidade máxima para encomenda atingida"
+              : "Quantidade máxima em estoque atingida";
+          toast.error(msg);
           return prev;
         }
         toast.success("Quantidade atualizada no carrinho");
