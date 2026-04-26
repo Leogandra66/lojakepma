@@ -183,7 +183,7 @@ export default function AdminProducts() {
 
   function handleStatusChange(v: ProductForm["status"]) {
     const updates: Partial<ProductForm> = { status: v };
-    if (v === "unavailable" || v === "preorder") {
+    if (v === "unavailable") {
       updates.stock_quantity = "0";
     }
     setForm({ ...form, ...updates });
