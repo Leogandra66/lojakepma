@@ -39,8 +39,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           toast.error(msg);
           return prev;
         }
-          return prev;
-        }
         toast.success("Quantidade atualizada no carrinho");
         return prev.map((i) =>
           i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
