@@ -22,6 +22,7 @@ import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminPayments from "./pages/admin/AdminPayments";
+import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
@@ -71,6 +72,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <WhatsAppFloatingButton />
           </BrowserRouter>
         </TooltipProvider>
       </CartProvider>
