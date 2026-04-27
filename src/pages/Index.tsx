@@ -90,6 +90,29 @@ export default function Index() {
       <HeroBanner />
 
       <main id="produtos" className="container flex-1 py-12">
+        {/* Search */}
+        <div className="mb-6 relative max-w-xl">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Pesquisar produtos por nome, categoria..."
+            className="pl-9 pr-9"
+            aria-label="Pesquisar produtos"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              aria-label="Limpar pesquisa"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
         {/* Category Filter */}
         <div className="mb-8 flex flex-wrap gap-2">
           <Button
