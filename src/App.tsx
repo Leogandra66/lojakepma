@@ -12,6 +12,8 @@ import ComoFunciona from "./pages/ComoFunciona";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Checkout from "./pages/Checkout";
 import PaymentReturn from "./pages/PaymentReturn";
 import MyAccount from "./pages/MyAccount";
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/produto/:id" element={<ProductDetail />} />
               <Route path="/carrinho" element={<Cart />} />
               <Route path="/entrar" element={<Auth />} />
+              <Route path="/recuperar-senha" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
