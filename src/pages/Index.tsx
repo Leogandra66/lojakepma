@@ -8,6 +8,8 @@ import HeroBanner from "@/components/HeroBanner";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -23,6 +25,7 @@ const PAGE_SIZE = 12;
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: products, isLoading } = useQuery({
@@ -39,13 +42,22 @@ export default function Index() {
     },
   });
 
-  const filtered = useMemo(
-    () =>
-      selectedCategory
-        ? products?.filter((p) => p.category === selectedCategory)
-        : products,
-    [products, selectedCategory],
-  );
+  const filtered = useMemo(() => {
+    let list = products ?? [];
+    if (selectedCategory) {
+      list = list.filter((p) => p.category === selectedCategory);
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.category?.toLowerCase().includes(q) ?? false) ||
+          (p.description?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    return list;
+  }, [products, selectedCategory, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -53,7 +65,7 @@ export default function Index() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory]);
+  }, [selectedCategory, searchQuery]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
