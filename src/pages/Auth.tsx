@@ -69,6 +69,16 @@ export default function Auth() {
             <Button type="submit" className="btn-gold w-full rounded-full" disabled={loading}>
               {loading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
             </Button>
+            {isLogin && (
+              <div className="text-right">
+                <Link
+                  to="/recuperar-senha"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
+            )}
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
