@@ -13,6 +13,9 @@ export default function Footer() {
           <Link to="/historia" className="text-muted-foreground hover:text-foreground transition-colors">
             História da Kepma
           </Link>
+          <Link to="/como-funciona" className="text-muted-foreground hover:text-foreground transition-colors">
+            Como funciona
+          </Link>
         </nav>
         <p className="text-sm text-muted-foreground">
           © {new Date().getFullYear()} Kepma. Todos os direitos reservados.
