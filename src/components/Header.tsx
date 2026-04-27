@@ -22,6 +22,11 @@ export default function Header() {
               História
             </Button>
           </Link>
+          <Link to="/como-funciona" className="hidden sm:block">
+            <Button variant="ghost" size="sm" className="font-body text-sm">
+              Como funciona
+            </Button>
+          </Link>
           <Link to="/carrinho" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
