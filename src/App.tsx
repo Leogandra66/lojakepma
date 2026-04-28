@@ -9,6 +9,7 @@ import { CartProvider } from "@/hooks/useCart";
 import Index from "./pages/Index";
 import HistoriaKepma from "./pages/HistoriaKepma";
 import ComoFunciona from "./pages/ComoFunciona";
+import ConhecaFabrica from "./pages/ConhecaFabrica";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/historia" element={<HistoriaKepma />} />
               <Route path="/como-funciona" element={<ComoFunciona />} />
+              <Route path="/conheca-a-fabrica" element={<ConhecaFabrica />} />
               <Route path="/produto/:id" element={<ProductDetail />} />
               <Route path="/carrinho" element={<Cart />} />
               <Route path="/entrar" element={<Auth />} />
