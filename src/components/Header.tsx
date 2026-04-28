@@ -27,6 +27,11 @@ export default function Header() {
               Como funciona
             </Button>
           </Link>
+          <Link to="/conheca-a-fabrica" className="hidden md:block">
+            <Button variant="ghost" size="sm" className="font-body text-sm">
+              Conheça a fábrica
+            </Button>
+          </Link>
           <Link to="/carrinho" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
