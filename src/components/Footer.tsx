@@ -19,6 +19,14 @@ export default function Footer() {
           <Link to="/conheca-a-fabrica" className="text-muted-foreground hover:text-foreground transition-colors">
             Conheça a fábrica
           </Link>
+          <a
+            href="https://www.kepmausa.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Kepma USA
+          </a>
         </nav>
         <p className="text-sm text-muted-foreground">
           © {new Date().getFullYear()} Kepma. Todos os direitos reservados.
