@@ -163,6 +163,31 @@ export default function Checkout() {
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
+      // Notify owner about new order (fire-and-forget; never block checkout)
+      supabase.functions
+        .invoke("send-transactional-email", {
+          body: {
+            templateName: "new-order",
+            idempotencyKey: `new-order-${order.id}`,
+            templateData: {
+              orderId: order.id,
+              customerName: user.user_metadata?.full_name || user.email,
+              customerEmail: user.email,
+              total: totalPrice - discountAmount,
+              amountDueNow,
+              hasPreorderItems,
+              createdAt: new Date().toLocaleString("pt-BR"),
+              items: orderItems.map((it) => ({
+                name: it.product_name,
+                quantity: it.quantity,
+                unit_price: it.unit_price,
+                is_preorder: it.is_preorder,
+              })),
+            },
+          },
+        })
+        .catch((e) => console.error("Failed to send new-order email:", e));
+
       const paymentType = hasPreorderItems && regularTotal === 0 ? "preorder_deposit" : "full";
       const { error: paymentErr } = await supabase.from("payments").insert({
         order_id: order.id,

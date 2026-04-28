@@ -27,6 +27,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminPayments from "./pages/admin/AdminPayments";
 import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
+import Unsubscribe from "./pages/Unsubscribe";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route
                 path="/admin"
                 element={
