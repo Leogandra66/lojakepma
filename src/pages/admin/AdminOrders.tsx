@@ -40,6 +40,8 @@ const formatBRL = (v: number) =>
 
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -52,6 +54,25 @@ export default function AdminOrders() {
       return data;
     },
   });
+
+  const handleDelete = async (orderId: string) => {
+    setDeletingId(orderId);
+    try {
+      // Delete dependent rows first (no cascade configured)
+      const { error: itemsErr } = await supabase.from("order_items").delete().eq("order_id", orderId);
+      if (itemsErr) throw itemsErr;
+      const { error: payErr } = await supabase.from("payments").delete().eq("order_id", orderId);
+      if (payErr) throw payErr;
+      const { error: orderErr } = await supabase.from("orders").delete().eq("id", orderId);
+      if (orderErr) throw orderErr;
+      toast.success("Pedido excluído");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    } catch (e: any) {
+      toast.error("Erro ao excluir pedido: " + (e.message || ""));
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = orders?.filter((o) => {
     const q = search.trim().toLowerCase();
