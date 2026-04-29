@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, Search } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { Eye, Search, Trash2, Loader2 } from "lucide-react";
 import type { OrderStatus } from "@/lib/types";
 
 const statusVariant: Record<OrderStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -35,6 +40,8 @@ const formatBRL = (v: number) =>
 
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -47,6 +54,25 @@ export default function AdminOrders() {
       return data;
     },
   });
+
+  const handleDelete = async (orderId: string) => {
+    setDeletingId(orderId);
+    try {
+      // Delete dependent rows first (no cascade configured)
+      const { error: itemsErr } = await supabase.from("order_items").delete().eq("order_id", orderId);
+      if (itemsErr) throw itemsErr;
+      const { error: payErr } = await supabase.from("payments").delete().eq("order_id", orderId);
+      if (payErr) throw payErr;
+      const { error: orderErr } = await supabase.from("orders").delete().eq("id", orderId);
+      if (orderErr) throw orderErr;
+      toast.success("Pedido excluído");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    } catch (e: any) {
+      toast.error("Erro ao excluir pedido: " + (e.message || ""));
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = orders?.filter((o) => {
     const q = search.trim().toLowerCase();
@@ -97,11 +123,36 @@ export default function AdminOrders() {
                   <TableCell className="text-right font-medium">{formatBRL(Number(o.total))}</TableCell>
                   <TableCell>{o.has_preorder_items ? "Sim" : "Não"}</TableCell>
                   <TableCell>
-                    <Link to={`/admin/pedidos/${o.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link to={`/admin/pedidos/${o.id}`}>
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" disabled={deletingId === o.id}>
+                            {deletingId === o.id
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : <Trash2 className="h-4 w-4 text-destructive" />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação é permanente e removerá o pedido {o.id.slice(0, 8)}, seus itens e pagamentos. Não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(o.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
