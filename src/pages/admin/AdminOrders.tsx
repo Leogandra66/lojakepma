@@ -123,11 +123,36 @@ export default function AdminOrders() {
                   <TableCell className="text-right font-medium">{formatBRL(Number(o.total))}</TableCell>
                   <TableCell>{o.has_preorder_items ? "Sim" : "Não"}</TableCell>
                   <TableCell>
-                    <Link to={`/admin/pedidos/${o.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link to={`/admin/pedidos/${o.id}`}>
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" disabled={deletingId === o.id}>
+                            {deletingId === o.id
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : <Trash2 className="h-4 w-4 text-destructive" />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação é permanente e removerá o pedido {o.id.slice(0, 8)}, seus itens e pagamentos. Não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(o.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
