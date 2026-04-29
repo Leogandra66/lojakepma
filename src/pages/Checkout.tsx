@@ -30,14 +30,21 @@ export default function Checkout() {
   const depositAmount = preorderTotal * 0.4;
   const subtotal = regularTotal + depositAmount;
 
-  // Calculate discount — only on eligible items if coupon is product-specific
+  // Calculate discount — base is what the customer pays NOW
+  // (preorder items count only the 40% deposit, not the full price)
+  const itemPayableNow = (i: typeof items[number]) => {
+    const isPreorder = i.product.status === "preorder";
+    const unit = isPreorder ? i.product.price * 0.4 : i.product.price;
+    return unit * i.quantity;
+  };
+
   let discountAmount = 0;
   if (appliedCoupon) {
-    let discountBase = totalPrice;
+    let discountBase = items.reduce((sum, i) => sum + itemPayableNow(i), 0);
     if (appliedCoupon.eligible_product_ids) {
       discountBase = items
         .filter((i) => appliedCoupon.eligible_product_ids!.includes(i.product.id))
-        .reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+        .reduce((sum, i) => sum + itemPayableNow(i), 0);
     }
 
     if (appliedCoupon.discount_type === "percentage") {
