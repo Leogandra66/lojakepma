@@ -200,18 +200,34 @@ export default function Checkout() {
       const infinityItems = items.map((item) => {
         const isPreorder = item.product.status === "preorder";
         const unitPrice = isPreorder ? item.product.price * 0.4 : item.product.price;
+        const priceCents = Math.round(unitPrice * 100);
         return {
           quantity: item.quantity,
-          price: Math.round(unitPrice * 100),
+          price: priceCents,
           description: item.product.name,
         };
       });
 
+      // Validate: InfinitePay requires every item price > 0
+      const invalid = infinityItems.find((i) => !i.price || i.price <= 0);
+      if (invalid) {
+        console.error("Item inválido para pagamento:", invalid);
+        throw new Error(`Produto "${invalid.description}" está com preço inválido. Remova-o do carrinho ou contate o suporte.`);
+      }
+
+      // Apply discount by reducing item prices proportionally (InfinitePay rejects negative prices)
       if (discountAmount > 0) {
-        infinityItems.push({
-          quantity: 1,
-          price: -Math.round(discountAmount * 100),
-          description: `Desconto (${appliedCoupon!.code})`,
+        const totalCents = infinityItems.reduce((s, i) => s + i.price * i.quantity, 0);
+        const discountCents = Math.round(discountAmount * 100);
+        let remaining = discountCents;
+        infinityItems.forEach((it, idx) => {
+          const isLast = idx === infinityItems.length - 1;
+          const share = isLast
+            ? remaining
+            : Math.floor((it.price * it.quantity * discountCents) / totalCents);
+          const perUnit = Math.floor(share / it.quantity);
+          it.price = Math.max(1, it.price - perUnit);
+          remaining -= perUnit * it.quantity;
         });
       }
 
