@@ -28,15 +28,18 @@ import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminPayments from "./pages/admin/AdminPayments";
 import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
 import Unsubscribe from "./pages/Unsubscribe";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import { usePageTracking } from "./hooks/usePageTracking";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
   const { pathname } = useLocation();
-  
+  usePageTracking();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  
+
   return null;
 }
 
@@ -78,6 +81,7 @@ const App = () => (
                 <Route path="pedidos" element={<AdminOrders />} />
                 <Route path="pedidos/:id" element={<AdminOrderDetail />} />
                 <Route path="pagamentos" element={<AdminPayments />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
                 <Route index element={<AdminProducts />} />
               </Route>
               <Route path="*" element={<NotFound />} />

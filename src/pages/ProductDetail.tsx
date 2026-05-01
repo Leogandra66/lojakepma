@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,7 @@ import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Package, Clock, CalendarDays } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { track } from "@/lib/analytics";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +41,12 @@ export default function ProductDetail() {
   });
 
   const isAvailable = product && product.status !== "unavailable";
+
+  useEffect(() => {
+    if (product?.id) {
+      track("product_view", { product_id: product.id, metadata: { name: product.name } });
+    }
+  }, [product?.id, product?.name]);
 
   return (
     <div className="flex min-h-screen flex-col">
