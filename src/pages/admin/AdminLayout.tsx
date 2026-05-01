@@ -1,9 +1,10 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Package, ArrowLeft, Ticket, ShoppingBag, CreditCard } from "lucide-react";
+import { Package, ArrowLeft, Ticket, ShoppingBag, CreditCard, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
+  { label: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { label: "Produtos", path: "/admin/produtos", icon: Package },
   { label: "Pedidos", path: "/admin/pedidos", icon: ShoppingBag },
   { label: "Pagamentos", path: "/admin/pagamentos", icon: CreditCard },
