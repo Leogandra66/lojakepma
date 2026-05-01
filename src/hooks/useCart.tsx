@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import type { CartItem, Product } from "@/lib/types";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface CartContextType {
   items: CartItem[];
@@ -25,6 +26,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       toast.error("Produto indisponível");
       return;
     }
+    track("add_to_cart", { product_id: product.id, metadata: { name: product.name, price: product.price } });
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
