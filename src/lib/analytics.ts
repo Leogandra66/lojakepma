@@ -36,7 +36,7 @@ export async function track(event: EventType, opts: TrackOptions = {}) {
     const { data: userData } = await supabase.auth.getUser();
     const user_id = userData?.user?.id ?? null;
 
-    await supabase.from("page_views").insert({
+    await supabase.from("page_views").insert([{
       event_type: event,
       path,
       referrer: document.referrer || null,
@@ -44,8 +44,8 @@ export async function track(event: EventType, opts: TrackOptions = {}) {
       session_id: getSessionId(),
       user_id,
       product_id: opts.product_id ?? null,
-      metadata: opts.metadata ?? null,
-    });
+      metadata: (opts.metadata ?? null) as never,
+    }]);
   } catch {
     // never break the UI for analytics
   }
