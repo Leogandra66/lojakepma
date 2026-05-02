@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HeroBanner from "@/components/HeroBanner";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -85,134 +85,174 @@ export default function Index() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-secondary/30">
       <Header />
-      <HeroBanner />
 
-      <main id="produtos" className="container flex-1 py-12">
-        {/* Search */}
-        <div className="mb-6 relative max-w-xl">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar produtos por nome, categoria..."
-            className="pl-9 pr-9"
-            aria-label="Pesquisar produtos"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-              aria-label="Limpar pesquisa"
-            >
-              <X className="h-4 w-4" />
-            </button>
+      <main id="produtos" className="flex-1">
+        {/* Page header — Apple "Comprar iPhone" style */}
+        <section className="container pt-16 pb-10 sm:pt-24 sm:pb-14">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground">
+              Comprar Kepma.
+            </h1>
+            <div className="flex flex-col gap-1 text-sm sm:text-right">
+              <a
+                href="https://wa.me/5511999999999"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Falar com um especialista ↗
+              </a>
+              <Link to="/conheca-a-fabrica" className="text-primary hover:underline">
+                Conheça a fábrica ↗
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Sub-nav: filter tabs (text style, like Apple's "Todos os modelos / Guias / ...") */}
+        <section className="border-y border-border bg-background/60 backdrop-blur-sm sticky top-16 z-30">
+          <div className="container">
+            <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-none">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  selectedCategory === null
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Todos os modelos
+              </button>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    selectedCategory === cat
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="container py-10 sm:py-14">
+          {/* Search */}
+          <div className="mb-8 relative max-w-md">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar modelos..."
+              className="pl-10 pr-10 h-11 rounded-full border-border bg-background"
+              aria-label="Pesquisar produtos"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar pesquisa"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Section title */}
+          <div className="mb-6 flex items-baseline gap-3">
+            <h2 className="font-heading text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              {selectedCategory ? `Série ${selectedCategory}.` : "Todos os modelos."}
+            </h2>
+            <span className="text-2xl sm:text-3xl font-semibold tracking-tight text-muted-foreground">
+              Escolha o seu.
+            </span>
+          </div>
+
+          {isLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-3xl bg-card p-8">
+                  <Skeleton className="h-5 w-1/3 mb-4" />
+                  <Skeleton className="aspect-square w-full mb-4" />
+                  <Skeleton className="h-5 w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : filtered?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="font-heading text-2xl text-muted-foreground">
+                {selectedCategory ? `Nenhum produto na categoria "${selectedCategory}"` : "Nenhum produto cadastrado ainda"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {selectedCategory ? "Tente outra categoria." : "Os produtos aparecerão aqui quando forem adicionados."}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {paginated?.map((p) => <ProductCard key={p.id} product={p} />)}
+              </div>
+
+              {totalPages > 1 && (
+                <Pagination className="mt-12">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#produtos"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (safePage > 1) goToPage(safePage - 1);
+                        }}
+                        className={safePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {getPageNumbers().map((page, idx) =>
+                      page === "ellipsis" ? (
+                        <PaginationItem key={`ellipsis-${idx}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#produtos"
+                            isActive={page === safePage}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              goToPage(page);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#produtos"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (safePage < totalPages) goToPage(safePage + 1);
+                        }}
+                        className={safePage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
           )}
         </div>
-
-        {/* Category Filter */}
-        <div className="mb-8 flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory(null)}
-          >
-            Todos
-          </Button>
-          {CATEGORIES.map((cat) => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
-
-        {isLoading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="card-product">
-                <Skeleton className="aspect-square w-full" />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-6 w-1/3" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filtered?.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="font-heading text-2xl text-muted-foreground">
-              {selectedCategory ? `Nenhum produto na categoria "${selectedCategory}"` : "Nenhum produto cadastrado ainda"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {selectedCategory ? "Tente outra categoria." : "Os produtos aparecerão aqui quando forem adicionados."}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {paginated?.map((p) => <ProductCard key={p.id} product={p} />)}
-            </div>
-
-            {totalPages > 1 && (
-              <Pagination className="mt-10">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#produtos"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (safePage > 1) goToPage(safePage - 1);
-                      }}
-                      className={safePage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-
-                  {getPageNumbers().map((page, idx) =>
-                    page === "ellipsis" ? (
-                      <PaginationItem key={`ellipsis-${idx}`}>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#produtos"
-                          isActive={page === safePage}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            goToPage(page);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ),
-                  )}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#produtos"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (safePage < totalPages) goToPage(safePage + 1);
-                      }}
-                      className={safePage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-          </>
-        )}
       </main>
 
       <Footer />
