@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HeroBanner from "@/components/HeroBanner";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
