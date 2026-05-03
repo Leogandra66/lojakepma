@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -45,8 +45,8 @@
     --sidebar-border: 30 10% 22%;
     --sidebar-ring: 36 60% 48%;
 
-    --font-heading: 'Playfair Display', serif;
-    --font-body: 'Source Sans 3', sans-serif;
+    --font-heading: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
 
     --gold-gradient: linear-gradient(135deg, hsl(36 60% 48%), hsl(42 70% 58%));
     --dark-gradient: linear-gradient(135deg, hsl(30 10% 12%), hsl(30 10% 20%));
