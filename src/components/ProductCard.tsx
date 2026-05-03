@@ -29,18 +29,19 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      {/* Title */}
+      {/* Title - altura fixa para alinhar todas as imagens */}
       <Link
         to={`/produto/${product.id}`}
-        className="font-heading text-2xl sm:text-3xl font-semibold leading-tight tracking-tight text-foreground hover:text-primary transition-colors"
+        className="font-heading text-xl sm:text-2xl font-semibold leading-tight tracking-tight text-foreground hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem] sm:min-h-[4rem]"
+        title={product.name}
       >
         {product.name}
       </Link>
 
-      {/* Image */}
+      {/* Image - aspect-square com padding interno para evitar corte */}
       <Link
         to={`/produto/${product.id}`}
-        className="mt-6 mb-6 block aspect-square overflow-hidden"
+        className="mt-6 mb-6 block aspect-square overflow-hidden bg-secondary/30 rounded-2xl p-4 sm:p-6"
       >
         {product.image_url ? (
           <img
