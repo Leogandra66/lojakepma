@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-secondary/50 py-8">
       <div className="container flex flex-col items-center gap-4 text-center">
         <img src={kepmaLogo} alt="Kepma" className="h-8 w-auto opacity-60" />
-        <nav className="flex gap-6 text-sm">
+        <nav className="flex flex-col items-center gap-4 text-sm sm:flex-row sm:gap-6">
           <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
             Produtos
           </Link>
