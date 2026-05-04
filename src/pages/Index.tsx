@@ -97,7 +97,7 @@ export default function Index() {
             </h1>
             <div className="flex flex-col gap-1 text-sm sm:text-right">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/553125280368"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
