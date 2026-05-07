@@ -42,7 +42,38 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
     if (!TELEGRAM_API_KEY) throw new Error('TELEGRAM_API_KEY is not configured');
 
-    const p = (await req.json()) as Payload;
+    const body = await req.json();
+
+    // Test mode: just send a ping message to verify chat is reachable
+    if (body?.test === true) {
+      const tgRes = await fetch(`${GATEWAY_URL}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'X-Connection-Api-Key': TELEGRAM_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: `✅ <b>Teste de notificação</b>\nO chat <code>${escapeHtml(CHAT_ID)}</code> está habilitado.\n${new Date().toLocaleString('pt-BR')}`,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }),
+      });
+      const data = await tgRes.json();
+      if (!tgRes.ok) {
+        console.error('Telegram test error:', tgRes.status, JSON.stringify(data));
+        return new Response(
+          JSON.stringify({ ok: false, status: tgRes.status, telegram: data, chat_id: CHAT_ID }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      return new Response(JSON.stringify({ ok: true, chat_id: CHAT_ID, telegram: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const p = body as Payload;
     if (!p?.orderId || !Array.isArray(p?.items)) {
       return new Response(JSON.stringify({ error: 'orderId and items are required' }), {
         status: 400,
