@@ -4,7 +4,7 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/telegram';
-const CHAT_ID = '@leogandra66';
+const CHAT_ID = '1226175446';
 
 interface OrderItem {
   name: string;
