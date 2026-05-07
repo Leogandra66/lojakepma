@@ -12,7 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Eye, Search, Trash2, Loader2 } from "lucide-react";
+import { Eye, Search, Trash2, Loader2, Send } from "lucide-react";
 import type { OrderStatus } from "@/lib/types";
 
 const statusVariant: Record<OrderStatus, "default" | "secondary" | "destructive" | "outline"> = {
