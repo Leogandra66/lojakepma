@@ -41,7 +41,28 @@ const formatBRL = (v: number) =>
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [testingTelegram, setTestingTelegram] = useState(false);
   const queryClient = useQueryClient();
+
+  const handleTestTelegram = async () => {
+    setTestingTelegram(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-telegram-order", {
+        body: { test: true },
+      });
+      if (error) throw error;
+      if (data?.ok) {
+        toast.success(`Telegram OK — mensagem enviada para ${data.chat_id}`);
+      } else {
+        const desc = data?.telegram?.description || "Falha desconhecida";
+        toast.error(`Telegram falhou: ${desc}`);
+      }
+    } catch (e: any) {
+      toast.error("Erro ao testar Telegram: " + (e.message || ""));
+    } finally {
+      setTestingTelegram(false);
+    }
+  };
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-orders"],
