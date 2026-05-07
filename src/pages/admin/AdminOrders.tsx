@@ -103,8 +103,21 @@ export default function AdminOrders() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Pedidos</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleTestTelegram}
+          disabled={testingTelegram}
+        >
+          {testingTelegram ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+          Testar Telegram
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative max-w-md">
