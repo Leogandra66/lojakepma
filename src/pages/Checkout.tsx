@@ -195,6 +195,26 @@ export default function Checkout() {
         })
         .catch((e) => console.error("Failed to send new-order email:", e));
 
+      // Notify Telegram about new order (fire-and-forget)
+      supabase.functions
+        .invoke("notify-telegram-order", {
+          body: {
+            orderId: order.id,
+            customerName: user.user_metadata?.full_name || user.email,
+            customerEmail: user.email,
+            total: totalPrice - discountAmount,
+            amountDueNow,
+            hasPreorderItems,
+            items: orderItems.map((it) => ({
+              name: it.product_name,
+              quantity: it.quantity,
+              unit_price: it.unit_price,
+              is_preorder: it.is_preorder,
+            })),
+          },
+        })
+        .catch((e) => console.error("Failed to send Telegram notification:", e));
+
       const paymentType = hasPreorderItems && regularTotal === 0 ? "preorder_deposit" : "full";
       const { error: paymentErr } = await supabase.from("payments").insert({
         order_id: order.id,
