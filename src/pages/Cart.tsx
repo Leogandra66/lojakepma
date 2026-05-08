@@ -95,8 +95,8 @@ export default function Cart() {
                   </Button>
                 </Link>
               ) : (
-                <div className="space-y-2">
-                  <Link to="/entrar?redirect=/checkout">
+                <div className="space-y-2 pt-2">
+                  <Link to="/entrar?redirect=/checkout" className="block">
                     <Button size="lg" className="btn-gold w-full rounded-full">
                       Entrar para Comprar
                     </Button>
