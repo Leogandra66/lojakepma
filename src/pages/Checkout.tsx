@@ -195,9 +195,9 @@ export default function Checkout() {
         })
         .catch((e) => console.error("Failed to send new-order email:", e));
 
-      // Notify Telegram about new order (fire-and-forget)
-      supabase.functions
-        .invoke("notify-telegram-order", {
+      // Notify Telegram about new order — await so the request isn't aborted by the redirect to the payment gateway
+      try {
+        const { error: tgErr } = await supabase.functions.invoke("notify-telegram-order", {
           body: {
             orderId: order.id,
             customerName: user.user_metadata?.full_name || user.email,
@@ -212,8 +212,11 @@ export default function Checkout() {
               is_preorder: it.is_preorder,
             })),
           },
-        })
-        .catch((e) => console.error("Failed to send Telegram notification:", e));
+        });
+        if (tgErr) console.error("Telegram notification error:", tgErr);
+      } catch (e) {
+        console.error("Failed to send Telegram notification:", e);
+      }
 
       const paymentType = hasPreorderItems && regularTotal === 0 ? "preorder_deposit" : "full";
       const { error: paymentErr } = await supabase.from("payments").insert({
