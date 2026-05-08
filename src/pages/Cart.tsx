@@ -6,6 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock } from "lucide-react";
 
+const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user } = useAuth();
