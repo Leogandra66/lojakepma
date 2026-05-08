@@ -6,6 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock } from "lucide-react";
 
+const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user } = useAuth();
@@ -61,7 +64,7 @@ export default function Cart() {
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                      <span className="font-heading font-bold">R$ {(product.price * quantity).toFixed(2).replace(".", ",")}</span>
+                      <span className="font-heading font-bold">R$ {formatBRL(product.price * quantity)}</span>
                     </div>
                   </div>
                 </div>
@@ -74,26 +77,26 @@ export default function Cart() {
               
               {hasPreorderItems && (
                 <div className="space-y-2 rounded-md bg-secondary/50 p-3 text-sm">
-                  <p className="font-semibold">Itens em estoque: <span className="text-foreground">R$ {regularTotal.toFixed(2).replace(".", ",")}</span></p>
-                  <p className="font-semibold">Encomendas (40% agora): <span className="text-foreground">R$ {depositAmount.toFixed(2).replace(".", ",")}</span></p>
-                  <p className="text-xs text-muted-foreground">Restante de encomendas (60%): R$ {(preorderTotal * 0.6).toFixed(2).replace(".", ",")}</p>
+                  <p className="font-semibold">Itens em estoque: <span className="text-foreground">R$ {formatBRL(regularTotal)}</span></p>
+                  <p className="font-semibold">Encomendas (40% agora): <span className="text-foreground">R$ {formatBRL(depositAmount)}</span></p>
+                  <p className="text-xs text-muted-foreground">Restante de encomendas (60%): R$ {formatBRL(preorderTotal * 0.6)}</p>
                 </div>
               )}
 
               <div className="flex justify-between text-lg font-heading font-bold border-t border-border pt-4">
                 <span>Pagar agora:</span>
-                <span>R$ {amountDueNow.toFixed(2).replace(".", ",")}</span>
+                <span>R$ {formatBRL(amountDueNow)}</span>
               </div>
 
               {user ? (
-                <Link to="/checkout">
+                <Link to="/checkout" className="block pt-2">
                   <Button size="lg" className="btn-gold w-full rounded-full gap-2">
                     Finalizar Compra <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               ) : (
-                <div className="space-y-2">
-                  <Link to="/entrar?redirect=/checkout">
+                <div className="space-y-2 pt-2">
+                  <Link to="/entrar?redirect=/checkout" className="block">
                     <Button size="lg" className="btn-gold w-full rounded-full">
                       Entrar para Comprar
                     </Button>
