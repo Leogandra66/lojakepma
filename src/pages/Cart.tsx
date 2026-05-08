@@ -64,7 +64,7 @@ export default function Cart() {
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                      <span className="font-heading font-bold">R$ {(product.price * quantity).toFixed(2).replace(".", ",")}</span>
+                      <span className="font-heading font-bold">R$ {formatBRL(product.price * quantity)}</span>
                     </div>
                   </div>
                 </div>
