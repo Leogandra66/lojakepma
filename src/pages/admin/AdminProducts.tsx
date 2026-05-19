@@ -334,7 +334,7 @@ export default function AdminProducts() {
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                   <SelectContent>
-{["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "F Mini", "Eletrônica"].map((cat) => (
+{["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "FC Mini", "Eletrônica"].map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
