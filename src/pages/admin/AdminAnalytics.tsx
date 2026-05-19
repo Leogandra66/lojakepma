@@ -43,26 +43,48 @@ export default function AdminAnalytics() {
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["admin-analytics-events", days],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("page_views")
-        .select("id, created_at, event_type, path, session_id, product_id")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(10000);
-      if (error) throw error;
-      return data ?? [];
+      // PostgREST caps a single response at 1000 rows; paginate to get all events.
+      const pageSize = 1000;
+      const all: any[] = [];
+      let from = 0;
+      // Safety cap to avoid runaway loops (max 100k rows).
+      for (let i = 0; i < 100; i++) {
+        const { data, error } = await supabase
+          .from("page_views")
+          .select("id, created_at, event_type, path, session_id, product_id")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return all;
     },
   });
 
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ["admin-analytics-orders", days],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, created_at, status, total")
-        .gte("created_at", since);
-      if (error) throw error;
-      return data ?? [];
+      const pageSize = 1000;
+      const all: any[] = [];
+      let from = 0;
+      for (let i = 0; i < 100; i++) {
+        const { data, error } = await supabase
+          .from("orders")
+          .select("id, created_at, status, total")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return all;
     },
   });
 
