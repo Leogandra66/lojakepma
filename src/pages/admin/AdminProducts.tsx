@@ -404,6 +404,20 @@ export default function AdminProducts() {
                 onChange={(e) => setForm({ ...form, video_url: e.target.value })}
               />
             </div>
+            <div>
+              <Label>Tag Eletrônica</Label>
+              <Select
+                value={form.electronics_tag || "__none__"}
+                onValueChange={(v) => setForm({ ...form, electronics_tag: v === "__none__" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nenhuma</SelectItem>
+                  {ELECTRONICS_TAG_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
             {/* Image Manager inline - only for existing products */}
             {editingProduct && (
