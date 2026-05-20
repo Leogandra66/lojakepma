@@ -21,10 +21,15 @@ export default function ProductCard({ product }: { product: Product }) {
       }`}
     >
       {/* Tag */}
-      <div className="min-h-5 mb-2">
+      <div className="min-h-5 mb-2 flex items-center gap-2 flex-wrap">
         {tag && (
           <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">
             {tag}
+          </span>
+        )}
+        {(product as any).electronics_tag && (
+          <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            {(product as any).electronics_tag}
           </span>
         )}
       </div>
