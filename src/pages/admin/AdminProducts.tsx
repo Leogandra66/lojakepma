@@ -131,6 +131,7 @@ export default function AdminProducts() {
         stock_quantity: 0,
         video_url: (product as any).video_url || null,
         preorder_estimated_delivery: null,
+        electronics_tag: (product as any).electronics_tag || null,
       };
       const { error } = await supabase.from("products").insert(payload);
       if (error) throw error;
