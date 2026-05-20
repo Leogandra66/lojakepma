@@ -27,6 +27,16 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   unavailable: "destructive",
 };
 
+const ELECTRONICS_TAG_OPTIONS = [
+  "Versão acústica",
+  "Eletrônica K1",
+  "Eletrônica K10 Pro",
+  "Eletrônica K11",
+  "Eletrônica Elfin",
+  "Eletrônica S1 Pro",
+  "Eletrônica L1",
+];
+
 interface ProductForm {
   name: string;
   description: string;
@@ -36,6 +46,7 @@ interface ProductForm {
   stock_quantity: string;
   preorder_estimated_delivery: string;
   video_url: string;
+  electronics_tag: string;
 }
 
 const emptyForm: ProductForm = {
@@ -47,6 +58,7 @@ const emptyForm: ProductForm = {
   stock_quantity: "0",
   preorder_estimated_delivery: "",
   video_url: "",
+  electronics_tag: "",
 };
 
 export default function AdminProducts() {
