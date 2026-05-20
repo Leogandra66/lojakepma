@@ -185,6 +185,7 @@ export default function AdminProducts() {
       stock_quantity: String(product.stock_quantity),
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
+      electronics_tag: (product as any).electronics_tag || "",
     });
     setDialogOpen(true);
   }
