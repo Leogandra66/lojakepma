@@ -95,6 +95,7 @@ export default function AdminProducts() {
         preorder_estimated_delivery: data.status === "preorder" && data.preorder_estimated_delivery
           ? data.preorder_estimated_delivery
           : null,
+        electronics_tag: data.electronics_tag || null,
       };
 
       if (editingProduct) {
