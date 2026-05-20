@@ -418,6 +418,9 @@ export default function AdminProducts() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+
 
             {/* Image Manager inline - only for existing products */}
             {editingProduct && (
