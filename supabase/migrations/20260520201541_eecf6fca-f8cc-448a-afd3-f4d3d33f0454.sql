@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN electronics_tag text;

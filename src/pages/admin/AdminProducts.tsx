@@ -27,6 +27,16 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   unavailable: "destructive",
 };
 
+const ELECTRONICS_TAG_OPTIONS = [
+  "Versão acústica",
+  "Eletrônica K1",
+  "Eletrônica K10 Pro",
+  "Eletrônica K11",
+  "Eletrônica Elfin",
+  "Eletrônica S1 Pro",
+  "Eletrônica L1",
+];
+
 interface ProductForm {
   name: string;
   description: string;
@@ -36,6 +46,7 @@ interface ProductForm {
   stock_quantity: string;
   preorder_estimated_delivery: string;
   video_url: string;
+  electronics_tag: string;
 }
 
 const emptyForm: ProductForm = {
@@ -47,6 +58,7 @@ const emptyForm: ProductForm = {
   stock_quantity: "0",
   preorder_estimated_delivery: "",
   video_url: "",
+  electronics_tag: "",
 };
 
 export default function AdminProducts() {
@@ -83,6 +95,7 @@ export default function AdminProducts() {
         preorder_estimated_delivery: data.status === "preorder" && data.preorder_estimated_delivery
           ? data.preorder_estimated_delivery
           : null,
+        electronics_tag: data.electronics_tag || null,
       };
 
       if (editingProduct) {
@@ -118,6 +131,7 @@ export default function AdminProducts() {
         stock_quantity: 0,
         video_url: (product as any).video_url || null,
         preorder_estimated_delivery: null,
+        electronics_tag: (product as any).electronics_tag || null,
       };
       const { error } = await supabase.from("products").insert(payload);
       if (error) throw error;
@@ -172,6 +186,7 @@ export default function AdminProducts() {
       stock_quantity: String(product.stock_quantity),
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
+      electronics_tag: (product as any).electronics_tag || "",
     });
     setDialogOpen(true);
   }
@@ -389,6 +404,23 @@ export default function AdminProducts() {
                 onChange={(e) => setForm({ ...form, video_url: e.target.value })}
               />
             </div>
+            <div>
+              <Label>Tag Eletrônica</Label>
+              <Select
+                value={form.electronics_tag || "__none__"}
+                onValueChange={(v) => setForm({ ...form, electronics_tag: v === "__none__" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nenhuma</SelectItem>
+                  {ELECTRONICS_TAG_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
 
             {/* Image Manager inline - only for existing products */}
             {editingProduct && (
