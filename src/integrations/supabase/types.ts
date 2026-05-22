@@ -231,33 +231,69 @@ export type Database = {
         Row: {
           coupon_id: string | null
           created_at: string
+          customer_cpf: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           discount_amount: number | null
           has_preorder_items: boolean
           id: string
+          shipping_city: string | null
+          shipping_complement: string | null
+          shipping_neighborhood: string | null
+          shipping_number: string | null
+          shipping_state: string | null
+          shipping_street: string | null
+          shipping_zip: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
+          tracking_url: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           coupon_id?: string | null
           created_at?: string
+          customer_cpf?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           discount_amount?: number | null
           has_preorder_items?: boolean
           id?: string
+          shipping_city?: string | null
+          shipping_complement?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
+          shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
+          tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           coupon_id?: string | null
           created_at?: string
+          customer_cpf?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           discount_amount?: number | null
           has_preorder_items?: boolean
           id?: string
+          shipping_city?: string | null
+          shipping_complement?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
+          shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
+          tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
         }
