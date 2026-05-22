@@ -72,16 +72,14 @@ export default function Index() {
           (p.description?.toLowerCase().includes(q) ?? false),
       );
     }
-    const min = parseFloat(minPrice.replace(/[^0-9.]/g, ""));
-    const max = parseFloat(maxPrice.replace(/[^0-9.]/g, ""));
-    if (!isNaN(min) && min > 0) {
-      list = list.filter((p) => p.price >= min);
-    }
-    if (!isNaN(max) && max > 0) {
-      list = list.filter((p) => p.price <= max);
+    if (priceRange) {
+      const range = PRICE_RANGES.find((r) => r.label === priceRange);
+      if (range) {
+        list = list.filter((p) => p.price >= range.min && p.price <= range.max);
+      }
     }
     return list;
-  }, [products, selectedCategory, searchQuery, minPrice, maxPrice]);
+  }, [products, selectedCategory, searchQuery, priceRange]);
 
   const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -89,7 +87,7 @@ export default function Index() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery, minPrice, maxPrice]);
+  }, [selectedCategory, searchQuery, priceRange]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
