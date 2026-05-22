@@ -136,6 +136,7 @@ export default function AdminProducts() {
         video_url: (product as any).video_url || null,
         preorder_estimated_delivery: null,
         electronics_tag: (product as any).electronics_tag || null,
+        uses_plek_technology: (product as any).uses_plek_technology ?? false,
       };
       const { error } = await supabase.from("products").insert(payload);
       if (error) throw error;
