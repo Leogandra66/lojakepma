@@ -48,6 +48,7 @@ interface ProductForm {
   preorder_estimated_delivery: string;
   video_url: string;
   electronics_tag: string;
+  uses_plek_technology: boolean;
 }
 
 const emptyForm: ProductForm = {
@@ -60,6 +61,7 @@ const emptyForm: ProductForm = {
   preorder_estimated_delivery: "",
   video_url: "",
   electronics_tag: "",
+  uses_plek_technology: false,
 };
 
 export default function AdminProducts() {
