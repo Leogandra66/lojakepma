@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Clock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, CreditCard } from "lucide-react";
+import { Package, Clock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, CreditCard, Truck } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   pending_payment: "Aguardando Pagamento",
@@ -125,6 +125,21 @@ export default function MyAccount() {
 
                   {isExpanded && (
                     <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
+                      {(order as { tracking_url?: string | null }).tracking_url && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Rastreio do Envio</h4>
+                          <a
+                            href={(order as { tracking_url?: string | null }).tracking_url!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                          >
+                            <Truck className="h-4 w-4" />
+                            Acompanhar entrega
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      )}
                       {/* Itens */}
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Itens do Pedido</h4>

@@ -6,6 +6,32 @@ const corsHeaders = {
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface InfinitePayCustomer {
+  name?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  cpf?: string;
+  document?: string;
+  tax_id?: string;
+}
+
+interface InfinitePayAddress {
+  zip_code?: string;
+  zipcode?: string;
+  postal_code?: string;
+  cep?: string;
+  street?: string;
+  address?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  uf?: string;
+}
+
 interface InfinitePayWebhookPayload {
   invoice_slug?: string;
   amount?: number;
@@ -16,6 +42,12 @@ interface InfinitePayWebhookPayload {
   order_nsu?: string;
   receipt_url?: string;
   items?: unknown[];
+  customer?: InfinitePayCustomer;
+  buyer?: InfinitePayCustomer;
+  payer?: InfinitePayCustomer;
+  address?: InfinitePayAddress;
+  shipping_address?: InfinitePayAddress;
+  billing_address?: InfinitePayAddress;
 }
 
 Deno.serve(async (req) => {
@@ -97,10 +129,29 @@ Deno.serve(async (req) => {
       throw updatePaymentErr;
     }
 
-    // Update order status to paid
+    // Build customer/shipping snapshot from webhook (fields may vary by payload version)
+    const cust = payload.customer ?? payload.buyer ?? payload.payer ?? {};
+    const addr = payload.shipping_address ?? payload.billing_address ?? payload.address ?? {};
+    const orderUpdate: Record<string, unknown> = { status: "paid" };
+    const setIf = (k: string, v: unknown) => {
+      if (v !== undefined && v !== null && String(v).trim() !== "") orderUpdate[k] = v;
+    };
+    setIf("customer_name", cust.full_name ?? cust.name);
+    setIf("customer_email", cust.email);
+    setIf("customer_phone", cust.phone);
+    setIf("customer_cpf", cust.cpf ?? cust.document ?? cust.tax_id);
+    setIf("shipping_zip", addr.zip_code ?? addr.zipcode ?? addr.postal_code ?? addr.cep);
+    setIf("shipping_street", addr.street ?? addr.address);
+    setIf("shipping_number", addr.number);
+    setIf("shipping_complement", addr.complement);
+    setIf("shipping_neighborhood", addr.neighborhood ?? addr.district);
+    setIf("shipping_city", addr.city);
+    setIf("shipping_state", addr.state ?? addr.uf);
+
+    // Update order status (and snapshot) to paid
     const { error: updateOrderErr } = await supabase
       .from("orders")
-      .update({ status: "paid" })
+      .update(orderUpdate)
       .eq("id", orderId);
 
     if (updateOrderErr) {
