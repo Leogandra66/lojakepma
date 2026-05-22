@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import plekLogo from "@/assets/plek-logo.jpg";
 
 interface ProductImage {
   id: string;
