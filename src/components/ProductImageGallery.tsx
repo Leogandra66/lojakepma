@@ -19,13 +19,14 @@ interface ProductImageGalleryProps {
   images: ProductImage[];
   fallbackUrl?: string | null;
   productName: string;
+  showPlekLogo?: boolean;
 }
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
 const ZOOM_STEP = 0.5;
 
-export default function ProductImageGallery({ images, fallbackUrl, productName }: ProductImageGalleryProps) {
+export default function ProductImageGallery({ images, fallbackUrl, productName, showPlekLogo }: ProductImageGalleryProps) {
   const isMobile = useIsMobile();
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
 
