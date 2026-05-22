@@ -190,34 +190,24 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-1">
-                <label htmlFor="min-price" className="text-xs font-medium text-muted-foreground">Preço mín.</label>
-                <Input
-                  id="min-price"
-                  type="text"
-                  inputMode="decimal"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  placeholder="R$ 0,00"
-                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
-                />
+                <label htmlFor="price-range" className="text-xs font-medium text-muted-foreground">Faixa de preço</label>
+                <Select value={priceRange} onValueChange={setPriceRange}>
+                  <SelectTrigger id="price-range" className="h-10 w-56 rounded-full border-border bg-background text-sm">
+                    <SelectValue placeholder="Todas as faixas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRICE_RANGES.map((range) => (
+                      <SelectItem key={range.label} value={range.label}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <span className="mt-5 text-muted-foreground">—</span>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="max-price" className="text-xs font-medium text-muted-foreground">Preço máx.</label>
-                <Input
-                  id="max-price"
-                  type="text"
-                  inputMode="decimal"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="R$ 0,00"
-                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
-                />
-              </div>
-              {(minPrice || maxPrice) && (
+              {priceRange && (
                 <button
                   type="button"
-                  onClick={() => { setMinPrice(""); setMaxPrice(""); }}
+                  onClick={() => setPriceRange("")}
                   className="mt-5 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Limpar filtro de preço"
                   title="Limpar filtro de preço"
