@@ -166,27 +166,31 @@ export default function Index() {
 
         <div className="container py-10 sm:py-14">
           {/* Search + Price filter */}
-          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-6">
             <div className="relative max-w-md flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Pesquisar modelos..."
-                className="pl-10 pr-10 h-11 rounded-full border-border bg-background"
-                aria-label="Pesquisar produtos"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-                  aria-label="Limpar pesquisa"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+              <label htmlFor="search" className="text-xs font-medium text-muted-foreground mb-1 block">Pesquisar</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="search"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquisar modelos..."
+                  className="pl-10 pr-10 h-10 rounded-full border-border bg-background"
+                  aria-label="Pesquisar produtos"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                    aria-label="Limpar pesquisa"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-1">
@@ -208,7 +212,7 @@ export default function Index() {
                 <button
                   type="button"
                   onClick={() => setPriceRange("")}
-                  className="mt-5 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="self-end mb-2 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Limpar filtro de preço"
                   title="Limpar filtro de preço"
                 >
