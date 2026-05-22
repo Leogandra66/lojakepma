@@ -138,6 +138,14 @@ export default function ProductImageGallery({ images, fallbackUrl, productName, 
             <ZoomIn className="h-4 w-4 text-foreground" />
           </span>
         )}
+        {showPlekLogo && (
+          <img
+            src={plekLogo}
+            alt="Tecnologia Plek"
+            title="Este instrumento usa tecnologia Plek"
+            className="absolute bottom-3 left-3 h-6 sm:h-7 w-auto opacity-70 pointer-events-none"
+          />
+        )}
       </button>
 
       {/* Thumbnails */}
