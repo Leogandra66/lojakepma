@@ -26,6 +26,8 @@ const PAGE_SIZE = 12;
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: products, isLoading } = useQuery({
@@ -56,8 +58,16 @@ export default function Index() {
           (p.description?.toLowerCase().includes(q) ?? false),
       );
     }
+    const min = parseFloat(minPrice.replace(/[^0-9.]/g, ""));
+    const max = parseFloat(maxPrice.replace(/[^0-9.]/g, ""));
+    if (!isNaN(min) && min > 0) {
+      list = list.filter((p) => p.price >= min);
+    }
+    if (!isNaN(max) && max > 0) {
+      list = list.filter((p) => p.price <= max);
+    }
     return list;
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery, minPrice, maxPrice]);
 
   const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -65,7 +75,7 @@ export default function Index() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, minPrice, maxPrice]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
@@ -143,27 +153,67 @@ export default function Index() {
         </section>
 
         <div className="container py-10 sm:py-14">
-          {/* Search */}
-          <div className="mb-8 relative max-w-md">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar modelos..."
-              className="pl-10 pr-10 h-11 rounded-full border-border bg-background"
-              aria-label="Pesquisar produtos"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-                aria-label="Limpar pesquisa"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+          {/* Search + Price filter */}
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+            <div className="relative max-w-md flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Pesquisar modelos..."
+                className="pl-10 pr-10 h-11 rounded-full border-border bg-background"
+                aria-label="Pesquisar produtos"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="Limpar pesquisa"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="min-price" className="text-xs font-medium text-muted-foreground">Preço mín.</label>
+                <Input
+                  id="min-price"
+                  type="text"
+                  inputMode="decimal"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="R$ 0,00"
+                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
+                />
+              </div>
+              <span className="mt-5 text-muted-foreground">—</span>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="max-price" className="text-xs font-medium text-muted-foreground">Preço máx.</label>
+                <Input
+                  id="max-price"
+                  type="text"
+                  inputMode="decimal"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="R$ 0,00"
+                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
+                />
+              </div>
+              {(minPrice || maxPrice) && (
+                <button
+                  type="button"
+                  onClick={() => { setMinPrice(""); setMaxPrice(""); }}
+                  className="mt-5 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Limpar filtro de preço"
+                  title="Limpar filtro de preço"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Section title */}
