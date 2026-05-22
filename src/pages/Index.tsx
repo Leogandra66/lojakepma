@@ -175,7 +175,7 @@ export default function Index() {
                   <X className="h-4 w-4" />
                 </button>
               )}
-            </br></div>
+            </div>
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-1">
                 <label htmlFor="min-price" className="text-xs font-medium text-muted-foreground">Preço mín.</label>
