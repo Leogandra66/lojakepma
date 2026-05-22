@@ -26,6 +26,8 @@ const PAGE_SIZE = 12;
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: products, isLoading } = useQuery({
