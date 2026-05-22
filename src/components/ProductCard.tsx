@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/hooks/useCart";
 import { Package } from "lucide-react";
+import plekLogo from "@/assets/plek-logo.jpg";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
