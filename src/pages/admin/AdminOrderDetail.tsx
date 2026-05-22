@@ -100,6 +100,27 @@ export default function AdminOrderDetail() {
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
 
   const { order, items, payments, profile } = data;
+  const o = order as typeof order & {
+    customer_name?: string | null; customer_cpf?: string | null;
+    customer_email?: string | null; customer_phone?: string | null;
+    shipping_zip?: string | null; shipping_street?: string | null;
+    shipping_number?: string | null; shipping_complement?: string | null;
+    shipping_neighborhood?: string | null; shipping_city?: string | null;
+    shipping_state?: string | null; tracking_url?: string | null;
+  };
+  const name = o.customer_name ?? profile?.full_name ?? null;
+  const cpf = o.customer_cpf ?? profile?.cpf ?? null;
+  const phone = o.customer_phone ?? profile?.phone ?? null;
+  const email = o.customer_email ?? null;
+  const addrParts = [
+    o.shipping_street ?? profile?.address_street,
+    o.shipping_number ?? profile?.address_number,
+    o.shipping_complement ?? profile?.address_complement,
+    o.shipping_neighborhood ?? profile?.address_neighborhood,
+    o.shipping_city ?? profile?.address_city,
+    o.shipping_state ?? profile?.address_state,
+  ].filter(Boolean);
+  const zip = o.shipping_zip ?? profile?.address_zip ?? null;
 
   return (
     <div className="space-y-6">
