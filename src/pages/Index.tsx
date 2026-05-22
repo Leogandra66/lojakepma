@@ -9,6 +9,13 @@ import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 import {
   Pagination,
@@ -19,6 +26,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+
+const PRICE_RANGES = [
+  { label: "Até R$ 2.000", min: 1, max: 2000 },
+  { label: "R$ 2.000 a R$ 4.000", min: 2000, max: 4000 },
+  { label: "R$ 4.000 a R$ 7.000", min: 4000, max: 7000 },
+  { label: "R$ 7.000 a R$ 10.000", min: 7000, max: 10000 },
+  { label: "Acima de R$ 10.000", min: 10000, max: Infinity },
+];
 
 const CATEGORIES = ["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "FC Mini", "Eletrônica"];
 const PAGE_SIZE = 12;
