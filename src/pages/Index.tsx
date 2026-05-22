@@ -9,6 +9,13 @@ import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 import {
   Pagination,
@@ -20,14 +27,21 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+const PRICE_RANGES = [
+  { label: "Até R$ 2.000", min: 1, max: 2000 },
+  { label: "R$ 2.000 a R$ 4.000", min: 2000, max: 4000 },
+  { label: "R$ 4.000 a R$ 7.000", min: 4000, max: 7000 },
+  { label: "R$ 7.000 a R$ 10.000", min: 7000, max: 10000 },
+  { label: "Acima de R$ 10.000", min: 10000, max: Infinity },
+];
+
 const CATEGORIES = ["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "FC Mini", "Eletrônica"];
 const PAGE_SIZE = 12;
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: products, isLoading } = useQuery({
@@ -58,16 +72,14 @@ export default function Index() {
           (p.description?.toLowerCase().includes(q) ?? false),
       );
     }
-    const min = parseFloat(minPrice.replace(/[^0-9.]/g, ""));
-    const max = parseFloat(maxPrice.replace(/[^0-9.]/g, ""));
-    if (!isNaN(min) && min > 0) {
-      list = list.filter((p) => p.price >= min);
-    }
-    if (!isNaN(max) && max > 0) {
-      list = list.filter((p) => p.price <= max);
+    if (priceRange) {
+      const range = PRICE_RANGES.find((r) => r.label === priceRange);
+      if (range) {
+        list = list.filter((p) => p.price >= range.min && p.price <= range.max);
+      }
     }
     return list;
-  }, [products, selectedCategory, searchQuery, minPrice, maxPrice]);
+  }, [products, selectedCategory, searchQuery, priceRange]);
 
   const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -75,7 +87,7 @@ export default function Index() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery, minPrice, maxPrice]);
+  }, [selectedCategory, searchQuery, priceRange]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
@@ -178,34 +190,24 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-1">
-                <label htmlFor="min-price" className="text-xs font-medium text-muted-foreground">Preço mín.</label>
-                <Input
-                  id="min-price"
-                  type="text"
-                  inputMode="decimal"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  placeholder="R$ 0,00"
-                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
-                />
+                <label htmlFor="price-range" className="text-xs font-medium text-muted-foreground">Faixa de preço</label>
+                <Select value={priceRange} onValueChange={setPriceRange}>
+                  <SelectTrigger id="price-range" className="h-10 w-56 rounded-full border-border bg-background text-sm">
+                    <SelectValue placeholder="Todas as faixas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRICE_RANGES.map((range) => (
+                      <SelectItem key={range.label} value={range.label}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <span className="mt-5 text-muted-foreground">—</span>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="max-price" className="text-xs font-medium text-muted-foreground">Preço máx.</label>
-                <Input
-                  id="max-price"
-                  type="text"
-                  inputMode="decimal"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="R$ 0,00"
-                  className="h-10 w-36 rounded-full border-border bg-background text-sm"
-                />
-              </div>
-              {(minPrice || maxPrice) && (
+              {priceRange && (
                 <button
                   type="button"
-                  onClick={() => { setMinPrice(""); setMaxPrice(""); }}
+                  onClick={() => setPriceRange("")}
                   className="mt-5 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Limpar filtro de preço"
                   title="Limpar filtro de preço"
