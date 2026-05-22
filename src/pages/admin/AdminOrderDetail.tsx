@@ -76,6 +76,26 @@ export default function AdminOrderDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [tracking, setTracking] = useState("");
+  useEffect(() => {
+    setTracking((data?.order as { tracking_url?: string | null } | undefined)?.tracking_url ?? "");
+  }, [data?.order]);
+
+  const updateTracking = useMutation({
+    mutationFn: async (tracking_url: string) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ tracking_url: tracking_url || null } as never)
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Link de rastreio salvo");
+      qc.invalidateQueries({ queryKey: ["admin-order", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
 
