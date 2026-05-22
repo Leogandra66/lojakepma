@@ -177,26 +177,60 @@ export default function AdminOrderDetail() {
           <CardTitle>Cliente</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-2 text-sm">
-          {profile ? (
-            <>
-              <div><span className="text-muted-foreground">Nome: </span>{profile.full_name ?? "-"}</div>
-              <div><span className="text-muted-foreground">CPF: </span>{profile.cpf ?? "-"}</div>
-              <div><span className="text-muted-foreground">Telefone: </span>{profile.phone ?? "-"}</div>
-              <div className="md:col-span-2">
-                <span className="text-muted-foreground">Endereço: </span>
-                {[profile.address_street, profile.address_number, profile.address_complement, profile.address_neighborhood, profile.address_city, profile.address_state, profile.address_zip]
-                  .filter(Boolean)
-                  .join(", ") || "-"}
-              </div>
-            </>
-          ) : (
-            <p className="text-muted-foreground md:col-span-2">Sem perfil cadastrado.</p>
-          )}
+          <div><span className="text-muted-foreground">Nome: </span>{name ?? "-"}</div>
+          <div><span className="text-muted-foreground">CPF: </span>{cpf ?? "-"}</div>
+          <div><span className="text-muted-foreground">E-mail: </span>{email ?? "-"}</div>
+          <div><span className="text-muted-foreground">Telefone: </span>{phone ?? "-"}</div>
+          <div className="md:col-span-2">
+            <span className="text-muted-foreground">Endereço: </span>
+            {addrParts.length ? addrParts.join(", ") : "-"}
+          </div>
+          <div className="md:col-span-2">
+            <span className="text-muted-foreground">CEP: </span>{zip ?? "-"}
+          </div>
           <div className="md:col-span-2 font-mono text-xs text-muted-foreground">
             user_id: {order.user_id ?? "-"}
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Envio</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Label htmlFor="tracking">Link de rastreio</Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              id="tracking"
+              type="url"
+              placeholder="https://..."
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+            />
+            <Button
+              onClick={() => updateTracking.mutate(tracking.trim())}
+              disabled={updateTracking.isPending || tracking === (o.tracking_url ?? "")}
+            >
+              <Save className="mr-2 h-4 w-4" /> Salvar
+            </Button>
+          </div>
+          {o.tracking_url && (
+            <a
+              href={o.tracking_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Abrir rastreio atual
+            </a>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Este link aparecerá para o cliente no painel "Minha Conta".
+          </p>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader>
