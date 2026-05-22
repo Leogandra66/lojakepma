@@ -6,6 +6,32 @@ const corsHeaders = {
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface InfinitePayCustomer {
+  name?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  cpf?: string;
+  document?: string;
+  tax_id?: string;
+}
+
+interface InfinitePayAddress {
+  zip_code?: string;
+  zipcode?: string;
+  postal_code?: string;
+  cep?: string;
+  street?: string;
+  address?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  uf?: string;
+}
+
 interface InfinitePayWebhookPayload {
   invoice_slug?: string;
   amount?: number;
@@ -16,6 +42,12 @@ interface InfinitePayWebhookPayload {
   order_nsu?: string;
   receipt_url?: string;
   items?: unknown[];
+  customer?: InfinitePayCustomer;
+  buyer?: InfinitePayCustomer;
+  payer?: InfinitePayCustomer;
+  address?: InfinitePayAddress;
+  shipping_address?: InfinitePayAddress;
+  billing_address?: InfinitePayAddress;
 }
 
 Deno.serve(async (req) => {
