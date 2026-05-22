@@ -58,8 +58,16 @@ export default function Index() {
           (p.description?.toLowerCase().includes(q) ?? false),
       );
     }
+    const min = parseFloat(minPrice.replace(/[^0-9.]/g, ""));
+    const max = parseFloat(maxPrice.replace(/[^0-9.]/g, ""));
+    if (!isNaN(min) && min > 0) {
+      list = list.filter((p) => p.price >= min);
+    }
+    if (!isNaN(max) && max > 0) {
+      list = list.filter((p) => p.price <= max);
+    }
     return list;
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery, minPrice, maxPrice]);
 
   const totalPages = Math.max(1, Math.ceil((filtered?.length ?? 0) / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -67,7 +75,7 @@ export default function Index() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, minPrice, maxPrice]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
