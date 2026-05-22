@@ -192,6 +192,7 @@ export default function AdminProducts() {
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
       electronics_tag: (product as any).electronics_tag || "",
+      uses_plek_technology: (product as any).uses_plek_technology ?? false,
     });
     setDialogOpen(true);
   }
