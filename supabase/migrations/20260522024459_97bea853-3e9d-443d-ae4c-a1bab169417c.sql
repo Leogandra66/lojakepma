@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN uses_plek_technology boolean NOT NULL DEFAULT false;

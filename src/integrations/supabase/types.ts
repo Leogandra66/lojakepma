@@ -413,6 +413,7 @@ export type Database = {
           status: Database["public"]["Enums"]["product_status"]
           stock_quantity: number
           updated_at: string
+          uses_plek_technology: boolean
           video_url: string | null
         }
         Insert: {
@@ -429,6 +430,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
           updated_at?: string
+          uses_plek_technology?: boolean
           video_url?: string | null
         }
         Update: {
@@ -445,6 +447,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
           updated_at?: string
+          uses_plek_technology?: boolean
           video_url?: string | null
         }
         Relationships: []
