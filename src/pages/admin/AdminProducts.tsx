@@ -427,6 +427,17 @@ export default function AdminProducts() {
               </Select>
             </div>
 
+            <div className="flex items-center gap-2 rounded-md border p-3">
+              <Checkbox
+                id="uses_plek_technology"
+                checked={form.uses_plek_technology}
+                onCheckedChange={(v) => setForm({ ...form, uses_plek_technology: v === true })}
+              />
+              <Label htmlFor="uses_plek_technology" className="cursor-pointer">
+                Usa tecnologia Plek (exibe logo discreta na imagem do produto)
+              </Label>
+            </div>
+
 
 
             {/* Image Manager inline - only for existing products */}
