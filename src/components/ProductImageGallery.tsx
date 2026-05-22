@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import plekLogo from "@/assets/plek-logo.jpg";
 
 interface ProductImage {
   id: string;
@@ -19,13 +20,14 @@ interface ProductImageGalleryProps {
   images: ProductImage[];
   fallbackUrl?: string | null;
   productName: string;
+  showPlekLogo?: boolean;
 }
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
 const ZOOM_STEP = 0.5;
 
-export default function ProductImageGallery({ images, fallbackUrl, productName }: ProductImageGalleryProps) {
+export default function ProductImageGallery({ images, fallbackUrl, productName, showPlekLogo }: ProductImageGalleryProps) {
   const isMobile = useIsMobile();
   const sortedImages = [...images].sort((a, b) => a.position - b.position);
 
@@ -135,6 +137,14 @@ export default function ProductImageGallery({ images, fallbackUrl, productName }
           <span className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <ZoomIn className="h-4 w-4 text-foreground" />
           </span>
+        )}
+        {showPlekLogo && (
+          <img
+            src={plekLogo}
+            alt="Tecnologia Plek"
+            title="Este instrumento usa tecnologia Plek"
+            className="absolute bottom-3 left-3 h-6 sm:h-7 w-auto opacity-70 pointer-events-none"
+          />
         )}
       </button>
 

@@ -103,7 +103,9 @@ export default function ProductDetail() {
                       images={productImages}
                       fallbackUrl={product.image_url}
                       productName={product.name}
+                      showPlekLogo={(product as any).uses_plek_technology === true}
                     />
+
                   </div>
                 </div>
 

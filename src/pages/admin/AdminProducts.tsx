@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Images, Copy, Search } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
@@ -48,6 +49,7 @@ interface ProductForm {
   preorder_estimated_delivery: string;
   video_url: string;
   electronics_tag: string;
+  uses_plek_technology: boolean;
 }
 
 const emptyForm: ProductForm = {
@@ -60,6 +62,7 @@ const emptyForm: ProductForm = {
   preorder_estimated_delivery: "",
   video_url: "",
   electronics_tag: "",
+  uses_plek_technology: false,
 };
 
 export default function AdminProducts() {
@@ -97,6 +100,7 @@ export default function AdminProducts() {
           ? data.preorder_estimated_delivery
           : null,
         electronics_tag: data.electronics_tag || null,
+        uses_plek_technology: data.uses_plek_technology,
       };
 
       if (editingProduct) {
@@ -133,6 +137,7 @@ export default function AdminProducts() {
         video_url: (product as any).video_url || null,
         preorder_estimated_delivery: null,
         electronics_tag: (product as any).electronics_tag || null,
+        uses_plek_technology: (product as any).uses_plek_technology ?? false,
       };
       const { error } = await supabase.from("products").insert(payload);
       if (error) throw error;
@@ -188,6 +193,7 @@ export default function AdminProducts() {
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
       electronics_tag: (product as any).electronics_tag || "",
+      uses_plek_technology: (product as any).uses_plek_technology ?? false,
     });
     setDialogOpen(true);
   }
@@ -419,6 +425,17 @@ export default function AdminProducts() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-md border p-3">
+              <Checkbox
+                id="uses_plek_technology"
+                checked={form.uses_plek_technology}
+                onCheckedChange={(v) => setForm({ ...form, uses_plek_technology: v === true })}
+              />
+              <Label htmlFor="uses_plek_technology" className="cursor-pointer">
+                Usa tecnologia Plek (exibe logo discreta na imagem do produto)
+              </Label>
             </div>
 
 

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/hooks/useCart";
 import { Package } from "lucide-react";
+import plekLogo from "@/assets/plek-logo.jpg";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -46,7 +47,7 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Image - aspect-square com padding interno para evitar corte */}
       <Link
         to={`/produto/${product.id}`}
-        className="mt-6 mb-6 block aspect-square overflow-hidden bg-secondary/30 rounded-2xl p-4 sm:p-6"
+        className="mt-6 mb-6 block aspect-square overflow-hidden bg-secondary/30 rounded-2xl p-4 sm:p-6 relative"
       >
         {product.image_url ? (
           <img
@@ -58,6 +59,14 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex h-full w-full items-center justify-center">
             <Package className="h-16 w-16 text-muted-foreground" />
           </div>
+        )}
+        {(product as any).uses_plek_technology && (
+          <img
+            src={plekLogo}
+            alt="Tecnologia Plek"
+            title="Este instrumento usa tecnologia Plek"
+            className="absolute bottom-3 right-3 h-5 sm:h-6 w-auto opacity-70 pointer-events-none"
+          />
         )}
       </Link>
 
