@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Images, Copy, Search } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
