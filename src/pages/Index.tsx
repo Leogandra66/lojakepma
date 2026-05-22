@@ -212,7 +212,7 @@ export default function Index() {
                 <button
                   type="button"
                   onClick={() => setPriceRange("")}
-                  className="mt-5 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="self-end mb-2 rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Limpar filtro de preço"
                   title="Limpar filtro de preço"
                 >
