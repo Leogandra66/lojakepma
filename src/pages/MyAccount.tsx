@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Clock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, CreditCard } from "lucide-react";
+import { Package, Clock, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, CreditCard, Truck } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   pending_payment: "Aguardando Pagamento",
