@@ -99,6 +99,7 @@ export default function AdminProducts() {
           ? data.preorder_estimated_delivery
           : null,
         electronics_tag: data.electronics_tag || null,
+        uses_plek_technology: data.uses_plek_technology,
       };
 
       if (editingProduct) {
