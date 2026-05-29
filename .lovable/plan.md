@@ -1,65 +1,79 @@
-## Gerar feed XML de catálogo para Meta / Instagram Shopping
+## Objetivo
 
-### Objetivo
-Criar uma URL pública e estável que retorna o catálogo da loja em **XML no formato Meta Product Feed (RSS 2.0 com namespace `g:`)**. Essa URL é o que você vai colar no Meta Commerce Manager para alimentar o catálogo do Instagram Shopping da @kepmabrasil.
+Criar uma loja **B2B (atacado)** em uma **URL separada**, usando o **mesmo banco de produtos** da loja atual, com:
+- Preços de atacado **só visíveis após login**.
+- **Cadastro de lojista** e **cadastro de representante**.
+- **Aprovação manual** do admin antes de liberar preços.
+- Representante pode **fazer pedidos por um lojista** (escolhendo um existente OU cadastrando um novo na hora).
+- **Zero interferência** na loja B2C atual.
 
-### O que será criado
+## Como garantir que a loja atual NÃO seja afetada
 
-**1. Edge function pública: `meta-catalog-feed`**
-- URL final: `https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/meta-catalog-feed`
-- Sem autenticação (público — `verify_jwt = false`), porque a Meta precisa conseguir ler o feed sem login.
-- Lê todos os produtos com `active = true` direto do banco.
-- Retorna `Content-Type: application/xml`.
-- Cache de 1 hora (`Cache-Control: public, max-age=3600`) para não sobrecarregar.
+- A loja B2B será um **projeto Lovable separado** (URL própria), conectado ao **mesmo banco de dados** desta loja.
+- Todas as mudanças no banco são **aditivas**: colunas novas (sempre opcionais) e tabelas novas. Nenhuma coluna/tabela existente é alterada ou removida.
+- A loja atual simplesmente **ignora** os novos campos. O comportamento dela permanece idêntico.
 
-**2. Formato do XML (padrão exigido pela Meta)**
+## Etapa 1 — Preparar o banco compartilhado (feito aqui, neste projeto)
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
-  <channel>
-    <title>Kepma Brasil</title>
-    <link>https://loja.kepmabrasil.com.br</link>
-    <description>Catálogo oficial Kepma Brasil</description>
-    <item>
-      <g:id>{product.id}</g:id>
-      <g:title>{product.name}</g:title>
-      <g:description>{product.description}</g:description>
-      <g:link>https://loja.kepmabrasil.com.br/produto/{product.id}</g:link>
-      <g:image_link>{product.image_url}</g:image_link>
-      <g:availability>in stock | out of stock</g:availability>
-      <g:price>3600.00 BRL</g:price>
-      <g:condition>new</g:condition>
-      <g:brand>Kepma</g:brand>
-      <g:product_type>{product.category}</g:product_type>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <!-- ... um <item> por produto ... -->
-  </channel>
-</rss>
-```
+Tudo aditivo e seguro:
 
-**3. Regras de mapeamento dos campos**
-- `availability`: `in stock` se `status = 'in_stock'` e `stock_quantity > 0`, senão `out of stock`.
-- `price`: sempre `"{valor} BRL"` (ex: `"3600.00 BRL"`).
-- `image_link`: usa `image_url` principal. Imagens adicionais de `product_images` viram `<g:additional_image_link>` (até 10).
-- Caracteres especiais em título/descrição são escapados (`&`, `<`, `>`, `"`, `'`).
-- Produtos com `active = false` são ignorados.
-- `identifier_exists = no` (não temos GTIN/MPN cadastrados).
+1. **Preço de atacado por produto**
+   - Adicionar coluna `wholesale_price` (opcional) na tabela `products`.
+   - A loja B2C não usa esse campo; a loja B2B usa esse valor no lugar do preço normal.
 
-### O que VOCÊ precisa fazer depois (eu não consigo)
-1. No **Meta Business Suite** → desconectar o catálogo da outra loja que está hoje vinculado ao Instagram @kepmabrasil.
-2. Em **Commerce Manager → Catálogos → Criar catálogo → Fonte de dados → Feed de dados agendado**.
-3. Colar a URL: `https://futrahzhqdvqwvuxlbqf.supabase.co/functions/v1/meta-catalog-feed`.
-4. Configurar atualização automática (diária recomendada).
-5. Conectar o catálogo ao Instagram da @kepmabrasil.
-6. Aguardar aprovação do Instagram Shopping pela Meta.
+2. **Perfis B2B (lojistas e representantes)**
+   - Nova tabela `b2b_accounts`: tipo da conta (`lojista` ou `representante`), dados comerciais (razão social/nome, CNPJ/CPF, telefone, endereço) e status de aprovação (`pendente` / `aprovado` / `recusado`).
+   - Ligada ao usuário autenticado (o mesmo sistema de login/senha).
 
-### Detalhes técnicos
-- **Arquivos novos**: `supabase/functions/meta-catalog-feed/index.ts` e bloco `[functions.meta-catalog-feed] verify_jwt = false` em `supabase/config.toml`.
-- **Sem mudanças no banco**, sem novas dependências, sem alterações no frontend.
-- **Sem segredos novos** — usa apenas `SUPABASE_URL` e `SUPABASE_ANON_KEY` que já existem.
-- **Custo**: praticamente zero (uma chamada por hora no máximo, vinda dos crawlers da Meta).
+3. **Vínculo representante → lojistas**
+   - Nova tabela `b2b_clients` (lojistas geridos por um representante): permite o representante manter sua carteira de clientes e cadastrar novos lojistas.
+   - Um lojista pode existir como conta própria (login dele) ou como cliente cadastrado por um representante.
 
-### Resultado
-Após a aprovação, você vai ter o feed gerando automaticamente. Toda vez que cadastrar/editar um produto no admin, ele aparece no XML na próxima leitura da Meta — sem trabalho manual.
+4. **Pedidos B2B**
+   - Reaproveitar a tabela `orders` adicionando colunas opcionais: `is_b2b` (marca pedido de atacado), `b2b_account_id` (lojista do pedido) e `placed_by_rep_id` (representante que lançou, quando aplicável).
+   - Assim os pedidos B2B ficam separados por um filtro e **não se misturam** com os pedidos da loja atual.
+
+5. **Segurança (RLS) e papéis**
+   - Adicionar papéis `representante` e `lojista` ao controle de acesso existente (via `user_roles` / função `has_role`), sem mexer no papel `admin`.
+   - Preços de atacado e dados B2B só ficam acessíveis para contas **aprovadas**; cadastros pendentes não enxergam preços.
+   - Admin aprova/recusa cadastros e enxerga todos os pedidos B2B.
+
+## Etapa 2 — Construir o app B2B (no novo projeto)
+
+Conectado ao mesmo banco acima:
+
+1. **Autenticação obrigatória**
+   - Login/senha (e Google opcional). Nenhum preço aparece sem login.
+   - Telas de cadastro com escolha: "Sou lojista" ou "Sou representante".
+
+2. **Fluxo de aprovação**
+   - Após cadastro, conta fica **pendente**: usuário vê o catálogo mas **sem preços**, com aviso "aguardando aprovação".
+   - Após aprovação do admin, preços de atacado liberam.
+
+3. **Catálogo B2B**
+   - Mesma vitrine/estrutura visual da loja atual, lendo os mesmos produtos.
+   - Exibe `wholesale_price` em vez do preço varejo.
+
+4. **Pedidos**
+   - Lojista: monta o carrinho e finaliza o próprio pedido.
+   - Representante: seleciona um lojista da carteira **ou** cadastra um novo lojista na hora, depois monta o pedido em nome dele.
+
+5. **Painel admin B2B**
+   - Aprovar/recusar cadastros de lojistas e representantes.
+   - Visualizar e gerenciar pedidos B2B (separados dos pedidos B2C).
+   - Gerenciar o preço de atacado dos produtos.
+
+## O que você precisará fazer (fora do código)
+
+- Criar o **novo projeto Lovable** para a loja B2B e **conectá-lo a este mesmo banco de dados** (eu te oriento no passo a passo).
+- O domínio/URL do B2B (ex.: `atacado.kepmabrasil.com.br`).
+
+## Detalhes técnicos (resumo)
+
+- Banco: `ALTER TABLE products ADD COLUMN wholesale_price` (nullable); novas tabelas `b2b_accounts`, `b2b_clients`; colunas `is_b2b`, `b2b_account_id`, `placed_by_rep_id` em `orders`; novos valores no enum de papéis; políticas RLS novas — tudo aditivo.
+- Compartilhamento de banco: o projeto B2B aponta para o mesmo backend Supabase desta loja (mesmos produtos, imagens e estoque em tempo real).
+- Risco para a loja atual: nenhum, pois nada existente é modificado, apenas estendido.
+
+## Onde começo
+
+Como este chat é da loja atual, posso **executar a Etapa 1 (preparar o banco compartilhado) aqui mesmo** assim que você aprovar. Depois te passo as instruções para criar o projeto B2B e conectá-lo a este banco, e seguimos com a Etapa 2.
