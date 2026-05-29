@@ -14,6 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      b2b_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["b2b_account_type"]
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          company_name: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          phone: string | null
+          status: Database["public"]["Enums"]["b2b_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["b2b_account_type"]
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          company_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["b2b_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["b2b_account_type"]
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          company_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["b2b_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      b2b_clients: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          phone: string | null
+          rep_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          rep_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          rep_account_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_clients_rep_account_id_fkey"
+            columns: ["rep_account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupon_products: {
         Row: {
           coupon_id: string
@@ -229,6 +354,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          b2b_account_id: string | null
           coupon_id: string | null
           created_at: string
           customer_cpf: string | null
@@ -238,6 +364,8 @@ export type Database = {
           discount_amount: number | null
           has_preorder_items: boolean
           id: string
+          is_b2b: boolean
+          placed_by_rep_id: string | null
           shipping_city: string | null
           shipping_complement: string | null
           shipping_neighborhood: string | null
@@ -252,6 +380,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          b2b_account_id?: string | null
           coupon_id?: string | null
           created_at?: string
           customer_cpf?: string | null
@@ -261,6 +390,8 @@ export type Database = {
           discount_amount?: number | null
           has_preorder_items?: boolean
           id?: string
+          is_b2b?: boolean
+          placed_by_rep_id?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
           shipping_neighborhood?: string | null
@@ -275,6 +406,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          b2b_account_id?: string | null
           coupon_id?: string | null
           created_at?: string
           customer_cpf?: string | null
@@ -284,6 +416,8 @@ export type Database = {
           discount_amount?: number | null
           has_preorder_items?: boolean
           id?: string
+          is_b2b?: boolean
+          placed_by_rep_id?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
           shipping_neighborhood?: string | null
@@ -429,6 +563,41 @@ export type Database = {
             foreignKeyName: "product_images_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_wholesale_prices: {
+        Row: {
+          created_at: string
+          id: string
+          min_quantity: number
+          price: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          price: number
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          price?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_wholesale_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -605,6 +774,7 @@ export type Database = {
         Args: { coupon_id: string }
         Returns: undefined
       }
+      is_approved_b2b: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -613,6 +783,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      owns_b2b_account: {
+        Args: { _account_id: string; _user_id: string }
+        Returns: boolean
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
@@ -625,6 +799,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      b2b_account_type: "lojista" | "representante"
+      b2b_status: "pendente" | "aprovado" | "recusado"
       discount_type: "percentage" | "fixed"
       order_status:
         | "pending_payment"
@@ -764,6 +940,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      b2b_account_type: ["lojista", "representante"],
+      b2b_status: ["pendente", "aprovado", "recusado"],
       discount_type: ["percentage", "fixed"],
       order_status: [
         "pending_payment",
