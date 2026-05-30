@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock, Loader2 } from "lucide-react";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
