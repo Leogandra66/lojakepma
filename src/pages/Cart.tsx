@@ -4,14 +4,14 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Clock, Loader2 } from "lucide-react";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const depositAmount = preorderTotal * 0.4;
   const amountDueNow = regularTotal + depositAmount;
@@ -88,7 +88,13 @@ export default function Cart() {
                 <span>R$ {formatBRL(amountDueNow)}</span>
               </div>
 
-              {user ? (
+              {authLoading ? (
+                <div className="flex justify-center pt-2">
+                  <Button size="lg" className="btn-gold w-full rounded-full" disabled>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </Button>
+                </div>
+              ) : user ? (
                 <Link to="/checkout" className="block pt-2">
                   <Button size="lg" className="btn-gold w-full rounded-full gap-2">
                     Finalizar Compra <ArrowRight className="h-4 w-4" />

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 as LoaderIcon } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
@@ -20,7 +21,7 @@ interface AppliedCoupon {
 
 export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -57,15 +58,29 @@ export default function Checkout() {
 
   const amountDueNow = subtotal - discountAmount;
 
-  if (!user) {
-    navigate("/entrar?redirect=/checkout");
+  // Redirect only AFTER the auth session finished restoring, to avoid
+  // sending an already-logged-in user to the login page (race condition).
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/entrar?redirect=/checkout");
+    } else if (items.length === 0) {
+      navigate("/carrinho");
+    }
+  }, [authLoading, user, items.length, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoaderIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || items.length === 0) {
     return null;
   }
 
-  if (items.length === 0) {
-    navigate("/carrinho");
-    return null;
-  }
 
   async function applyCoupon() {
     const code = couponCode.trim().toUpperCase();
