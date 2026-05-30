@@ -58,15 +58,29 @@ export default function Checkout() {
 
   const amountDueNow = subtotal - discountAmount;
 
-  if (!user) {
-    navigate("/entrar?redirect=/checkout");
+  // Redirect only AFTER the auth session finished restoring, to avoid
+  // sending an already-logged-in user to the login page (race condition).
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/entrar?redirect=/checkout");
+    } else if (items.length === 0) {
+      navigate("/carrinho");
+    }
+  }, [authLoading, user, items.length, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoaderIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || items.length === 0) {
     return null;
   }
 
-  if (items.length === 0) {
-    navigate("/carrinho");
-    return null;
-  }
 
   async function applyCoupon() {
     const code = couponCode.trim().toUpperCase();
