@@ -88,7 +88,13 @@ export default function Cart() {
                 <span>R$ {formatBRL(amountDueNow)}</span>
               </div>
 
-              {user ? (
+              {authLoading ? (
+                <div className="flex justify-center pt-2">
+                  <Button size="lg" className="btn-gold w-full rounded-full" disabled>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </Button>
+                </div>
+              ) : user ? (
                 <Link to="/checkout" className="block pt-2">
                   <Button size="lg" className="btn-gold w-full rounded-full gap-2">
                     Finalizar Compra <ArrowRight className="h-4 w-4" />
