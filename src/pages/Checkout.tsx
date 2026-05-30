@@ -21,7 +21,7 @@ interface AppliedCoupon {
 
 export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
