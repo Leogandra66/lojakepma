@@ -11,7 +11,7 @@ const formatBRL = (value: number) =>
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const depositAmount = preorderTotal * 0.4;
   const amountDueNow = regularTotal + depositAmount;
