@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 as LoaderIcon } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
