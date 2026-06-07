@@ -161,6 +161,27 @@ Deno.serve(async (req) => {
 
     console.log(`Payment ${paymentToUpdate.id} and order ${orderId} marked as paid.`);
 
+    // Notify Telegram about the payment status change (only if it actually changed)
+    if (paymentToUpdate.status !== "paid") {
+      try {
+        await supabase.functions.invoke("notify-telegram-order", {
+          body: {
+            kind: "payment_status",
+            orderId,
+            previousStatus: paymentToUpdate.status,
+            newStatus: "paid",
+            amount: Number(paymentToUpdate.amount),
+            paymentType: paymentToUpdate.payment_type,
+            customerName: (orderUpdate.customer_name as string) ?? undefined,
+            receiptUrl: receipt_url ?? paymentToUpdate.receipt_url ?? undefined,
+          },
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify Telegram about payment status:", notifyErr);
+      }
+    }
+
+
     return new Response(JSON.stringify({ received: true, matched: true, order_id: orderId }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
