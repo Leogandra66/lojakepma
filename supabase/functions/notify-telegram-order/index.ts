@@ -73,6 +73,82 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Payment status update notification
+    if (body?.kind === 'payment_status') {
+      const {
+        orderId,
+        newStatus,
+        previousStatus,
+        amount,
+        paymentType,
+        customerName,
+        receiptUrl,
+      } = body as {
+        orderId?: string;
+        newStatus?: string;
+        previousStatus?: string;
+        amount?: number;
+        paymentType?: string;
+        customerName?: string;
+        receiptUrl?: string;
+      };
+
+      if (!orderId || !newStatus) {
+        return new Response(JSON.stringify({ error: 'orderId and newStatus are required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const statusLabels: Record<string, string> = {
+        pending: 'Aguardando pagamento',
+        paid: 'Pago ✅',
+        partial_paid: 'Parcialmente pago',
+        failed: 'Falhou ❌',
+        refunded: 'Reembolsado',
+        cancelled: 'Cancelado',
+      };
+      const label = (s: string) => statusLabels[s] ?? s;
+
+      const lines: string[] = [];
+      lines.push(`🔔 <b>Atualização de pagamento</b>`);
+      lines.push(`<b>Pedido:</b> <code>${escapeHtml(orderId)}</code>`);
+      if (customerName) lines.push(`<b>Cliente:</b> ${escapeHtml(customerName)}`);
+      if (previousStatus) {
+        lines.push(`<b>Status anterior:</b> ${escapeHtml(label(previousStatus))}`);
+      }
+      lines.push(`<b>Novo status:</b> ${escapeHtml(label(newStatus))}`);
+      if (typeof amount === 'number') lines.push(`<b>Valor:</b> ${fmtBRL(amount)}`);
+      if (paymentType) lines.push(`<b>Tipo:</b> ${escapeHtml(paymentType)}`);
+      if (receiptUrl) lines.push(`<b>Comprovante:</b> ${escapeHtml(receiptUrl)}`);
+
+      const tgRes = await fetch(`${GATEWAY_URL}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'X-Connection-Api-Key': TELEGRAM_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: lines.join('\n'),
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }),
+      });
+
+      const data = await tgRes.json();
+      if (!tgRes.ok) {
+        console.error('Telegram payment status error:', tgRes.status, JSON.stringify(data));
+        throw new Error(`Telegram API failed [${tgRes.status}]: ${JSON.stringify(data)}`);
+      }
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
     const p = body as Payload;
     if (!p?.orderId || !Array.isArray(p?.items)) {
       return new Response(JSON.stringify({ error: 'orderId and items are required' }), {
