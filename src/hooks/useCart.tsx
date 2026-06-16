@@ -1,7 +1,24 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { CartItem, Product } from "@/lib/types";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+
+const CART_STORAGE_KEY = "kepma-cart-v1";
+
+function loadStoredCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (i) => i && i.product && typeof i.product.id === "string" && typeof i.quantity === "number",
+    );
+  } catch {
+    return [];
+  }
+}
 
 interface CartContextType {
   items: CartItem[];
