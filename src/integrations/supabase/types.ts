@@ -485,9 +485,11 @@ export type Database = {
           amount: number
           capture_method: string | null
           created_at: string
+          gateway: string
           id: string
           infinitypay_id: string | null
           infinitypay_link: string | null
+          mp_preference_id: string | null
           order_id: string
           paid_at: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
@@ -500,9 +502,11 @@ export type Database = {
           amount: number
           capture_method?: string | null
           created_at?: string
+          gateway?: string
           id?: string
           infinitypay_id?: string | null
           infinitypay_link?: string | null
+          mp_preference_id?: string | null
           order_id: string
           paid_at?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
@@ -515,9 +519,11 @@ export type Database = {
           amount?: number
           capture_method?: string | null
           created_at?: string
+          gateway?: string
           id?: string
           infinitypay_id?: string | null
           infinitypay_link?: string | null
+          mp_preference_id?: string | null
           order_id?: string
           paid_at?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
