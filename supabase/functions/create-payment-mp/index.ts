@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderId, items, redirectUrl } = await req.json();
+    const { orderId, items, redirectUrl, pixOnly } = await req.json();
 
     if (!orderId || !items || !Array.isArray(items) || items.length === 0) {
       return new Response(JSON.stringify({ error: "orderId and items are required" }), {
