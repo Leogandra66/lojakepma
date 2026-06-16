@@ -283,7 +283,7 @@ export default function Checkout() {
       //  - Preview/staging (*.lovable.app) -> Mercado Pago (em teste)
       //  - Production (loja.kepmabrasil.com.br) -> InfinitePay (atual)
       // Override here to force a gateway: "infinitepay" | "mercadopago" | "auto"
-      const GATEWAY_OVERRIDE: "infinitepay" | "mercadopago" | "auto" = "auto";
+      const GATEWAY_OVERRIDE: "infinitepay" | "mercadopago" | "auto" = "mercadopago";
       const isPreviewEnv = window.location.hostname.endsWith(".lovable.app");
       const gateway =
         GATEWAY_OVERRIDE !== "auto"
@@ -390,7 +390,7 @@ export default function Checkout() {
           </div>
 
           <Button size="lg" className="btn-gold w-full rounded-full text-base" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com InfinityPay"}
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
           </Button>
         </div>
       </main>
