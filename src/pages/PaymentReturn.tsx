@@ -91,7 +91,9 @@ export default function PaymentReturn() {
               <CheckCircle2 className="h-20 w-20 mx-auto text-primary" />
               <h1 className="font-heading text-3xl font-bold">Obrigado pela sua compra!</h1>
               <p className="text-muted-foreground">
-                Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.
+                {mpPending
+                  ? "Seu pedido foi registrado. Assim que o pagamento for confirmado, o status será atualizado automaticamente em \"Meus Pedidos\"."
+                  : <>Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.</>}
               </p>
               {receiptUrl && (
                 <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
