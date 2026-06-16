@@ -23,7 +23,7 @@ export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<false | "default" | "pix">(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
@@ -166,7 +166,7 @@ export default function Checkout() {
           has_preorder_items: hasPreorderItems,
           status: "pending_payment",
           coupon_id: appliedCoupon?.id || null,
-          discount_amount: discountAmount,
+          discount_amount: totalDiscount,
         } as any)
         .select()
         .single();
