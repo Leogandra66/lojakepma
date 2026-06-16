@@ -23,7 +23,7 @@ export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<false | "default" | "pix">(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
@@ -150,18 +150,23 @@ export default function Checkout() {
     }
   }
 
-  const handleCheckout = async () => {
-    setLoading(true);
+  const handleCheckout = async (pix = false) => {
+    setLoading(pix ? "pix" : "default");
     try {
+      // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
+      const pixDiscount = pix ? amountDueNow * 0.1 : 0;
+      const totalDiscount = discountAmount + pixDiscount;
+      const finalAmountDue = amountDueNow - pixDiscount;
+
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
-          total: totalPrice - discountAmount,
+          total: totalPrice - totalDiscount,
           has_preorder_items: hasPreorderItems,
           status: "pending_payment",
           coupon_id: appliedCoupon?.id || null,
-          discount_amount: discountAmount,
+          discount_amount: totalDiscount,
         } as any)
         .select()
         .single();
@@ -237,7 +242,7 @@ export default function Checkout() {
       const { error: paymentErr } = await supabase.from("payments").insert({
         order_id: order.id,
         payment_type: paymentType,
-        amount: amountDueNow,
+        amount: finalAmountDue,
         status: "pending",
       });
       if (paymentErr) throw paymentErr;
@@ -260,10 +265,10 @@ export default function Checkout() {
         throw new Error(`Produto "${invalid.description}" está com preço inválido. Remova-o do carrinho ou contate o suporte.`);
       }
 
-      // Apply discount by reducing item prices proportionally (InfinitePay rejects negative prices)
-      if (discountAmount > 0) {
+      // Apply discount by reducing item prices proportionally (gateways reject negative prices)
+      if (totalDiscount > 0) {
         const totalCents = infinityItems.reduce((s, i) => s + i.price * i.quantity, 0);
-        const discountCents = Math.round(discountAmount * 100);
+        const discountCents = Math.round(totalDiscount * 100);
         let remaining = discountCents;
         infinityItems.forEach((it, idx) => {
           const isLast = idx === infinityItems.length - 1;
@@ -288,7 +293,7 @@ export default function Checkout() {
       const paymentFunction = gateway === "mercadopago" ? "create-payment-mp" : "create-payment";
 
       const { data: paymentData, error: payErr } = await supabase.functions.invoke(paymentFunction, {
-        body: { orderId: order.id, items: infinityItems, redirectUrl },
+        body: { orderId: order.id, items: infinityItems, redirectUrl, pixOnly: pix },
       });
 
       if (payErr) throw payErr;
@@ -380,11 +385,30 @@ export default function Checkout() {
               <span className="font-heading text-xl font-bold">Total a pagar agora:</span>
               <span className="font-heading text-2xl font-bold">{formatBRL(amountDueNow)}</span>
             </div>
+            <div className="flex justify-between items-center text-sm text-green-600">
+              <span className="font-semibold">No PIX (-10%):</span>
+              <span className="font-bold">{formatBRL(amountDueNow * 0.9)}</span>
+            </div>
           </div>
 
-          <Button size="lg" className="btn-gold w-full rounded-full text-base" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
-          </Button>
+          <div className="space-y-3">
+            <Button
+              size="lg"
+              className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => handleCheckout(true)}
+              disabled={loading !== false}
+            >
+              {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
+            </Button>
+            <Button
+              size="lg"
+              className="btn-gold w-full rounded-full text-base"
+              onClick={() => handleCheckout(false)}
+              disabled={loading !== false}
+            >
+              {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
