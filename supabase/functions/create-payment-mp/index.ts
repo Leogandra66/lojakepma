@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
 
     // Build Mercado Pago preference payload
-    const preference = {
+    const preference: Record<string, unknown> = {
       items: (items as CheckoutItem[]).map((item) => ({
         title: item.description,
         quantity: item.quantity,
@@ -68,6 +68,20 @@ Deno.serve(async (req) => {
       },
       auto_return: "approved",
     };
+
+    // Restrict the checkout to PIX only when requested
+    if (pixOnly) {
+      preference.payment_methods = {
+        excluded_payment_types: [
+          { id: "credit_card" },
+          { id: "debit_card" },
+          { id: "ticket" },
+          { id: "atm" },
+          { id: "prepaid_card" },
+        ],
+        installments: 1,
+      };
+    }
 
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
