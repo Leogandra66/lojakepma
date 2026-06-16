@@ -385,11 +385,30 @@ export default function Checkout() {
               <span className="font-heading text-xl font-bold">Total a pagar agora:</span>
               <span className="font-heading text-2xl font-bold">{formatBRL(amountDueNow)}</span>
             </div>
+            <div className="flex justify-between items-center text-sm text-green-600">
+              <span className="font-semibold">No PIX (-10%):</span>
+              <span className="font-bold">{formatBRL(amountDueNow * 0.9)}</span>
+            </div>
           </div>
 
-          <Button size="lg" className="btn-gold w-full rounded-full text-base" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
-          </Button>
+          <div className="space-y-3">
+            <Button
+              size="lg"
+              className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => handleCheckout(true)}
+              disabled={loading !== false}
+            >
+              {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
+            </Button>
+            <Button
+              size="lg"
+              className="btn-gold w-full rounded-full text-base"
+              onClick={() => handleCheckout(false)}
+              disabled={loading !== false}
+            >
+              {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
