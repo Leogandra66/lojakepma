@@ -150,14 +150,19 @@ export default function Checkout() {
     }
   }
 
-  const handleCheckout = async () => {
-    setLoading(true);
+  const handleCheckout = async (pix = false) => {
+    setLoading(pix ? "pix" : "default");
     try {
+      // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
+      const pixDiscount = pix ? amountDueNow * 0.1 : 0;
+      const totalDiscount = discountAmount + pixDiscount;
+      const finalAmountDue = amountDueNow - pixDiscount;
+
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
-          total: totalPrice - discountAmount,
+          total: totalPrice - totalDiscount,
           has_preorder_items: hasPreorderItems,
           status: "pending_payment",
           coupon_id: appliedCoupon?.id || null,
