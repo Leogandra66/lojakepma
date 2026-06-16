@@ -36,7 +36,17 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => loadStoredCart());
+
+  // Persist the cart so it survives page reloads / reopening the tab
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // ignore quota / serialization errors
+    }
+  }, [items]);
+
 
   const addItem = useCallback((product: Product) => {
     if (product.status === "unavailable") {
