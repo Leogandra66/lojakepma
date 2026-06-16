@@ -279,7 +279,22 @@ export default function Checkout() {
       const origin = window.location.origin;
       const redirectUrl = `${origin}/pagamento-concluido`;
 
-      const { data: paymentData, error: payErr } = await supabase.functions.invoke("create-payment", {
+      // Gateway selection by environment:
+      //  - Preview/staging (*.lovable.app) -> Mercado Pago (em teste)
+      //  - Production (loja.kepmabrasil.com.br) -> InfinitePay (atual)
+      // Override here to force a gateway: "infinitepay" | "mercadopago" | "auto"
+      const GATEWAY_OVERRIDE: "infinitepay" | "mercadopago" | "auto" = "auto";
+      const isPreviewEnv = window.location.hostname.endsWith(".lovable.app");
+      const gateway =
+        GATEWAY_OVERRIDE !== "auto"
+          ? GATEWAY_OVERRIDE
+          : isPreviewEnv
+          ? "mercadopago"
+          : "infinitepay";
+
+      const paymentFunction = gateway === "mercadopago" ? "create-payment-mp" : "create-payment";
+
+      const { data: paymentData, error: payErr } = await supabase.functions.invoke(paymentFunction, {
         body: { orderId: order.id, items: infinityItems, redirectUrl },
       });
 
