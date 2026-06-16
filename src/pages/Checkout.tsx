@@ -242,7 +242,7 @@ export default function Checkout() {
       const { error: paymentErr } = await supabase.from("payments").insert({
         order_id: order.id,
         payment_type: paymentType,
-        amount: amountDueNow,
+        amount: finalAmountDue,
         status: "pending",
       });
       if (paymentErr) throw paymentErr;
@@ -265,10 +265,10 @@ export default function Checkout() {
         throw new Error(`Produto "${invalid.description}" está com preço inválido. Remova-o do carrinho ou contate o suporte.`);
       }
 
-      // Apply discount by reducing item prices proportionally (InfinitePay rejects negative prices)
-      if (discountAmount > 0) {
+      // Apply discount by reducing item prices proportionally (gateways reject negative prices)
+      if (totalDiscount > 0) {
         const totalCents = infinityItems.reduce((s, i) => s + i.price * i.quantity, 0);
-        const discountCents = Math.round(discountAmount * 100);
+        const discountCents = Math.round(totalDiscount * 100);
         let remaining = discountCents;
         infinityItems.forEach((it, idx) => {
           const isLast = idx === infinityItems.length - 1;
@@ -293,7 +293,7 @@ export default function Checkout() {
       const paymentFunction = gateway === "mercadopago" ? "create-payment-mp" : "create-payment";
 
       const { data: paymentData, error: payErr } = await supabase.functions.invoke(paymentFunction, {
-        body: { orderId: order.id, items: infinityItems, redirectUrl },
+        body: { orderId: order.id, items: infinityItems, redirectUrl, pixOnly: pix },
       });
 
       if (payErr) throw payErr;
