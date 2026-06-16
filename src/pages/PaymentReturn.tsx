@@ -10,14 +10,27 @@ export default function PaymentReturn() {
   const [searchParams] = useSearchParams();
   const [saving, setSaving] = useState(true);
 
+  // InfinitePay return params
   const orderNsu = searchParams.get("order_nsu");
   const receiptUrl = searchParams.get("receipt_url");
   const slug = searchParams.get("slug");
   const captureMethod = searchParams.get("capture_method");
   const transactionNsu = searchParams.get("transaction_nsu");
 
+  // Mercado Pago return params (external_reference = our orderId)
+  const mpExternalRef = searchParams.get("external_reference");
+  const mpStatus = searchParams.get("status") || searchParams.get("collection_status");
+  const isMercadoPago = !!mpExternalRef || !!searchParams.get("payment_id") || !!searchParams.get("preference_id");
+
   useEffect(() => {
     const savePaymentInfo = async () => {
+      // Mercado Pago: the webhook is the source of truth for marking paid.
+      // Here we only stop the loading state and show a status-aware message.
+      if (isMercadoPago) {
+        setSaving(false);
+        return;
+      }
+
       if (!orderNsu) {
         setSaving(false);
         return;
@@ -59,7 +72,9 @@ export default function PaymentReturn() {
     };
 
     savePaymentInfo();
-  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu]);
+  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago]);
+
+  const mpPending = isMercadoPago && mpStatus !== "approved";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -76,7 +91,9 @@ export default function PaymentReturn() {
               <CheckCircle2 className="h-20 w-20 mx-auto text-primary" />
               <h1 className="font-heading text-3xl font-bold">Obrigado pela sua compra!</h1>
               <p className="text-muted-foreground">
-                Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.
+                {mpPending
+                  ? "Seu pedido foi registrado. Assim que o pagamento for confirmado, o status será atualizado automaticamente em \"Meus Pedidos\"."
+                  : <>Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.</>}
               </p>
               {receiptUrl && (
                 <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
