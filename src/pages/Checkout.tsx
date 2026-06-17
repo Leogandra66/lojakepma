@@ -82,6 +82,13 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [form, setForm] = useState<CheckoutForm>(emptyForm);
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const setField = (k: keyof CheckoutForm, v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const formValid = checkoutSchema.safeParse(form).success;
 
   const depositAmount = preorderTotal * 0.4;
   const subtotal = regularTotal + depositAmount;
