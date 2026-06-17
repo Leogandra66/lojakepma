@@ -615,11 +615,16 @@ export default function Checkout() {
           </div>
 
           <div className="space-y-3">
+            {!formValid && (
+              <p className="text-sm text-muted-foreground text-center">
+                Preencha seus dados acima para liberar o pagamento.
+              </p>
+            )}
             <Button
               size="lg"
               className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
               onClick={() => handleCheckout(true)}
-              disabled={loading !== false}
+              disabled={loading !== false || !formValid}
             >
               {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
             </Button>
@@ -627,7 +632,7 @@ export default function Checkout() {
               size="lg"
               className="btn-gold w-full rounded-full text-base"
               onClick={() => handleCheckout(false)}
-              disabled={loading !== false}
+              disabled={loading !== false || !formValid}
             >
               {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
             </Button>
