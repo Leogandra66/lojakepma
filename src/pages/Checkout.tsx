@@ -325,9 +325,6 @@ export default function Checkout() {
 
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
-
-      if (appliedCoupon) {
-        await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
       }
 
       const orderItems = items.map((item) => ({
