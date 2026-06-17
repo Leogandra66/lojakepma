@@ -264,6 +264,12 @@ export default function Checkout() {
   }
 
   const handleCheckout = async (pix = false) => {
+    const parsed = checkoutSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0]?.message || "Preencha os dados corretamente");
+      return;
+    }
+    const f = parsed.data;
     setLoading(pix ? "pix" : "default");
     try {
       // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
@@ -280,11 +286,45 @@ export default function Checkout() {
           status: "pending_payment",
           coupon_id: appliedCoupon?.id || null,
           discount_amount: totalDiscount,
+          customer_name: f.name,
+          customer_cpf: f.doc,
+          customer_email: f.email,
+          customer_phone: f.phone,
+          shipping_zip: f.zip,
+          shipping_street: f.street,
+          shipping_number: f.number,
+          shipping_complement: f.complement || null,
+          shipping_neighborhood: f.neighborhood,
+          shipping_city: f.city,
+          shipping_state: f.state,
         } as any)
         .select()
         .single();
 
       if (orderErr) throw orderErr;
+
+      // Save data back to the user's profile for next time (fire-and-forget)
+      supabase
+        .from("profiles")
+        .update({
+          full_name: f.name,
+          cpf: f.doc,
+          phone: f.phone,
+          address_zip: f.zip,
+          address_street: f.street,
+          address_number: f.number,
+          address_complement: f.complement || null,
+          address_neighborhood: f.neighborhood,
+          address_city: f.city,
+          address_state: f.state,
+        } as any)
+        .eq("user_id", user.id)
+        .then(({ error }) => {
+          if (error) console.error("Failed to update profile:", error);
+        });
+
+      if (appliedCoupon) {
+        await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
 
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
