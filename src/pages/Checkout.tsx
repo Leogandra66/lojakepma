@@ -131,6 +131,57 @@ export default function Checkout() {
     }
   }, [authLoading, user, items.length, navigate]);
 
+  // Prefill the form from the user's profile
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setForm((f) => ({
+        ...f,
+        name: data?.full_name || f.name,
+        doc: data?.cpf || f.doc,
+        email: user.email || f.email,
+        phone: data?.phone || f.phone,
+        zip: data?.address_zip || f.zip,
+        street: data?.address_street || f.street,
+        number: data?.address_number || f.number,
+        complement: data?.address_complement || f.complement,
+        neighborhood: data?.address_neighborhood || f.neighborhood,
+        city: data?.address_city || f.city,
+        state: data?.address_state || f.state,
+      }));
+    })();
+  }, [user]);
+
+  async function lookupCep(rawCep: string) {
+    const cep = onlyDigits(rawCep);
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        street: data.logradouro || f.street,
+        neighborhood: data.bairro || f.neighborhood,
+        city: data.localidade || f.city,
+        state: data.uf || f.state,
+      }));
+    } catch {
+      toast.error("Erro ao consultar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
