@@ -89,10 +89,17 @@ export default function ProductDetail() {
                 {product.name}
               </h1>
               {isAvailable && (
-                <div className="text-center text-base md:text-lg text-foreground font-medium mb-12 space-y-1">
-                  <p>em 10 vezes de R$ {formatPrice(product.price / 10)} no cartão</p>
-                  <p>R$ {formatPrice(product.price * 0.9)} no Pix</p>
-                </div>
+              <div className="text-center mb-12 space-y-0.5">
+                <p className="font-heading text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                  R$ {formatPrice(product.price)}
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  em 10x de R$ {formatPrice(product.price / 10)} no cartão
+                </p>
+                <p className="text-xs md:text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                  R$ {formatPrice(product.price * 0.9)} no Pix
+                </p>
+              </div>
               )}
 
               <div className="grid gap-12 md:grid-cols-2 md:gap-16 items-start">
