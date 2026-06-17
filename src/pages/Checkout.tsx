@@ -483,6 +483,79 @@ export default function Checkout() {
             ))}
           </div>
 
+          {/* Customer / shipping data */}
+          <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+            <h2 className="font-heading text-xl font-bold">Dados para faturamento e entrega</h2>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Nome / Razão social</Label>
+              <Input id="name" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="Seu nome ou razão social" />
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="doc">CPF / CNPJ</Label>
+                <Input id="doc" value={form.doc} onChange={(e) => setField("doc", e.target.value)} placeholder="Somente números" inputMode="numeric" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input id="phone" value={form.phone} onChange={(e) => setField("phone", e.target.value)} placeholder="(00) 00000-0000" inputMode="tel" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} placeholder="email@exemplo.com" />
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="zip">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="zip"
+                    value={form.zip}
+                    onChange={(e) => setField("zip", e.target.value)}
+                    onBlur={(e) => lookupCep(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                  />
+                  {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="number">Número</Label>
+                <Input id="number" value={form.number} onChange={(e) => setField("number", e.target.value)} placeholder="123" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="street">Rua / Logradouro</Label>
+              <Input id="street" value={form.street} onChange={(e) => setField("street", e.target.value)} placeholder="Rua, avenida..." />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="complement">Complemento (opcional)</Label>
+              <Input id="complement" value={form.complement} onChange={(e) => setField("complement", e.target.value)} placeholder="Apto, bloco..." />
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input id="neighborhood" value={form.neighborhood} onChange={(e) => setField("neighborhood", e.target.value)} placeholder="Bairro" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="city">Cidade</Label>
+                <Input id="city" value={form.city} onChange={(e) => setField("city", e.target.value)} placeholder="Cidade" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="state">UF</Label>
+                <Input id="state" value={form.state} maxLength={2} onChange={(e) => setField("state", e.target.value.toUpperCase())} placeholder="SP" />
+              </div>
+            </div>
+          </div>
+
+
           {hasPreorderItems && (
             <div className="rounded-lg border border-border bg-secondary/50 p-4 text-sm space-y-1">
               <p><strong>Itens em estoque:</strong> {formatBRL(regularTotal)}</p>
