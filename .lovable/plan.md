@@ -1,51 +1,37 @@
-# Botão de pagamento via PIX com 10% de desconto
+# Coletar dados do pedido antes do pagamento
 
-Adicionar um segundo botão no checkout para pagamento via PIX, que aplica 10% de desconto sobre o valor a pagar (somando com cupom, se houver) e leva o cliente a uma página do Mercado Pago que oferece **somente PIX**.
+Antes de enviar o cliente ao Mercado Pago, vamos coletar e validar os dados necessários para faturar e processar o pedido. As colunas de banco já existem (`orders.customer_*` / `shipping_*` e `profiles`), então **não é preciso migração**.
 
-## O que muda para o cliente
+## Dados coletados
 
-Na tela "Finalizar Compra" passarão a existir dois botões:
-- **Pagar com Mercado Pago** (atual — todos os meios de pagamento, sem desconto extra)
-- **Pagar com PIX — 10% de desconto** (novo)
+- **Nome / Razão social** (faturamento) — obrigatório
+- **CPF / CNPJ** — obrigatório, com validação de formato
+- **E-mail** — obrigatório (pré-preenchido com o e-mail da conta)
+- **Telefone** — obrigatório
+- **Endereço completo**: CEP, rua, número, complemento (opcional), bairro, cidade, estado — obrigatórios exceto complemento
 
-O resumo do pedido mostrará, abaixo do total atual, o valor com o desconto PIX para o cliente saber quanto economiza.
+## Como vai funcionar
 
-## Como funciona
+1. **Pré-preenchimento**: ao abrir o checkout, carregamos o `profiles` do usuário e preenchemos os campos automaticamente quando já houver dados salvos.
+2. **CEP automático**: ao digitar o CEP (8 dígitos), consultamos o ViaCEP (`https://viacep.com.br/ws/{cep}/json/`) e preenchemos rua, bairro, cidade e estado; o cliente só completa número e complemento.
+3. **Validação** (com Zod, client-side): todos os campos obrigatórios preenchidos, e-mail válido, CPF/CNPJ com tamanho/formato correto, telefone válido. Os botões de pagamento ficam desabilitados até o formulário estar válido.
+4. **Ao pagar** (PIX ou Mercado Pago):
+   - Gravamos os dados no pedido (`orders.customer_name`, `customer_cpf`, `customer_email`, `customer_phone`, `shipping_zip/street/number/complement/neighborhood/city/state`).
+   - Atualizamos o `profiles` do usuário com os mesmos dados, para agilizar próximas compras.
+   - Seguimos o fluxo atual (cria order_items, pagamento, notificações, redireciona ao gateway).
 
-1. O desconto PIX (10%) é calculado sobre o `amountDueNow` (valor já com cupom aplicado). Os dois descontos se somam.
-2. Ao clicar no botão PIX, o pedido é criado normalmente, porém com o total e o pagamento já refletindo o desconto de 10%.
-3. O cliente é redirecionado para a página do Mercado Pago configurada para exibir **apenas PIX**.
+## Layout
 
-## Alterações técnicas
+Um novo bloco "Dados para faturamento e entrega" no `Checkout.tsx`, posicionado acima do resumo do pedido/cupom, usando os componentes `Input`/`Label` já existentes. Os dois botões de pagamento atuais (PIX e Mercado Pago) permanecem, apenas passam a exigir o formulário válido.
 
-### `src/pages/Checkout.tsx`
-- Extrair a lógica de `handleCheckout` para aceitar um parâmetro `pix: boolean`.
-- Quando `pix === true`:
-  - Calcular `pixDiscount = amountDueNow * 0.10` e `pixAmount = amountDueNow - pixDiscount`.
-  - Gravar em `orders`: `total` e `discount_amount` incluindo o desconto PIX (somado ao cupom).
-  - Gravar em `payments.amount` o valor com desconto PIX.
-  - Aplicar a redução proporcional adicional de 10% sobre os itens enviados (mesma técnica já usada para o cupom, garantindo preço de item > 0).
-  - Invocar `create-payment-mp` com uma flag nova `pixOnly: true`.
-- Adicionar o segundo botão e uma linha no resumo mostrando "Total no PIX (-10%)".
-- Estados de loading separados (ou um identificador) para não travar os dois botões ao mesmo tempo.
+## Detalhes técnicos
 
-### `supabase/functions/create-payment-mp/index.ts`
-- Aceitar `pixOnly` no corpo da requisição.
-- Quando `pixOnly === true`, adicionar à `preference`:
-  ```text
-  payment_methods: {
-    excluded_payment_types: [
-      { id: "credit_card" },
-      { id: "debit_card" },
-      { id: "ticket" },
-      { id: "atm" },
-      { id: "prepaid_card" }
-    ],
-    installments: 1
-  }
-  ```
-  Isso deixa apenas PIX disponível na página do Mercado Pago. O restante do fluxo (preferência, `init_point`, webhook) permanece igual.
+- Arquivo principal: `src/pages/Checkout.tsx`.
+  - Novo estado `form` com os campos e estado de validação.
+  - `useEffect` para carregar `profiles` (via `supabase.from("profiles").select().eq("user_id", user.id).maybeSingle()`).
+  - Função `lookupCep` para ViaCEP (com tratamento de erro/CEP não encontrado).
+  - Schema Zod para validação; helper para detectar CPF (11) vs CNPJ (14) dígitos.
+  - No `handleCheckout`, incluir os campos do formulário no `insert` de `orders` e fazer `upsert`/`update` no `profiles`.
+- Passar `customer_*` também ao Mercado Pago é opcional; o foco é gravar no pedido e perfil. (Se desejado, depois podemos enviar `payer` na preferência em `create-payment-mp/index.ts`.)
 
-## Observações
-- Nenhuma mudança de schema é necessária — usamos as colunas existentes `total`, `discount_amount` e `payments.amount`.
-- O webhook `mercadopago-webhook` continua funcionando sem alteração (confirma o pagamento pelo `external_reference`).
+Sem alterações de banco de dados.

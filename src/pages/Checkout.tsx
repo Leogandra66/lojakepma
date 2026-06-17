@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 as LoaderIcon } from "lucide-react";
+import { z } from "zod";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
@@ -8,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Tag, X } from "lucide-react";
 
@@ -19,6 +21,59 @@ interface AppliedCoupon {
   eligible_product_ids: string[] | null; // null = all products
 }
 
+interface CheckoutForm {
+  name: string;
+  doc: string; // CPF or CNPJ
+  email: string;
+  phone: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+}
+
+const emptyForm: CheckoutForm = {
+  name: "",
+  doc: "",
+  email: "",
+  phone: "",
+  zip: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+};
+
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
+const checkoutSchema = z.object({
+  name: z.string().trim().min(3, "Informe o nome ou razão social"),
+  doc: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length === 11 || v.length === 14, "CPF (11) ou CNPJ (14) inválido"),
+  email: z.string().trim().email("E-mail inválido"),
+  phone: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length >= 10 && v.length <= 11, "Telefone inválido"),
+  zip: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length === 8, "CEP inválido"),
+  street: z.string().trim().min(2, "Informe a rua"),
+  number: z.string().trim().min(1, "Informe o número"),
+  complement: z.string().trim().optional(),
+  neighborhood: z.string().trim().min(2, "Informe o bairro"),
+  city: z.string().trim().min(2, "Informe a cidade"),
+  state: z.string().trim().length(2, "UF inválida"),
+});
+
 export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
@@ -27,6 +82,13 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [form, setForm] = useState<CheckoutForm>(emptyForm);
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const setField = (k: keyof CheckoutForm, v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const formValid = checkoutSchema.safeParse(form).success;
 
   const depositAmount = preorderTotal * 0.4;
   const subtotal = regularTotal + depositAmount;
@@ -68,6 +130,57 @@ export default function Checkout() {
       navigate("/carrinho");
     }
   }, [authLoading, user, items.length, navigate]);
+
+  // Prefill the form from the user's profile
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setForm((f) => ({
+        ...f,
+        name: data?.full_name || f.name,
+        doc: data?.cpf || f.doc,
+        email: user.email || f.email,
+        phone: data?.phone || f.phone,
+        zip: data?.address_zip || f.zip,
+        street: data?.address_street || f.street,
+        number: data?.address_number || f.number,
+        complement: data?.address_complement || f.complement,
+        neighborhood: data?.address_neighborhood || f.neighborhood,
+        city: data?.address_city || f.city,
+        state: data?.address_state || f.state,
+      }));
+    })();
+  }, [user]);
+
+  async function lookupCep(rawCep: string) {
+    const cep = onlyDigits(rawCep);
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        street: data.logradouro || f.street,
+        neighborhood: data.bairro || f.neighborhood,
+        city: data.localidade || f.city,
+        state: data.uf || f.state,
+      }));
+    } catch {
+      toast.error("Erro ao consultar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
 
   if (authLoading) {
     return (
@@ -151,6 +264,12 @@ export default function Checkout() {
   }
 
   const handleCheckout = async (pix = false) => {
+    const parsed = checkoutSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0]?.message || "Preencha os dados corretamente");
+      return;
+    }
+    const f = parsed.data;
     setLoading(pix ? "pix" : "default");
     try {
       // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
@@ -167,11 +286,42 @@ export default function Checkout() {
           status: "pending_payment",
           coupon_id: appliedCoupon?.id || null,
           discount_amount: totalDiscount,
+          customer_name: f.name,
+          customer_cpf: f.doc,
+          customer_email: f.email,
+          customer_phone: f.phone,
+          shipping_zip: f.zip,
+          shipping_street: f.street,
+          shipping_number: f.number,
+          shipping_complement: f.complement || null,
+          shipping_neighborhood: f.neighborhood,
+          shipping_city: f.city,
+          shipping_state: f.state,
         } as any)
         .select()
         .single();
 
       if (orderErr) throw orderErr;
+
+      // Save data back to the user's profile for next time (fire-and-forget)
+      supabase
+        .from("profiles")
+        .update({
+          full_name: f.name,
+          cpf: f.doc,
+          phone: f.phone,
+          address_zip: f.zip,
+          address_street: f.street,
+          address_number: f.number,
+          address_complement: f.complement || null,
+          address_neighborhood: f.neighborhood,
+          address_city: f.city,
+          address_state: f.state,
+        } as any)
+        .eq("user_id", user.id)
+        .then(({ error }) => {
+          if (error) console.error("Failed to update profile:", error);
+        });
 
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
@@ -333,6 +483,79 @@ export default function Checkout() {
             ))}
           </div>
 
+          {/* Customer / shipping data */}
+          <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+            <h2 className="font-heading text-xl font-bold">Dados para faturamento e entrega</h2>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Nome / Razão social</Label>
+              <Input id="name" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="Seu nome ou razão social" />
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="doc">CPF / CNPJ</Label>
+                <Input id="doc" value={form.doc} onChange={(e) => setField("doc", e.target.value)} placeholder="Somente números" inputMode="numeric" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input id="phone" value={form.phone} onChange={(e) => setField("phone", e.target.value)} placeholder="(00) 00000-0000" inputMode="tel" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} placeholder="email@exemplo.com" />
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="zip">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="zip"
+                    value={form.zip}
+                    onChange={(e) => setField("zip", e.target.value)}
+                    onBlur={(e) => lookupCep(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                  />
+                  {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="number">Número</Label>
+                <Input id="number" value={form.number} onChange={(e) => setField("number", e.target.value)} placeholder="123" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="street">Rua / Logradouro</Label>
+              <Input id="street" value={form.street} onChange={(e) => setField("street", e.target.value)} placeholder="Rua, avenida..." />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="complement">Complemento (opcional)</Label>
+              <Input id="complement" value={form.complement} onChange={(e) => setField("complement", e.target.value)} placeholder="Apto, bloco..." />
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input id="neighborhood" value={form.neighborhood} onChange={(e) => setField("neighborhood", e.target.value)} placeholder="Bairro" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="city">Cidade</Label>
+                <Input id="city" value={form.city} onChange={(e) => setField("city", e.target.value)} placeholder="Cidade" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="state">UF</Label>
+                <Input id="state" value={form.state} maxLength={2} onChange={(e) => setField("state", e.target.value.toUpperCase())} placeholder="SP" />
+              </div>
+            </div>
+          </div>
+
+
           {hasPreorderItems && (
             <div className="rounded-lg border border-border bg-secondary/50 p-4 text-sm space-y-1">
               <p><strong>Itens em estoque:</strong> {formatBRL(regularTotal)}</p>
@@ -392,11 +615,16 @@ export default function Checkout() {
           </div>
 
           <div className="space-y-3">
+            {!formValid && (
+              <p className="text-sm text-muted-foreground text-center">
+                Preencha seus dados acima para liberar o pagamento.
+              </p>
+            )}
             <Button
               size="lg"
               className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
               onClick={() => handleCheckout(true)}
-              disabled={loading !== false}
+              disabled={loading !== false || !formValid}
             >
               {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
             </Button>
@@ -404,7 +632,7 @@ export default function Checkout() {
               size="lg"
               className="btn-gold w-full rounded-full text-base"
               onClick={() => handleCheckout(false)}
-              disabled={loading !== false}
+              disabled={loading !== false || !formValid}
             >
               {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
             </Button>
