@@ -71,14 +71,17 @@ export default function ProductCard({ product }: { product: Product }) {
       </Link>
 
       {/* Footer: price + CTA */}
-      <div className="mt-auto flex items-center justify-between gap-3">
-        <div className="flex flex-col">
+      <div className="mt-auto flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-0.5">
           {isAvailable ? (
             <>
-              <span className="font-heading text-sm sm:text-base font-semibold text-foreground">
-                em 10 vezes de R$ {(product.price / 10).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} no cartão
+              <span className="font-heading text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+                R$ {product.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className="font-heading text-sm sm:text-base font-semibold text-foreground">
+              <span className="text-[11px] sm:text-xs text-muted-foreground leading-snug">
+                em 10x de R$ {(product.price / 10).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} no cartão
+              </span>
+              <span className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 leading-snug font-medium">
                 R$ {(product.price * 0.9).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} no Pix
               </span>
             </>
@@ -89,7 +92,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {isAvailable && (
           <button
             onClick={() => addItem(product)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md"
+            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md shrink-0"
           >
             Comprar
           </button>
