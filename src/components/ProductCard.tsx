@@ -75,9 +75,11 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex flex-col">
           {isAvailable ? (
             <>
-              <span className="text-xs text-muted-foreground">A partir de</span>
-              <span className="font-heading text-lg sm:text-xl font-semibold text-foreground">
-                R$ {product.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <span className="font-heading text-sm sm:text-base font-semibold text-foreground">
+                em 10 vezes de R$ {(product.price / 10).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} no cartão
+              </span>
+              <span className="font-heading text-sm sm:text-base font-semibold text-foreground">
+                R$ {(product.price * 0.9).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} no Pix
               </span>
             </>
           ) : (
