@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 as LoaderIcon } from "lucide-react";
+import { z } from "zod";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
@@ -8,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Tag, X } from "lucide-react";
 
@@ -18,6 +20,59 @@ interface AppliedCoupon {
   discount_value: number;
   eligible_product_ids: string[] | null; // null = all products
 }
+
+interface CheckoutForm {
+  name: string;
+  doc: string; // CPF or CNPJ
+  email: string;
+  phone: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+}
+
+const emptyForm: CheckoutForm = {
+  name: "",
+  doc: "",
+  email: "",
+  phone: "",
+  zip: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+};
+
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
+const checkoutSchema = z.object({
+  name: z.string().trim().min(3, "Informe o nome ou razão social"),
+  doc: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length === 11 || v.length === 14, "CPF (11) ou CNPJ (14) inválido"),
+  email: z.string().trim().email("E-mail inválido"),
+  phone: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length >= 10 && v.length <= 11, "Telefone inválido"),
+  zip: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length === 8, "CEP inválido"),
+  street: z.string().trim().min(2, "Informe a rua"),
+  number: z.string().trim().min(1, "Informe o número"),
+  complement: z.string().trim().optional(),
+  neighborhood: z.string().trim().min(2, "Informe o bairro"),
+  city: z.string().trim().min(2, "Informe a cidade"),
+  state: z.string().trim().length(2, "UF inválida"),
+});
 
 export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
