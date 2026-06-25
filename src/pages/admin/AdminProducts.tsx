@@ -46,6 +46,7 @@ interface ProductForm {
   category: string;
   status: "in_stock" | "preorder" | "unavailable";
   stock_quantity: string;
+  bling_code: string;
   preorder_estimated_delivery: string;
   video_url: string;
   electronics_tag: string;
