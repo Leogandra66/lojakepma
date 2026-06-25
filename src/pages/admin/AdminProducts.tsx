@@ -192,6 +192,7 @@ export default function AdminProducts() {
       category: product.category || "",
       status: product.status,
       stock_quantity: String(product.stock_quantity),
+      bling_code: (product as any).bling_code || "",
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
       electronics_tag: (product as any).electronics_tag || "",
