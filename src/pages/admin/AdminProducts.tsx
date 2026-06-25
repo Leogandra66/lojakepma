@@ -397,6 +397,17 @@ export default function AdminProducts() {
                 />
               </div>
             </div>
+            <div>
+              <Label>Código Bling (SKU)</Label>
+              <Input
+                value={form.bling_code}
+                onChange={(e) => setForm({ ...form, bling_code: e.target.value })}
+                placeholder="Código do produto no Bling para sincronizar o estoque"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use o mesmo código cadastrado no Bling. É por ele que o estoque é atualizado automaticamente.
+              </p>
+            </div>
             {form.status === "preorder" && (
               <div>
                 <Label>Previsão de Entrega</Label>
