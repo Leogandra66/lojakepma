@@ -1,37 +1,53 @@
-# Coletar dados do pedido antes do pagamento
+# Sincronização de estoque do Bling → Loja (via Webhook)
 
-Antes de enviar o cliente ao Mercado Pago, vamos coletar e validar os dados necessários para faturar e processar o pedido. As colunas de banco já existem (`orders.customer_*` / `shipping_*` e `profiles`), então **não é preciso migração**.
+## Objetivo
+Quando o estoque de um produto mudar no Bling (ERP), o Bling envia um webhook para a loja e o `stock_quantity` da tabela `products` é atualizado automaticamente, em tempo real.
 
-## Dados coletados
+## Como vai funcionar (visão geral)
+```text
+Bling (estoque muda)
+      │  envia webhook (HTTP POST)
+      ▼
+Edge Function pública "bling-stock-webhook"
+      │  valida segredo + identifica produto pelo código (SKU)
+      ▼
+Atualiza products.stock_quantity (e status, se zerar)
+```
 
-- **Nome / Razão social** (faturamento) — obrigatório
-- **CPF / CNPJ** — obrigatório, com validação de formato
-- **E-mail** — obrigatório (pré-preenchido com o e-mail da conta)
-- **Telefone** — obrigatório
-- **Endereço completo**: CEP, rua, número, complemento (opcional), bairro, cidade, estado — obrigatórios exceto complemento
+## 1. Banco de dados (migration)
+- Adicionar à tabela `products`:
+  - `bling_code TEXT` — o código/SKU do produto no Bling (chave de ligação). Com índice único parcial (permite produtos sem código ainda).
+  - `stock_synced_at TIMESTAMPTZ` — registra a última atualização vinda do Bling (para auditoria/diagnóstico).
+- Sem mudança de RLS: a edge function usa a service role para atualizar.
 
-## Como vai funcionar
+## 2. Edge Function `bling-stock-webhook` (pública, `verify_jwt = false`)
+- Recebe o POST do Bling.
+- **Segurança**: valida um segredo próprio enviado na URL (ex.: `?token=...`) contra o secret `BLING_WEBHOOK_SECRET`. Sem token válido → 401.
+- Lê o payload do Bling (evento de estoque), extrai o **código do produto** e o **saldo atual**.
+- Faz `UPDATE products SET stock_quantity = <saldo>, stock_synced_at = now() WHERE bling_code = <código>`.
+- Regra de status: se saldo = 0 → `status = 'unavailable'`; se saldo > 0 e produto estava indisponível → opcional voltar para `available` (a confirmar com você na implementação).
+- Sempre responde 200 rápido para o Bling (mesmo quando o produto não é encontrado, apenas loga), evitando reenvios infinitos.
+- Trata os dois formatos de payload que o Bling pode mandar (com saldo no corpo, ou só com o ID exigindo consulta — ver seção 4).
 
-1. **Pré-preenchimento**: ao abrir o checkout, carregamos o `profiles` do usuário e preenchemos os campos automaticamente quando já houver dados salvos.
-2. **CEP automático**: ao digitar o CEP (8 dígitos), consultamos o ViaCEP (`https://viacep.com.br/ws/{cep}/json/`) e preenchemos rua, bairro, cidade e estado; o cliente só completa número e complemento.
-3. **Validação** (com Zod, client-side): todos os campos obrigatórios preenchidos, e-mail válido, CPF/CNPJ com tamanho/formato correto, telefone válido. Os botões de pagamento ficam desabilitados até o formulário estar válido.
-4. **Ao pagar** (PIX ou Mercado Pago):
-   - Gravamos os dados no pedido (`orders.customer_name`, `customer_cpf`, `customer_email`, `customer_phone`, `shipping_zip/street/number/complement/neighborhood/city/state`).
-   - Atualizamos o `profiles` do usuário com os mesmos dados, para agilizar próximas compras.
-   - Seguimos o fluxo atual (cria order_items, pagamento, notificações, redireciona ao gateway).
+## 3. Painel Admin
+- Em `src/pages/admin/AdminProducts.tsx`: adicionar o campo **"Código Bling (SKU)"** no formulário de criar/editar produto e exibir na tabela. É o que liga cada produto da loja ao Bling.
 
-## Layout
+## 4. Credenciais do Bling (a confirmar na implementação)
+Dois cenários, dependendo do que o webhook do Bling entrega:
+- **Cenário simples**: o webhook já traz o saldo no corpo → não precisamos chamar a API do Bling. Só precisamos do `BLING_WEBHOOK_SECRET` (gerado por nós).
+- **Cenário com consulta**: se o webhook trouxer apenas o ID do produto, a função precisa consultar a API v3 do Bling para obter o saldo. Nesse caso precisaremos das credenciais OAuth2 do Bling (`client_id`, `client_secret`) e armazenar/renovar o token de acesso. Isso adiciona um fluxo de autorização inicial.
 
-Um novo bloco "Dados para faturamento e entrega" no `Checkout.tsx`, posicionado acima do resumo do pedido/cupom, usando os componentes `Input`/`Label` já existentes. Os dois botões de pagamento atuais (PIX e Mercado Pago) permanecem, apenas passam a exigir o formulário válido.
+Começaremos pelo cenário simples (webhook com saldo). Se o seu app no Bling só mandar o ID, ativamos o fluxo OAuth2 depois.
+
+## 5. Configuração que você fará no Bling
+Depois de implementado, você cadastra no Bling um webhook apontando para a URL da edge function (eu te passo a URL final, com o token de segurança).
 
 ## Detalhes técnicos
+- Secret novo: `BLING_WEBHOOK_SECRET` (gerado automaticamente).
+- Edge function sem JWT (endpoint público chamado por servidor externo), protegida por token na URL.
+- Atualização via service role (ignora RLS) apenas dentro da função.
+- Tabela `products` ganha `bling_code` (único) e `stock_synced_at`.
 
-- Arquivo principal: `src/pages/Checkout.tsx`.
-  - Novo estado `form` com os campos e estado de validação.
-  - `useEffect` para carregar `profiles` (via `supabase.from("profiles").select().eq("user_id", user.id).maybeSingle()`).
-  - Função `lookupCep` para ViaCEP (com tratamento de erro/CEP não encontrado).
-  - Schema Zod para validação; helper para detectar CPF (11) vs CNPJ (14) dígitos.
-  - No `handleCheckout`, incluir os campos do formulário no `insert` de `orders` e fazer `upsert`/`update` no `profiles`.
-- Passar `customer_*` também ao Mercado Pago é opcional; o foco é gravar no pedido e perfil. (Se desejado, depois podemos enviar `payer` na preferência em `create-payment-mp/index.ts`.)
-
-Sem alterações de banco de dados.
+## Fora de escopo (por enquanto)
+- Sincronizar preço, nome ou criar produtos novos a partir do Bling.
+- Importação inicial em massa do estoque (pode ser adicionada depois com o fluxo OAuth2).

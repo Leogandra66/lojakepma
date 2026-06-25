@@ -46,6 +46,7 @@ interface ProductForm {
   category: string;
   status: "in_stock" | "preorder" | "unavailable";
   stock_quantity: string;
+  bling_code: string;
   preorder_estimated_delivery: string;
   video_url: string;
   electronics_tag: string;
@@ -59,6 +60,7 @@ const emptyForm: ProductForm = {
   category: "",
   status: "in_stock",
   stock_quantity: "0",
+  bling_code: "",
   preorder_estimated_delivery: "",
   video_url: "",
   electronics_tag: "",
@@ -95,6 +97,7 @@ export default function AdminProducts() {
         category: data.category || null,
         status: data.status,
         stock_quantity: parseInt(data.stock_quantity) || 0,
+        bling_code: data.bling_code.trim() || null,
         video_url: data.video_url || null,
         preorder_estimated_delivery: data.status === "preorder" && data.preorder_estimated_delivery
           ? data.preorder_estimated_delivery
@@ -190,6 +193,7 @@ export default function AdminProducts() {
       category: product.category || "",
       status: product.status,
       stock_quantity: String(product.stock_quantity),
+      bling_code: (product as any).bling_code || "",
       preorder_estimated_delivery: product.preorder_estimated_delivery || "",
       video_url: (product as any).video_url || "",
       electronics_tag: (product as any).electronics_tag || "",
@@ -260,6 +264,7 @@ export default function AdminProducts() {
                 <TableHead>Categoria</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>Estoque</TableHead>
+                <TableHead>Cód. Bling</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -272,6 +277,7 @@ export default function AdminProducts() {
                   <TableCell>{p.category || "—"}</TableCell>
                   <TableCell>{formatPrice(p.price)}</TableCell>
                   <TableCell>{p.stock_quantity}</TableCell>
+                  <TableCell className="text-muted-foreground">{(p as any).bling_code || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[p.status]}>
                       {statusLabels[p.status]}
@@ -392,6 +398,17 @@ export default function AdminProducts() {
                   disabled={form.status === "unavailable"}
                 />
               </div>
+            </div>
+            <div>
+              <Label>Código Bling (SKU)</Label>
+              <Input
+                value={form.bling_code}
+                onChange={(e) => setForm({ ...form, bling_code: e.target.value })}
+                placeholder="Código do produto no Bling para sincronizar o estoque"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use o mesmo código cadastrado no Bling. É por ele que o estoque é atualizado automaticamente.
+              </p>
             </div>
             {form.status === "preorder" && (
               <div>
