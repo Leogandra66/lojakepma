@@ -264,6 +264,7 @@ export default function AdminProducts() {
                 <TableHead>Categoria</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>Estoque</TableHead>
+                <TableHead>Cód. Bling</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
