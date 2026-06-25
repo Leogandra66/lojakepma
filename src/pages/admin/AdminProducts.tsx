@@ -277,6 +277,7 @@ export default function AdminProducts() {
                   <TableCell>{p.category || "—"}</TableCell>
                   <TableCell>{formatPrice(p.price)}</TableCell>
                   <TableCell>{p.stock_quantity}</TableCell>
+                  <TableCell className="text-muted-foreground">{(p as any).bling_code || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[p.status]}>
                       {statusLabels[p.status]}
