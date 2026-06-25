@@ -612,6 +612,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          bling_code: string | null
           category: string | null
           created_at: string
           description: string | null
@@ -623,12 +624,14 @@ export type Database = {
           price: number
           status: Database["public"]["Enums"]["product_status"]
           stock_quantity: number
+          stock_synced_at: string | null
           updated_at: string
           uses_plek_technology: boolean
           video_url: string | null
         }
         Insert: {
           active?: boolean
+          bling_code?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -640,12 +643,14 @@ export type Database = {
           price: number
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
+          stock_synced_at?: string | null
           updated_at?: string
           uses_plek_technology?: boolean
           video_url?: string | null
         }
         Update: {
           active?: boolean
+          bling_code?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -657,6 +662,7 @@ export type Database = {
           price?: number
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
+          stock_synced_at?: string | null
           updated_at?: string
           uses_plek_technology?: boolean
           video_url?: string | null
