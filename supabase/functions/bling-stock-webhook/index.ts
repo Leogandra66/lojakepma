@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
   if (balance === 0) {
     updates.status = "unavailable";
   } else if (product.status === "unavailable") {
-    updates.status = "available";
+    updates.status = "in_stock";
   }
 
   const { error: updErr } = await supabase
