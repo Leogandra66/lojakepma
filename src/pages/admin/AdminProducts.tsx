@@ -97,6 +97,7 @@ export default function AdminProducts() {
         category: data.category || null,
         status: data.status,
         stock_quantity: parseInt(data.stock_quantity) || 0,
+        bling_code: data.bling_code.trim() || null,
         video_url: data.video_url || null,
         preorder_estimated_delivery: data.status === "preorder" && data.preorder_estimated_delivery
           ? data.preorder_estimated_delivery
