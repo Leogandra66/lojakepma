@@ -60,6 +60,7 @@ const emptyForm: ProductForm = {
   category: "",
   status: "in_stock",
   stock_quantity: "0",
+  bling_code: "",
   preorder_estimated_delivery: "",
   video_url: "",
   electronics_tag: "",
