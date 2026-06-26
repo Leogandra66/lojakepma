@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ExternalLink, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Save, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
