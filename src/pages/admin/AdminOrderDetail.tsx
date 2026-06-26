@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ExternalLink, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Save, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -95,6 +95,24 @@ export default function AdminOrderDetail() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const reconcile = useMutation({
+    mutationFn: async (mpPaymentId?: string) => {
+      const { data, error } = await supabase.functions.invoke("mercadopago-reconcile", {
+        body: { orderId: id, ...(mpPaymentId ? { mpPaymentId } : {}) },
+      });
+      if (error) throw error;
+      return data as { message?: string; changed?: boolean };
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message ?? "Verificação concluída");
+      qc.invalidateQueries({ queryKey: ["admin-order", id] });
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [mpPaymentId, setMpPaymentId] = useState("");
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
@@ -261,10 +279,43 @@ export default function AdminOrderDetail() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle>Pagamentos</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => reconcile.mutate(undefined)}
+            disabled={reconcile.isPending}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${reconcile.isPending ? "animate-spin" : ""}`} />
+            Verificar no Mercado Pago
+          </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+            <Label htmlFor="mpid" className="text-xs">
+              Não encontrou? Cole o ID do pagamento do Mercado Pago
+            </Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="mpid"
+                placeholder="Ex: 165073852859"
+                value={mpPaymentId}
+                onChange={(e) => setMpPaymentId(e.target.value)}
+              />
+              <Button
+                variant="secondary"
+                onClick={() => reconcile.mutate(mpPaymentId.trim())}
+                disabled={reconcile.isPending || !mpPaymentId.trim()}
+              >
+                Vincular pagamento
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Encontre o ID na tela do pagamento no painel do Mercado Pago.
+            </p>
+          </div>
+
           {payments.length === 0 ? (
             <p className="text-muted-foreground">Nenhum pagamento.</p>
           ) : (
