@@ -277,8 +277,17 @@ export default function AdminOrderDetail() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle>Pagamentos</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => reconcile.mutate()}
+            disabled={reconcile.isPending}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${reconcile.isPending ? "animate-spin" : ""}`} />
+            Verificar no Mercado Pago
+          </Button>
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
