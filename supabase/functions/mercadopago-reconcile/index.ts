@@ -191,7 +191,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    const mp = await searchBestMpPayment(accessToken, orderId);
+    // If the admin pasted a specific Mercado Pago payment ID, fetch it directly.
+    // Useful when the payment's external_reference doesn't match the order code.
+    const mpPaymentId: string | undefined = body?.mpPaymentId
+      ? String(body.mpPaymentId).trim()
+      : undefined;
+
+    let mp: MpPayment | null;
+    if (mpPaymentId) {
+      const res = await fetch(`https://api.mercadopago.com/v1/payments/${mpPaymentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await res.json();
+      mp = res.ok ? (data as MpPayment) : null;
+      if (!mp) {
+        return new Response(
+          JSON.stringify({ ok: true, found: false, message: `Pagamento ${mpPaymentId} não encontrado no Mercado Pago.` }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else {
+      mp = await searchBestMpPayment(accessToken, orderId);
+    }
+
     if (!mp) {
       return new Response(
         JSON.stringify({ ok: true, found: false, message: "Nenhum pagamento encontrado no Mercado Pago para este pedido." }),
