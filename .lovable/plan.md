@@ -1,53 +1,36 @@
-# Sincronização de estoque do Bling → Loja (via Webhook)
+## Problema
 
-## Objetivo
-Quando o estoque de um produto mudar no Bling (ERP), o Bling envia um webhook para a loja e o `stock_quantity` da tabela `products` é atualizado automaticamente, em tempo real.
+Uma venda foi paga (o dinheiro chegou ao Mercado Pago), mas o pedido continuou como **"Aguardando pagamento"**. Hoje a atualização do status depende 100% do webhook do Mercado Pago. Quando essa notificação não chega (ou falha — atraso, instabilidade, retry perdido), o pedido fica preso para sempre, sem nenhuma forma de corrigir além de mudar o status na mão (o que não registra o pagamento de verdade).
 
-## Como vai funcionar (visão geral)
-```text
-Bling (estoque muda)
-      │  envia webhook (HTTP POST)
-      ▼
-Edge Function pública "bling-stock-webhook"
-      │  valida segredo + identifica produto pelo código (SKU)
-      ▼
-Atualiza products.stock_quantity (e status, se zerar)
-```
+Confirmei no banco: a cliente fez várias tentativas de checkout (cada clique gera um novo pedido) e todos estão `pending_payment`, apesar do pagamento existir no Mercado Pago.
 
-## 1. Banco de dados (migration)
-- Adicionar à tabela `products`:
-  - `bling_code TEXT` — o código/SKU do produto no Bling (chave de ligação). Com índice único parcial (permite produtos sem código ainda).
-  - `stock_synced_at TIMESTAMPTZ` — registra a última atualização vinda do Bling (para auditoria/diagnóstico).
-- Sem mudança de RLS: a edge function usa a service role para atualizar.
+## Solução
 
-## 2. Edge Function `bling-stock-webhook` (pública, `verify_jwt = false`)
-- Recebe o POST do Bling.
-- **Segurança**: valida um segredo próprio enviado na URL (ex.: `?token=...`) contra o secret `BLING_WEBHOOK_SECRET`. Sem token válido → 401.
-- Lê o payload do Bling (evento de estoque), extrai o **código do produto** e o **saldo atual**.
-- Faz `UPDATE products SET stock_quantity = <saldo>, stock_synced_at = now() WHERE bling_code = <código>`.
-- Regra de status: se saldo = 0 → `status = 'unavailable'`; se saldo > 0 e produto estava indisponível → opcional voltar para `available` (a confirmar com você na implementação).
-- Sempre responde 200 rápido para o Bling (mesmo quando o produto não é encontrado, apenas loga), evitando reenvios infinitos.
-- Trata os dois formatos de payload que o Bling pode mandar (com saldo no corpo, ou só com o ID exigindo consulta — ver seção 4).
+Criar um mecanismo de **reconferência** que consulta o Mercado Pago e atualiza o pedido — usado tanto manualmente quanto de forma automática.
 
-## 3. Painel Admin
-- Em `src/pages/admin/AdminProducts.tsx`: adicionar o campo **"Código Bling (SKU)"** no formulário de criar/editar produto e exibir na tabela. É o que liga cada produto da loja ao Bling.
+### 1. Nova função de backend `mercadopago-reconcile`
+- Recebe o `order_id` de um pedido.
+- Consulta a API de busca do Mercado Pago pelos pagamentos daquele pedido (`/v1/payments/search?external_reference={order_id}`).
+- Aplica exatamente a mesma lógica do webhook atual: mapeia o status do Mercado Pago (`approved` → pago, `rejected`/`cancelled` → falhou, etc.), atualiza a tabela de pagamentos (com `paid_at`, comprovante, NSU) e marca o pedido como **Pago** quando confirmado.
+- Dispara a notificação no Telegram quando o pagamento passa a pago, igual ao fluxo atual.
+- Responde dizendo o que encontrou (ex.: "pagamento aprovado, pedido atualizado" ou "nenhum pagamento aprovado encontrado").
 
-## 4. Credenciais do Bling (a confirmar na implementação)
-Dois cenários, dependendo do que o webhook do Bling entrega:
-- **Cenário simples**: o webhook já traz o saldo no corpo → não precisamos chamar a API do Bling. Só precisamos do `BLING_WEBHOOK_SECRET` (gerado por nós).
-- **Cenário com consulta**: se o webhook trouxer apenas o ID do produto, a função precisa consultar a API v3 do Bling para obter o saldo. Nesse caso precisaremos das credenciais OAuth2 do Bling (`client_id`, `client_secret`) e armazenar/renovar o token de acesso. Isso adiciona um fluxo de autorização inicial.
+### 2. Botão no detalhe do pedido (admin)
+- Na tela de detalhe do pedido, adicionar o botão **"Verificar pagamento no Mercado Pago"**.
+- Ao clicar, chama a função acima e atualiza a tela com o resultado (toast de sucesso/erro e recarregamento dos dados).
+- Assim, para o pedido que está preso agora, basta abrir e clicar — ele será corrigido na hora.
 
-Começaremos pelo cenário simples (webhook com saldo). Se o seu app no Bling só mandar o ID, ativamos o fluxo OAuth2 depois.
-
-## 5. Configuração que você fará no Bling
-Depois de implementado, você cadastra no Bling um webhook apontando para a URL da edge function (eu te passo a URL final, com o token de segurança).
+### 3. Reconferência automática (rede de segurança)
+- Um processo periódico que, a cada intervalo, pega pedidos recentes ainda em "Aguardando pagamento" (ex.: criados nas últimas 24–48h) e roda a reconferência neles automaticamente.
+- Isso garante que, mesmo se o webhook falhar de novo, o pedido será atualizado sozinho em poucos minutos, sem ação manual.
 
 ## Detalhes técnicos
-- Secret novo: `BLING_WEBHOOK_SECRET` (gerado automaticamente).
-- Edge function sem JWT (endpoint público chamado por servidor externo), protegida por token na URL.
-- Atualização via service role (ignora RLS) apenas dentro da função.
-- Tabela `products` ganha `bling_code` (único) e `stock_synced_at`.
 
-## Fora de escopo (por enquanto)
-- Sincronizar preço, nome ou criar produtos novos a partir do Bling.
-- Importação inicial em massa do estoque (pode ser adicionada depois com o fluxo OAuth2).
+- A função reutiliza `MERCADO_PAGO_ACCESS_TOKEN` (já configurado) e o mapeamento de status do `mercadopago-webhook`. Para evitar duplicação, a lógica de "aplicar status de um pagamento MP ao pedido" será compartilhada entre o webhook e a reconferência.
+- A função usa a service role para atualizar pedidos/pagamentos e responde com CORS para ser chamada do painel admin (com validação de admin via JWT).
+- A reconferência automática usará agendamento (cron) no backend chamando a função para pedidos pendentes recentes.
+- Nenhuma mudança no fluxo de checkout do cliente — só adiciona caminhos de recuperação.
+
+## Fora do escopo
+- Não altera o fluxo de criação de pagamento nem o webhook existente (ele continua funcionando como caminho principal).
+- Não mexe na duplicação de pedidos por múltiplos cliques (pode ser tratado depois, se desejar).
