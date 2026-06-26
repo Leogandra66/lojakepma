@@ -284,14 +284,38 @@ export default function AdminOrderDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => reconcile.mutate()}
+            onClick={() => reconcile.mutate(undefined)}
             disabled={reconcile.isPending}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${reconcile.isPending ? "animate-spin" : ""}`} />
             Verificar no Mercado Pago
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+            <Label htmlFor="mpid" className="text-xs">
+              Não encontrou? Cole o ID do pagamento do Mercado Pago
+            </Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="mpid"
+                placeholder="Ex: 165073852859"
+                value={mpPaymentId}
+                onChange={(e) => setMpPaymentId(e.target.value)}
+              />
+              <Button
+                variant="secondary"
+                onClick={() => reconcile.mutate(mpPaymentId.trim())}
+                disabled={reconcile.isPending || !mpPaymentId.trim()}
+              >
+                Vincular pagamento
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Encontre o ID na tela do pagamento no painel do Mercado Pago.
+            </p>
+          </div>
+
           {payments.length === 0 ? (
             <p className="text-muted-foreground">Nenhum pagamento.</p>
           ) : (
