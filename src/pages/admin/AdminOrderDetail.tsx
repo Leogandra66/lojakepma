@@ -97,9 +97,9 @@ export default function AdminOrderDetail() {
   });
 
   const reconcile = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (mpPaymentId?: string) => {
       const { data, error } = await supabase.functions.invoke("mercadopago-reconcile", {
-        body: { orderId: id },
+        body: { orderId: id, ...(mpPaymentId ? { mpPaymentId } : {}) },
       });
       if (error) throw error;
       return data as { message?: string; changed?: boolean };
@@ -111,6 +111,8 @@ export default function AdminOrderDetail() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [mpPaymentId, setMpPaymentId] = useState("");
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
