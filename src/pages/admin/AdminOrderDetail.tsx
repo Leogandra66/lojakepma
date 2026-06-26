@@ -96,6 +96,22 @@ export default function AdminOrderDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const reconcile = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("mercadopago-reconcile", {
+        body: { orderId: id },
+      });
+      if (error) throw error;
+      return data as { message?: string; changed?: boolean };
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message ?? "Verificação concluída");
+      qc.invalidateQueries({ queryKey: ["admin-order", id] });
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
 
