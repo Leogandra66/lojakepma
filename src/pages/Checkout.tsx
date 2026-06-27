@@ -388,7 +388,10 @@ export default function Checkout() {
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
+      // Only notify on a freshly created order (skip when reusing a duplicate).
+      if (isNewOrder) {
       // Notify owner about new order (fire-and-forget; never block checkout)
+
       supabase.functions
         .invoke("send-transactional-email", {
           body: {
