@@ -438,6 +438,9 @@ export default function Checkout() {
       } catch (e) {
         console.error("Failed to send Telegram notification:", e);
       }
+      } // end isNewOrder notifications
+
+
 
       const paymentType = hasPreorderItems && regularTotal === 0 ? "preorder_deposit" : "full";
       const { error: paymentErr } = await supabase.from("payments").insert({
