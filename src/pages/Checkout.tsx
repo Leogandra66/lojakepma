@@ -370,9 +370,10 @@ export default function Checkout() {
           if (error) console.error("Failed to update profile:", error);
         });
 
-      if (appliedCoupon) {
+      if (appliedCoupon && isNewOrder) {
         await supabase.rpc("increment_coupon_usage" as any, { coupon_id: appliedCoupon.id });
       }
+
 
       const orderItems = items.map((item) => ({
         order_id: order.id,
