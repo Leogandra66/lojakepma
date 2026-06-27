@@ -277,31 +277,78 @@ export default function Checkout() {
       const totalDiscount = discountAmount + pixDiscount;
       const finalAmountDue = amountDueNow - pixDiscount;
 
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          total: totalPrice - totalDiscount,
-          has_preorder_items: hasPreorderItems,
-          status: "pending_payment",
-          coupon_id: appliedCoupon?.id || null,
-          discount_amount: totalDiscount,
-          customer_name: f.name,
-          customer_cpf: f.doc,
-          customer_email: f.email,
-          customer_phone: f.phone,
-          shipping_zip: f.zip,
-          shipping_street: f.street,
-          shipping_number: f.number,
-          shipping_complement: f.complement || null,
-          shipping_neighborhood: f.neighborhood,
-          shipping_city: f.city,
-          shipping_state: f.state,
-        } as any)
-        .select()
-        .single();
+      const orderPayload = {
+        user_id: user.id,
+        total: totalPrice - totalDiscount,
+        has_preorder_items: hasPreorderItems,
+        status: "pending_payment",
+        coupon_id: appliedCoupon?.id || null,
+        discount_amount: totalDiscount,
+        customer_name: f.name,
+        customer_cpf: f.doc,
+        customer_email: f.email,
+        customer_phone: f.phone,
+        shipping_zip: f.zip,
+        shipping_street: f.street,
+        shipping_number: f.number,
+        shipping_complement: f.complement || null,
+        shipping_neighborhood: f.neighborhood,
+        shipping_city: f.city,
+        shipping_state: f.state,
+      };
 
-      if (orderErr) throw orderErr;
+      // Signature of the current cart, used to detect a duplicate of a recent order.
+      const cartSignature = items
+        .map((i) => `${i.product.id}:${i.quantity}`)
+        .sort()
+        .join("|");
+
+      // Try to reuse a recent unpaid order (last 24h) with the exact same cart,
+      // instead of creating a brand new order on every checkout click.
+      let order: any = null;
+      let isNewOrder = true;
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentOrders } = await supabase
+        .from("orders")
+        .select("id, order_items(product_id, quantity)")
+        .eq("user_id", user.id)
+        .eq("status", "pending_payment")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const reusable = (recentOrders ?? []).find((o: any) => {
+        const sig = (o.order_items ?? [])
+          .map((it: any) => `${it.product_id}:${it.quantity}`)
+          .sort()
+          .join("|");
+        return sig === cartSignature;
+      });
+
+      if (reusable) {
+        // Reuse the existing order: refresh its data and clear stale items/payments.
+        const { data: updated, error: updateErr } = await supabase
+          .from("orders")
+          .update(orderPayload as any)
+          .eq("id", reusable.id)
+          .select()
+          .single();
+        if (updateErr) throw updateErr;
+        order = updated;
+        isNewOrder = false;
+
+        await supabase.from("order_items").delete().eq("order_id", order.id);
+        await supabase.from("payments").delete().eq("order_id", order.id).eq("status", "pending");
+      } else {
+        const { data: inserted, error: orderErr } = await supabase
+          .from("orders")
+          .insert(orderPayload as any)
+          .select()
+          .single();
+        if (orderErr) throw orderErr;
+        order = inserted;
+      }
+
 
       // Save data back to the user's profile for next time (fire-and-forget)
       supabase
