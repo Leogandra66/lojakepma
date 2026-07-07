@@ -58,7 +58,18 @@ export default function AdminOrderDetail() {
         profile = p;
       }
 
-      return { order: orderRes.data, items: itemsRes.data ?? [], payments: paymentsRes.data ?? [], profile };
+      let coupon = null;
+      const couponId = (orderRes.data as { coupon_id?: string | null } | null)?.coupon_id;
+      if (couponId) {
+        const { data: c } = await supabase
+          .from("coupons")
+          .select("code")
+          .eq("id", couponId)
+          .maybeSingle();
+        coupon = c;
+      }
+
+      return { order: orderRes.data, items: itemsRes.data ?? [], payments: paymentsRes.data ?? [], profile, coupon };
     },
     enabled: !!id,
   });
@@ -117,7 +128,7 @@ export default function AdminOrderDetail() {
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
 
-  const { order, items, payments, profile } = data;
+  const { order, items, payments, profile, coupon } = data;
   const o = order as typeof order & {
     customer_name?: string | null; customer_cpf?: string | null;
     customer_email?: string | null; customer_phone?: string | null;
@@ -164,6 +175,10 @@ export default function AdminOrderDetail() {
           <div>
             <p className="text-sm text-muted-foreground">Desconto</p>
             <p className="font-medium">{formatBRL(Number(order.discount_amount ?? 0))}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Cupom</p>
+            <p className="font-medium">{coupon?.code ?? "-"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Pré-venda</p>
