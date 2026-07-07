@@ -128,7 +128,7 @@ export default function AdminOrderDetail() {
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!data?.order) return <p className="text-muted-foreground">Pedido não encontrado.</p>;
 
-  const { order, items, payments, profile } = data;
+  const { order, items, payments, profile, coupon } = data;
   const o = order as typeof order & {
     customer_name?: string | null; customer_cpf?: string | null;
     customer_email?: string | null; customer_phone?: string | null;
