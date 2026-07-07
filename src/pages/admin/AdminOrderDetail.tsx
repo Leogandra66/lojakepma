@@ -177,6 +177,10 @@ export default function AdminOrderDetail() {
             <p className="font-medium">{formatBRL(Number(order.discount_amount ?? 0))}</p>
           </div>
           <div>
+            <p className="text-sm text-muted-foreground">Cupom</p>
+            <p className="font-medium">{coupon?.code ?? "-"}</p>
+          </div>
+          <div>
             <p className="text-sm text-muted-foreground">Pré-venda</p>
             <p className="font-medium">{order.has_preorder_items ? "Sim" : "Não"}</p>
           </div>
