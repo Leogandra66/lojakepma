@@ -58,7 +58,18 @@ export default function AdminOrderDetail() {
         profile = p;
       }
 
-      return { order: orderRes.data, items: itemsRes.data ?? [], payments: paymentsRes.data ?? [], profile };
+      let coupon = null;
+      const couponId = (orderRes.data as { coupon_id?: string | null } | null)?.coupon_id;
+      if (couponId) {
+        const { data: c } = await supabase
+          .from("coupons")
+          .select("code")
+          .eq("id", couponId)
+          .maybeSingle();
+        coupon = c;
+      }
+
+      return { order: orderRes.data, items: itemsRes.data ?? [], payments: paymentsRes.data ?? [], profile, coupon };
     },
     enabled: !!id,
   });
