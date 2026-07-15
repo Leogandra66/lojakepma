@@ -1,36 +1,64 @@
-## Problema
+## Integração com API do Bling v3 para sincronizar estoque
 
-Uma venda foi paga (o dinheiro chegou ao Mercado Pago), mas o pedido continuou como **"Aguardando pagamento"**. Hoje a atualização do status depende 100% do webhook do Mercado Pago. Quando essa notificação não chega (ou falha — atraso, instabilidade, retry perdido), o pedido fica preso para sempre, sem nenhuma forma de corrigir além de mudar o status na mão (o que não registra o pagamento de verdade).
+### Objetivo
+Atualizar automaticamente `stock_quantity` na tabela `products` a cada 1 hora, apenas para produtos que têm o campo **Cód. Bling** preenchido. Além disso, um botão manual "Sincronizar agora" no admin.
 
-Confirmei no banco: a cliente fez várias tentativas de checkout (cada clique gera um novo pedido) e todos estão `pending_payment`, apesar do pagamento existir no Mercado Pago.
+---
 
-## Solução
+### Passo 1 — Criar o app no Bling (você faz isso)
 
-Criar um mecanismo de **reconferência** que consulta o Mercado Pago e atualiza o pedido — usado tanto manualmente quanto de forma automática.
+Antes de eu implementar, você precisa criar um aplicativo no Bling para me fornecer as credenciais OAuth2:
 
-### 1. Nova função de backend `mercadopago-reconcile`
-- Recebe o `order_id` de um pedido.
-- Consulta a API de busca do Mercado Pago pelos pagamentos daquele pedido (`/v1/payments/search?external_reference={order_id}`).
-- Aplica exatamente a mesma lógica do webhook atual: mapeia o status do Mercado Pago (`approved` → pago, `rejected`/`cancelled` → falhou, etc.), atualiza a tabela de pagamentos (com `paid_at`, comprovante, NSU) e marca o pedido como **Pago** quando confirmado.
-- Dispara a notificação no Telegram quando o pagamento passa a pago, igual ao fluxo atual.
-- Responde dizendo o que encontrou (ex.: "pagamento aprovado, pedido atualizado" ou "nenhum pagamento aprovado encontrado").
+1. Acesse **https://developer.bling.com.br/** e faça login com a conta Bling da empresa.
+2. Vá em **Meus Aplicativos → Criar novo aplicativo**.
+3. Preencha:
+   - **Nome:** Loja Kepma (ou o que preferir)
+   - **Categoria:** E-commerce / Integração própria
+   - **Link de redirecionamento (Redirect URI):** vou te informar a URL exata assim que a edge function estiver pronta — será algo como
+     `https://<projeto>.functions.supabase.co/bling-oauth-callback`
+   - **Escopos:** marque pelo menos **Produtos** e **Estoques** (leitura).
+4. Ao salvar, o Bling gera **Client ID** e **Client Secret**. Guarde os dois.
 
-### 2. Botão no detalhe do pedido (admin)
-- Na tela de detalhe do pedido, adicionar o botão **"Verificar pagamento no Mercado Pago"**.
-- Ao clicar, chama a função acima e atualiza a tela com o resultado (toast de sucesso/erro e recarregamento dos dados).
-- Assim, para o pedido que está preso agora, basta abrir e clicar — ele será corrigido na hora.
+> Observação: como o Bling v3 usa OAuth2 com refresh token (validade curta do access token, ~6h), a primeira autorização é feita 1x pelo navegador; depois o sistema renova sozinho.
 
-### 3. Reconferência automática (rede de segurança)
-- Um processo periódico que, a cada intervalo, pega pedidos recentes ainda em "Aguardando pagamento" (ex.: criados nas últimas 24–48h) e roda a reconferência neles automaticamente.
-- Isso garante que, mesmo se o webhook falhar de novo, o pedido será atualizado sozinho em poucos minutos, sem ação manual.
+---
 
-## Detalhes técnicos
+### Passo 2 — O que eu vou implementar (depois que você tiver as credenciais)
 
-- A função reutiliza `MERCADO_PAGO_ACCESS_TOKEN` (já configurado) e o mapeamento de status do `mercadopago-webhook`. Para evitar duplicação, a lógica de "aplicar status de um pagamento MP ao pedido" será compartilhada entre o webhook e a reconferência.
-- A função usa a service role para atualizar pedidos/pagamentos e responde com CORS para ser chamada do painel admin (com validação de admin via JWT).
-- A reconferência automática usará agendamento (cron) no backend chamando a função para pedidos pendentes recentes.
-- Nenhuma mudança no fluxo de checkout do cliente — só adiciona caminhos de recuperação.
+**Backend (Lovable Cloud):**
+1. **Tabela `bling_auth`** para guardar `access_token`, `refresh_token`, `expires_at` (linha única, protegida por RLS — só service_role).
+2. **Edge function `bling-oauth-start`**: gera a URL de autorização do Bling e redireciona.
+3. **Edge function `bling-oauth-callback`**: recebe o `code` do Bling, troca por tokens e salva em `bling_auth`.
+4. **Edge function `bling-sync-stock`**:
+   - Carrega tokens; se expirado, usa `refresh_token` para renovar.
+   - Busca em lotes todos os `products` com `bling_code IS NOT NULL AND bling_code <> ''`.
+   - Para cada código, consulta `GET /produtos?codigo=<sku>` (ou endpoint de estoque) e atualiza `stock_quantity` + `stock_synced_at`.
+   - Se saldo = 0, marca `status = 'unavailable'`; se voltou a ter saldo e estava indisponível, volta para `in_stock` (mesma regra do webhook atual).
+   - Respeita o rate limit do Bling (3 req/s) com pequenas pausas entre chamadas.
+   - Retorna um resumo (quantos atualizados, quantos não encontrados, quantos com erro).
+5. **Cron job (pg_cron + pg_net)** chamando `bling-sync-stock` **a cada 1 hora**.
 
-## Fora do escopo
-- Não altera o fluxo de criação de pagamento nem o webhook existente (ele continua funcionando como caminho principal).
-- Não mexe na duplicação de pedidos por múltiplos cliques (pode ser tratado depois, se desejar).
+**Secrets a serem cadastrados:** `BLING_CLIENT_ID`, `BLING_CLIENT_SECRET`.
+
+**Frontend (Admin):**
+- Na página **/admin/produtos**, adicionar no topo:
+  - Botão **"Conectar Bling"** (aparece só se `bling_auth` estiver vazio) → abre a URL do OAuth.
+  - Botão **"Sincronizar estoque agora"** (aparece quando conectado) → chama `bling-sync-stock` e mostra toast com o resumo.
+  - Texto pequeno com "Última sincronização: <data/hora>" e "Próxima sincronização automática: em ~X min".
+- A coluna atual mostra `Cód. Bling` — nada muda ali.
+
+**Compatibilidade com o que já existe:**
+- O webhook `bling-stock-webhook` continua funcionando como está (recebe eventos em tempo real do Bling se você configurar). A sincronização periódica é redundância segura caso um webhook se perca.
+- Nenhuma alteração no fluxo de checkout, pedidos ou pagamentos.
+
+---
+
+### Passo 3 — Ordem de execução
+
+1. Você cria o app no Bling e me confirma "criei".
+2. Eu implemento a tabela + edge functions + botões e te informo a **Redirect URI exata** para você colar no cadastro do app Bling.
+3. Você cola a Redirect URI, pega Client ID + Client Secret, e eu abro o formulário seguro para você salvar.
+4. Você clica em **"Conectar Bling"** uma vez no admin, autoriza no site do Bling, é redirecionado de volta.
+5. Clica em **"Sincronizar agora"** para o primeiro teste. Se tudo ok, o cron de 1 em 1 hora assume dali em diante.
+
+Me avise quando o app estiver criado no Bling (ou se quiser que eu já implemente os passos 2 em paralelo, sem os secrets — as funções ficam prontas esperando as credenciais).
