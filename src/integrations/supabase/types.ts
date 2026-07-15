@@ -139,6 +139,39 @@ export type Database = {
           },
         ]
       }
+      bling_auth: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: number
+          last_sync_at: string | null
+          last_sync_summary: Json | null
+          refresh_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: number
+          last_sync_at?: string | null
+          last_sync_summary?: Json | null
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: number
+          last_sync_at?: string | null
+          last_sync_summary?: Json | null
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupon_products: {
         Row: {
           coupon_id: string
