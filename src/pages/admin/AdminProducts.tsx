@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Images, Copy, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Images, Copy, Search, RefreshCw, Link as LinkIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BlingSyncPanel } from "@/components/admin/BlingSyncPanel";
 import AdminImageManager from "@/components/admin/AdminImageManager";
 
 const statusLabels: Record<string, string> = {
