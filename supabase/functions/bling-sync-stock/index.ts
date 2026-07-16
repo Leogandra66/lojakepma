@@ -14,6 +14,10 @@ Deno.serve(async (req) => {
   try {
     const accessToken = await getAccessToken(supabase);
 
+    // Descobrir id do depósito "Geral"
+    const depositoGeralId = await findDepositoGeral(accessToken);
+    console.log("Depósito Geral id:", depositoGeralId);
+
     const { data: products, error: prodErr } = await supabase
       .from("products")
       .select("id, bling_code, status")
@@ -21,11 +25,19 @@ Deno.serve(async (req) => {
       .neq("bling_code", "");
     if (prodErr) throw prodErr;
 
-    const summary = { total: products?.length ?? 0, updated: 0, not_found: 0, errors: 0, details: [] as any[] };
+    const summary = {
+      total: products?.length ?? 0,
+      updated: 0,
+      not_found: 0,
+      errors: 0,
+      first_error: null as string | null,
+      deposito_geral_id: depositoGeralId,
+      details: [] as any[],
+    };
 
     for (const p of products ?? []) {
       try {
-        const balance = await fetchStock(accessToken, p.bling_code as string);
+        const balance = await fetchStock(accessToken, p.bling_code as string, depositoGeralId);
         if (balance === null) {
           summary.not_found++;
           summary.details.push({ code: p.bling_code, status: "not_found" });
@@ -44,11 +56,12 @@ Deno.serve(async (req) => {
         summary.details.push({ code: p.bling_code, balance });
       } catch (e) {
         summary.errors++;
-        summary.details.push({ code: p.bling_code, error: (e as Error).message });
+        const msg = (e as Error).message;
+        if (!summary.first_error) summary.first_error = msg;
+        summary.details.push({ code: p.bling_code, error: msg });
         console.error("Erro no produto", p.bling_code, e);
       }
-      // Rate limit: Bling permite 3 req/s.
-      await sleep(350);
+      await sleep(350); // Bling permite ~3 req/s
     }
 
     await supabase
@@ -102,7 +115,26 @@ async function getAccessToken(supabase: any): Promise<string> {
   return tok.access_token;
 }
 
-async function fetchStock(token: string, code: string): Promise<number | null> {
+async function findDepositoGeral(token: string): Promise<number | null> {
+  try {
+    const r = await fetch(`${BLING_API}/depositos`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    });
+    if (!r.ok) {
+      console.warn(`GET /depositos ${r.status}: ${await r.text()}`);
+      return null;
+    }
+    const body = await r.json();
+    const list = body?.data ?? [];
+    const geral = list.find((d: any) => String(d?.descricao ?? "").trim().toLowerCase() === "geral");
+    return geral?.id ?? null;
+  } catch (e) {
+    console.warn("findDepositoGeral falhou:", (e as Error).message);
+    return null;
+  }
+}
+
+async function fetchStock(token: string, code: string, depositoId: number | null): Promise<number | null> {
   // 1. Achar produto pelo código (SKU)
   const r = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(code)}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
@@ -113,22 +145,38 @@ async function fetchStock(token: string, code: string): Promise<number | null> {
   const prod = Array.isArray(list) ? list.find((x: any) => String(x.codigo) === code) ?? list[0] : null;
   if (!prod?.id) return null;
 
-  // 2. Consultar saldo detalhado
-  const s = await fetch(`${BLING_API}/estoques/saldos?idsProdutos[]=${prod.id}`, {
+  // 2. Consultar saldo, preferindo o depósito Geral quando conhecido
+  const saldosUrl = depositoId
+    ? `${BLING_API}/estoques/saldos?idsProdutos[]=${prod.id}&idsDepositos[]=${depositoId}`
+    : `${BLING_API}/estoques/saldos?idsProdutos[]=${prod.id}`;
+  const s = await fetch(saldosUrl, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
   if (!s.ok) {
-    // fallback: alguns produtos vêm com estoque inline
     const inline = prod?.estoque?.saldoVirtualTotal ?? prod?.estoque?.saldoFisico;
     if (inline != null) return Math.max(0, Math.floor(Number(inline)));
     throw new Error(`GET /estoques/saldos ${s.status}: ${await s.text()}`);
   }
   const sb = await s.json();
   const items = sb?.data ?? [];
-  const first = items[0];
-  const saldo = first?.saldoVirtual ?? first?.saldoFisico ?? first?.saldoVirtualTotal;
+
+  // A resposta pode vir como [{ produto:{id}, depositos:[{id,saldoFisico,saldoVirtual}] }]
+  // ou já filtrada. Extrair o saldo do depósito Geral quando presente.
+  let saldo: number | null = null;
+  for (const it of items) {
+    const deps = it?.depositos ?? (it?.saldoFisico != null ? [it] : []);
+    for (const d of deps) {
+      if (depositoId && d?.id && Number(d.id) !== Number(depositoId)) continue;
+      const v = d?.saldoFisico ?? d?.saldoVirtual ?? d?.saldoFisicoTotal ?? d?.saldoVirtualTotal;
+      if (v != null) {
+        saldo = Number(v);
+        break;
+      }
+    }
+    if (saldo != null) break;
+  }
   if (saldo == null) return null;
-  return Math.max(0, Math.floor(Number(saldo)));
+  return Math.max(0, Math.floor(saldo));
 }
 
 function json(body: unknown, status = 200) {
