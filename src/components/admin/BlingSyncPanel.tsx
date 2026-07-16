@@ -32,9 +32,12 @@ export function BlingSyncPanel() {
       return data.summary;
     },
     onSuccess: (s: any) => {
-      toast.success(
-        `Sincronização concluída: ${s.updated} atualizado(s), ${s.not_found} não encontrado(s), ${s.errors} erro(s).`,
-      );
+      const base = `Sincronização: ${s.updated} atualizado(s), ${s.not_found} não encontrado(s), ${s.errors} erro(s).`;
+      if (s.errors > 0 && s.first_error) {
+        toast.error(`${base}\nPrimeiro erro: ${s.first_error}`, { duration: 12000 });
+      } else {
+        toast.success(base);
+      }
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["bling-auth-status"] });
