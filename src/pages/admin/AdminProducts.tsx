@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Images, Copy, Search, RefreshCw, Link as LinkIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Images, Copy, Search } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BlingSyncPanel } from "@/components/admin/BlingSyncPanel";
@@ -243,6 +243,8 @@ export default function AdminProducts() {
           <Plus className="mr-2 h-4 w-4" /> Novo Produto
         </Button>
       </div>
+
+      <BlingSyncPanel />
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
