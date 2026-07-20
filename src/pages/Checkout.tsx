@@ -278,8 +278,8 @@ export default function Checkout() {
     // amountDueNow is base; part 1 = card (always), part 2 = card or pix
     const p1 = parseBRLInput(splitPart1Input);
     const p2 = Math.max(0, amountDueNow - p1);
-    const p1Method: "card" | "pix" = "card";
-    const p2Method: "card" | "pix" = splitCombo === "card_pix" ? "pix" : "card";
+    const p1Method = "card" as "card" | "pix";
+    const p2Method = (splitCombo === "card_pix" ? "pix" : "card") as "card" | "pix";
     const p1Final = p1Method === "pix" ? p1 * 0.9 : p1;
     const p2Final = p2Method === "pix" ? p2 * 0.9 : p2;
     const valid = p1 >= 5 && p2 >= 5 && p1 < amountDueNow;
@@ -706,22 +706,109 @@ export default function Checkout() {
                 Preencha seus dados acima para liberar o pagamento.
               </p>
             )}
-            <Button
-              size="lg"
-              className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => handleCheckout(true)}
-              disabled={loading !== false || !formValid}
-            >
-              {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
-            </Button>
-            <Button
-              size="lg"
-              className="btn-gold w-full rounded-full text-base"
-              onClick={() => handleCheckout(false)}
-              disabled={loading !== false || !formValid}
-            >
-              {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
-            </Button>
+
+            {/* Payment mode selector */}
+            <div className="flex gap-2 p-1 bg-muted rounded-full">
+              <button
+                type="button"
+                onClick={() => setPaymentMode("single")}
+                className={`flex-1 rounded-full text-sm py-2 transition ${paymentMode === "single" ? "bg-background shadow font-medium" : "text-muted-foreground"}`}
+              >
+                Pagamento único
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMode("split")}
+                className={`flex-1 rounded-full text-sm py-2 transition ${paymentMode === "split" ? "bg-background shadow font-medium" : "text-muted-foreground"}`}
+              >
+                Dividir em 2 formas
+              </button>
+            </div>
+
+            {paymentMode === "single" ? (
+              <>
+                <Button
+                  size="lg"
+                  className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => handleCheckout("pix")}
+                  disabled={loading !== false || !formValid}
+                >
+                  {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
+                </Button>
+                <Button
+                  size="lg"
+                  className="btn-gold w-full rounded-full text-base"
+                  onClick={() => handleCheckout("default")}
+                  disabled={loading !== false || !formValid}
+                >
+                  {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3 border rounded-2xl p-4">
+                <div>
+                  <label className="text-sm font-medium">Combinação</label>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSplitCombo("card_pix")}
+                      className={`flex-1 rounded-full text-sm py-2 border ${splitCombo === "card_pix" ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
+                    >
+                      Cartão + PIX
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSplitCombo("card_card")}
+                      className={`flex-1 rounded-full text-sm py-2 border ${splitCombo === "card_card" ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
+                    >
+                      Cartão + Cartão
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Valor da 1ª parte (Cartão) em R$</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={splitPart1Input}
+                    onChange={(e) => setSplitPart1Input(e.target.value)}
+                    placeholder="Ex: 1500,00"
+                    className="mt-2 w-full rounded-full border px-4 py-2 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Total a dividir: {formatBRL(amountDueNow)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-muted/50 p-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span>1ª parte — Cartão</span>
+                    <span className="font-medium">{formatBRL(split.p1Final)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>2ª parte — {split.p2Method === "pix" ? "PIX (−10%)" : "Cartão"}</span>
+                    <span className="font-medium">{formatBRL(split.p2Final)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 mt-1">
+                    <span className="font-semibold">Total efetivo</span>
+                    <span className="font-semibold">{formatBRL(split.effectiveTotal)}</span>
+                  </div>
+                </div>
+
+                <Button
+                  size="lg"
+                  className="btn-gold w-full rounded-full text-base"
+                  onClick={() => handleCheckout("split")}
+                  disabled={loading !== false || !formValid || !split.valid}
+                >
+                  {loading === "split" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Iniciar pagamento dividido"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Você pagará a 1ª parte agora. Após concluir, retornará automaticamente para pagar a 2ª parte.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>
