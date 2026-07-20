@@ -34,11 +34,12 @@ export default function PaymentReturn() {
       // Split return: check other part
       if (isSplitReturn && refOrderId) {
         try {
-          const { data: parts } = await supabase
-            .from("order_payment_parts" as any)
+          const { data: partsData } = await (supabase as any)
+            .from("order_payment_parts")
             .select("part_index, status, mp_init_point, method, amount_cents")
             .eq("order_id", refOrderId)
             .order("part_index");
+          const parts = (partsData ?? []) as any[];
           const other = (parts ?? []).find((p: any) => p.part_index !== currentPart);
           const bothApproved = (parts ?? []).length === 2 && (parts ?? []).every((p: any) => p.status === "approved");
           if (bothApproved) {
