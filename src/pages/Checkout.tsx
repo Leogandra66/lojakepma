@@ -78,12 +78,17 @@ export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<false | "default" | "pix">(false);
+  const [loading, setLoading] = useState<false | "default" | "pix" | "split">(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [form, setForm] = useState<CheckoutForm>(emptyForm);
   const [cepLoading, setCepLoading] = useState(false);
+
+  // Split payment state
+  const [paymentMode, setPaymentMode] = useState<"single" | "split">("single");
+  const [splitCombo, setSplitCombo] = useState<"card_pix" | "card_card">("card_pix");
+  const [splitPart1Input, setSplitPart1Input] = useState<string>(""); // BRL string typed by user
 
   const setField = (k: keyof CheckoutForm, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -263,19 +268,46 @@ export default function Checkout() {
     }
   }
 
-  const handleCheckout = async (pix = false) => {
+  // Split calculation helpers
+  const parseBRLInput = (s: string) => {
+    const cleaned = s.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? 0 : n;
+  };
+  const split = (() => {
+    // amountDueNow is base; part 1 = card (always), part 2 = card or pix
+    const p1 = parseBRLInput(splitPart1Input);
+    const p2 = Math.max(0, amountDueNow - p1);
+    const p1Method = "card" as "card" | "pix";
+    const p2Method = (splitCombo === "card_pix" ? "pix" : "card") as "card" | "pix";
+    const p1Final = p1Method === "pix" ? p1 * 0.9 : p1;
+    const p2Final = p2Method === "pix" ? p2 * 0.9 : p2;
+    const valid = p1 >= 5 && p2 >= 5 && p1 < amountDueNow;
+    return { p1, p2, p1Method, p2Method, p1Final, p2Final, valid, effectiveTotal: p1Final + p2Final };
+  })();
+
+  const handleCheckout = async (mode: "default" | "pix" | "split" = "default") => {
     const parsed = checkoutSchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.errors[0]?.message || "Preencha os dados corretamente");
       return;
     }
+    if (mode === "split" && !split.valid) {
+      toast.error("Divisão inválida. Cada parte precisa ter no mínimo R$ 5,00.");
+      return;
+    }
     const f = parsed.data;
-    setLoading(pix ? "pix" : "default");
+    setLoading(mode);
     try {
-      // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
+      const pix = mode === "pix";
+      const isSplit = mode === "split";
+
+      // PIX (single) gives an extra 10% discount on the amount due now (stacks with coupon)
       const pixDiscount = pix ? amountDueNow * 0.1 : 0;
-      const totalDiscount = discountAmount + pixDiscount;
-      const finalAmountDue = amountDueNow - pixDiscount;
+      // Split PIX portion discount (only on the pix part)
+      const splitPixDiscount = isSplit && split.p2Method === "pix" ? split.p2 * 0.1 : 0;
+      const totalDiscount = discountAmount + pixDiscount + splitPixDiscount;
+      const finalAmountDue = amountDueNow - pixDiscount - splitPixDiscount;
 
       const orderPayload = {
         user_id: user.id,
@@ -496,6 +528,32 @@ export default function Checkout() {
 
       const paymentFunction = gateway === "mercadopago" ? "create-payment-mp" : "create-payment";
 
+      // Split path: request two payment preferences
+      if (isSplit) {
+        // Update order to split mode (works for both reused & new order)
+        await supabase.from("orders")
+          .update({ payment_mode: "split", split_config: { combo: splitCombo } } as any)
+          .eq("id", order.id);
+
+        const { data: splitData, error: splitErr } = await supabase.functions.invoke("create-payment-mp", {
+          body: {
+            orderId: order.id,
+            redirectUrl,
+            parts: [
+              { partIndex: 1, method: split.p1Method, amountCents: Math.round(split.p1Final * 100) },
+              { partIndex: 2, method: split.p2Method, amountCents: Math.round(split.p2Final * 100) },
+            ],
+          },
+        });
+        if (splitErr) throw splitErr;
+        const parts = (splitData?.parts ?? []) as Array<{ partIndex: number; initPoint: string }>;
+        const first = parts.find((p) => p.partIndex === 1);
+        if (!first?.initPoint) throw new Error("Falha ao criar pagamento dividido");
+        clearCart();
+        window.location.href = first.initPoint;
+        return;
+      }
+
       const { data: paymentData, error: payErr } = await supabase.functions.invoke(paymentFunction, {
         body: { orderId: order.id, items: infinityItems, redirectUrl, pixOnly: pix },
       });
@@ -674,22 +732,109 @@ export default function Checkout() {
                 Preencha seus dados acima para liberar o pagamento.
               </p>
             )}
-            <Button
-              size="lg"
-              className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => handleCheckout(true)}
-              disabled={loading !== false || !formValid}
-            >
-              {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
-            </Button>
-            <Button
-              size="lg"
-              className="btn-gold w-full rounded-full text-base"
-              onClick={() => handleCheckout(false)}
-              disabled={loading !== false || !formValid}
-            >
-              {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
-            </Button>
+
+            {/* Payment mode selector */}
+            <div className="flex gap-2 p-1 bg-muted rounded-full">
+              <button
+                type="button"
+                onClick={() => setPaymentMode("single")}
+                className={`flex-1 rounded-full text-sm py-2 transition ${paymentMode === "single" ? "bg-background shadow font-medium" : "text-muted-foreground"}`}
+              >
+                Pagamento único
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMode("split")}
+                className={`flex-1 rounded-full text-sm py-2 transition ${paymentMode === "split" ? "bg-background shadow font-medium" : "text-muted-foreground"}`}
+              >
+                Dividir em 2 formas
+              </button>
+            </div>
+
+            {paymentMode === "single" ? (
+              <>
+                <Button
+                  size="lg"
+                  className="w-full rounded-full text-base bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => handleCheckout("pix")}
+                  disabled={loading !== false || !formValid}
+                >
+                  {loading === "pix" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com PIX — 10% de desconto"}
+                </Button>
+                <Button
+                  size="lg"
+                  className="btn-gold w-full rounded-full text-base"
+                  onClick={() => handleCheckout("default")}
+                  disabled={loading !== false || !formValid}
+                >
+                  {loading === "default" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pagar com Mercado Pago"}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3 border rounded-2xl p-4">
+                <div>
+                  <label className="text-sm font-medium">Combinação</label>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSplitCombo("card_pix")}
+                      className={`flex-1 rounded-full text-sm py-2 border ${splitCombo === "card_pix" ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
+                    >
+                      Cartão + PIX
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSplitCombo("card_card")}
+                      className={`flex-1 rounded-full text-sm py-2 border ${splitCombo === "card_card" ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
+                    >
+                      Cartão + Cartão
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Valor da 1ª parte (Cartão) em R$</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={splitPart1Input}
+                    onChange={(e) => setSplitPart1Input(e.target.value)}
+                    placeholder="Ex: 1500,00"
+                    className="mt-2 w-full rounded-full border px-4 py-2 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Total a dividir: {formatBRL(amountDueNow)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-muted/50 p-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span>1ª parte — Cartão</span>
+                    <span className="font-medium">{formatBRL(split.p1Final)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>2ª parte — {split.p2Method === "pix" ? "PIX (−10%)" : "Cartão"}</span>
+                    <span className="font-medium">{formatBRL(split.p2Final)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 mt-1">
+                    <span className="font-semibold">Total efetivo</span>
+                    <span className="font-semibold">{formatBRL(split.effectiveTotal)}</span>
+                  </div>
+                </div>
+
+                <Button
+                  size="lg"
+                  className="btn-gold w-full rounded-full text-base"
+                  onClick={() => handleCheckout("split")}
+                  disabled={loading !== false || !formValid || !split.valid}
+                >
+                  {loading === "split" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Iniciar pagamento dividido"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Você pagará a 1ª parte agora. Após concluir, retornará automaticamente para pagar a 2ª parte.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>

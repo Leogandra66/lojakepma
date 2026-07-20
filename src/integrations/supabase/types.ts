@@ -385,6 +385,59 @@ export type Database = {
           },
         ]
       }
+      order_payment_parts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          method: string
+          mp_init_point: string | null
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          order_id: string
+          paid_at: string | null
+          part_index: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          method: string
+          mp_init_point?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          order_id: string
+          paid_at?: string | null
+          part_index: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          method?: string
+          mp_init_point?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          order_id?: string
+          paid_at?: string | null
+          part_index?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_payment_parts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           b2b_account_id: string | null
@@ -398,6 +451,7 @@ export type Database = {
           has_preorder_items: boolean
           id: string
           is_b2b: boolean
+          payment_mode: string
           placed_by_rep_id: string | null
           shipping_city: string | null
           shipping_complement: string | null
@@ -406,6 +460,7 @@ export type Database = {
           shipping_state: string | null
           shipping_street: string | null
           shipping_zip: string | null
+          split_config: Json | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
           tracking_url: string | null
@@ -424,6 +479,7 @@ export type Database = {
           has_preorder_items?: boolean
           id?: string
           is_b2b?: boolean
+          payment_mode?: string
           placed_by_rep_id?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
@@ -432,6 +488,7 @@ export type Database = {
           shipping_state?: string | null
           shipping_street?: string | null
           shipping_zip?: string | null
+          split_config?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
           tracking_url?: string | null
@@ -450,6 +507,7 @@ export type Database = {
           has_preorder_items?: boolean
           id?: string
           is_b2b?: boolean
+          payment_mode?: string
           placed_by_rep_id?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
@@ -458,6 +516,7 @@ export type Database = {
           shipping_state?: string | null
           shipping_street?: string | null
           shipping_zip?: string | null
+          split_config?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           tracking_url?: string | null
