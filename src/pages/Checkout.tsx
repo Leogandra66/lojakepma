@@ -528,6 +528,32 @@ export default function Checkout() {
 
       const paymentFunction = gateway === "mercadopago" ? "create-payment-mp" : "create-payment";
 
+      // Split path: request two payment preferences
+      if (isSplit) {
+        // Update order to split mode (works for both reused & new order)
+        await supabase.from("orders")
+          .update({ payment_mode: "split", split_config: { combo: splitCombo } } as any)
+          .eq("id", order.id);
+
+        const { data: splitData, error: splitErr } = await supabase.functions.invoke("create-payment-mp", {
+          body: {
+            orderId: order.id,
+            redirectUrl,
+            parts: [
+              { partIndex: 1, method: split.p1Method, amountCents: Math.round(split.p1Final * 100) },
+              { partIndex: 2, method: split.p2Method, amountCents: Math.round(split.p2Final * 100) },
+            ],
+          },
+        });
+        if (splitErr) throw splitErr;
+        const parts = (splitData?.parts ?? []) as Array<{ partIndex: number; initPoint: string }>;
+        const first = parts.find((p) => p.partIndex === 1);
+        if (!first?.initPoint) throw new Error("Falha ao criar pagamento dividido");
+        clearCart();
+        window.location.href = first.initPoint;
+        return;
+      }
+
       const { data: paymentData, error: payErr } = await supabase.functions.invoke(paymentFunction, {
         body: { orderId: order.id, items: infinityItems, redirectUrl, pixOnly: pix },
       });
