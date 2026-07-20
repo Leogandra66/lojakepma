@@ -268,19 +268,46 @@ export default function Checkout() {
     }
   }
 
-  const handleCheckout = async (pix = false) => {
+  // Split calculation helpers
+  const parseBRLInput = (s: string) => {
+    const cleaned = s.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? 0 : n;
+  };
+  const split = (() => {
+    // amountDueNow is base; part 1 = card (always), part 2 = card or pix
+    const p1 = parseBRLInput(splitPart1Input);
+    const p2 = Math.max(0, amountDueNow - p1);
+    const p1Method: "card" | "pix" = "card";
+    const p2Method: "card" | "pix" = splitCombo === "card_pix" ? "pix" : "card";
+    const p1Final = p1Method === "pix" ? p1 * 0.9 : p1;
+    const p2Final = p2Method === "pix" ? p2 * 0.9 : p2;
+    const valid = p1 >= 5 && p2 >= 5 && p1 < amountDueNow;
+    return { p1, p2, p1Method, p2Method, p1Final, p2Final, valid, effectiveTotal: p1Final + p2Final };
+  })();
+
+  const handleCheckout = async (mode: "default" | "pix" | "split" = "default") => {
     const parsed = checkoutSchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.errors[0]?.message || "Preencha os dados corretamente");
       return;
     }
+    if (mode === "split" && !split.valid) {
+      toast.error("Divisão inválida. Cada parte precisa ter no mínimo R$ 5,00.");
+      return;
+    }
     const f = parsed.data;
-    setLoading(pix ? "pix" : "default");
+    setLoading(mode);
     try {
-      // PIX gives an extra 10% discount on the amount due now (stacks with coupon)
+      const pix = mode === "pix";
+      const isSplit = mode === "split";
+
+      // PIX (single) gives an extra 10% discount on the amount due now (stacks with coupon)
       const pixDiscount = pix ? amountDueNow * 0.1 : 0;
-      const totalDiscount = discountAmount + pixDiscount;
-      const finalAmountDue = amountDueNow - pixDiscount;
+      // Split PIX portion discount (only on the pix part)
+      const splitPixDiscount = isSplit && split.p2Method === "pix" ? split.p2 * 0.1 : 0;
+      const totalDiscount = discountAmount + pixDiscount + splitPixDiscount;
+      const finalAmountDue = amountDueNow - pixDiscount - splitPixDiscount;
 
       const orderPayload = {
         user_id: user.id,
