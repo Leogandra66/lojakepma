@@ -78,12 +78,17 @@ export default function Checkout() {
   const { items, totalPrice, preorderTotal, regularTotal, hasPreorderItems, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<false | "default" | "pix">(false);
+  const [loading, setLoading] = useState<false | "default" | "pix" | "split">(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [form, setForm] = useState<CheckoutForm>(emptyForm);
   const [cepLoading, setCepLoading] = useState(false);
+
+  // Split payment state
+  const [paymentMode, setPaymentMode] = useState<"single" | "split">("single");
+  const [splitCombo, setSplitCombo] = useState<"card_pix" | "card_card">("card_pix");
+  const [splitPart1Input, setSplitPart1Input] = useState<string>(""); // BRL string typed by user
 
   const setField = (k: keyof CheckoutForm, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
