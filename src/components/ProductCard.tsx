@@ -116,16 +116,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </button>
         )}
       </div>
-
-        {isAvailable && (
-          <button
-            onClick={() => addItem(product)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md shrink-0"
-          >
-            Comprar
-          </button>
-        )}
-      </div>
     </div>
   );
 }
