@@ -70,6 +70,24 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
 
+      {/* Encomenda: prazo e condições */}
+      {product.status === "preorder" && (
+        <div className="mb-4 rounded-2xl bg-secondary/50 p-3 space-y-1">
+          {product.preorder_estimated_delivery && (
+            <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Chegada prevista:{" "}
+              <span className="font-medium text-foreground">
+                {new Date(product.preorder_estimated_delivery).toLocaleDateString("pt-BR")}
+              </span>
+            </p>
+          )}
+          <p className="text-[11px] sm:text-xs text-muted-foreground">
+            40% de entrada (R$ {(product.price * 0.4).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) e 60% na entrega
+          </p>
+        </div>
+      )}
+
       {/* Footer: price + CTA */}
       <div className="mt-auto flex items-end justify-between gap-3">
         <div className="flex flex-col gap-0.5">
@@ -89,6 +107,16 @@ export default function ProductCard({ product }: { product: Product }) {
             <span className="text-sm text-muted-foreground">Indisponível</span>
           )}
         </div>
+        {isAvailable && (
+          <button
+            onClick={() => addItem(product)}
+            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md shrink-0"
+          >
+            {product.status === "preorder" ? "Encomendar" : "Comprar"}
+          </button>
+        )}
+      </div>
+
         {isAvailable && (
           <button
             onClick={() => addItem(product)}
