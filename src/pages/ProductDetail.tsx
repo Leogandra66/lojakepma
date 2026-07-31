@@ -185,7 +185,7 @@ export default function ProductDetail() {
                         onClick={() => addItem(product)}
                       >
                         <ShoppingCart className="h-4 w-4" />
-                        Comprar
+                        {product.status === "preorder" ? "Encomendar" : "Comprar"}
                       </Button>
                     ) : (
                       <Button size="lg" disabled className="rounded-full w-full md:w-auto px-10 h-12">
