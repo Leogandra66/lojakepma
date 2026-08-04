@@ -335,30 +335,53 @@ export default function AdminOrderDetail() {
             <p className="text-muted-foreground">Nenhum pagamento.</p>
           ) : (
             <ul className="divide-y">
-              {payments.map((p) => (
-                <li key={p.id} className="py-3">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">
-                        {formatBRL(Number(p.amount))}{" "}
-                        <Badge variant={p.status === "paid" ? "default" : "outline"}>{p.status}</Badge>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {p.payment_type} • {p.capture_method ?? "-"} •{" "}
-                        {new Date(p.created_at).toLocaleString("pt-BR")}
-                      </p>
-                      {p.transaction_nsu && (
-                        <p className="text-xs text-muted-foreground font-mono">NSU: {p.transaction_nsu}</p>
+              {payments.map((p) => {
+                const meta = (p as any).metadata;
+                const mpError = meta?.mp_error;
+                return (
+                  <li key={p.id} className="py-3">
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {formatBRL(Number(p.amount))}{" "}
+                          <Badge variant={p.status === "paid" ? "default" : "outline"}>{p.status}</Badge>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.payment_type} • {p.capture_method ?? "-"} •{" "}
+                          {new Date(p.created_at).toLocaleString("pt-BR")}
+                        </p>
+                        {p.transaction_nsu && (
+                          <p className="text-xs text-muted-foreground font-mono">NSU: {p.transaction_nsu}</p>
+                        )}
+                        {p.mp_preference_id && (
+                          <p className="text-xs text-muted-foreground font-mono">Preference: {p.mp_preference_id}</p>
+                        )}
+                        {mpError && (
+                          <div className="mt-2 rounded bg-destructive/10 p-2 text-xs text-destructive">
+                            <p className="font-semibold">Erro Mercado Pago ({meta.mp_status}):</p>
+                            <pre className="whitespace-pre-wrap break-all">{JSON.stringify(mpError, null, 2)}</pre>
+                          </div>
+                        )}
+                        {meta && !mpError && (
+                          <details className="mt-2 text-xs">
+                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                              Ver detalhes do gateway
+                            </summary>
+                            <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted p-2 whitespace-pre-wrap break-all">
+                              {JSON.stringify(meta, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                      {p.receipt_url && (
+                        <a href={p.receipt_url} target="_blank" rel="noreferrer" className="text-sm underline">
+                          Comprovante
+                        </a>
                       )}
                     </div>
-                    {p.receipt_url && (
-                      <a href={p.receipt_url} target="_blank" rel="noreferrer" className="text-sm underline">
-                        Comprovante
-                      </a>
-                    )}
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>
