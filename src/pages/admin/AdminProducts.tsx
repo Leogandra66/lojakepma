@@ -38,6 +38,7 @@ const ELECTRONICS_TAG_OPTIONS = [
   "Eletrônica S1 Pro",
   "Eletrônica L1",
   "Eletrônica X1 Pro",
+  "LRbaggs Anthem Stage Pro",
 ];
 
 interface ProductForm {
