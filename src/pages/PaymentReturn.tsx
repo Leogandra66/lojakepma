@@ -33,10 +33,30 @@ export default function PaymentReturn() {
   const isMpFailure = isMercadoPago && (mpStatus === "failure" || mpStatus === "rejected" || mpStatus === "cancelled");
 
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const loadOrderStatus = async (orderId: string) => {
+      try {
+        const { data, error } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
+        if (error) throw error;
+        setOrderStatus(data?.status ?? null);
+        return data?.status;
+      } catch (e) {
+        console.error("Failed to load order status:", e);
+        return null;
+      }
+    };
+
     const run = async () => {
       // Split return: check other part
       if (isSplitReturn && refOrderId) {
         try {
+          const currentOrderStatus = await loadOrderStatus(refOrderId);
+          if (currentOrderStatus === "paid") {
+            setSplitDone(true);
+            setSaving(false);
+            return;
+          }
           const { data: partsData } = await (supabase as any)
             .from("order_payment_parts")
             .select("part_index, status, mp_init_point, method, amount_cents")
@@ -63,6 +83,23 @@ export default function PaymentReturn() {
       }
 
       if (isMercadoPago) {
+        if (isMpFailure && refOrderId) {
+          setPaymentFailed(true);
+          await loadOrderStatus(refOrderId);
+        } else if (refOrderId) {
+          const status = await loadOrderStatus(refOrderId);
+          if (status !== "paid") {
+            // Poll for webhook confirmation (max ~60s)
+            let attempts = 0;
+            interval = setInterval(async () => {
+              attempts += 1;
+              const refreshed = await loadOrderStatus(refOrderId);
+              if (refreshed === "paid" || attempts >= 12) {
+                if (interval) clearInterval(interval);
+              }
+            }, 5000);
+          }
+        }
         setSaving(false);
         return;
       }
@@ -99,7 +136,9 @@ export default function PaymentReturn() {
       }
     };
     run();
-  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart]);
+
+    return () => { if (interval) clearInterval(interval); };
+  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart, isMpFailure]);
 
   const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn;
   const formatBRL = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
