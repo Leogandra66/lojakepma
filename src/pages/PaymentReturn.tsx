@@ -140,7 +140,7 @@ export default function PaymentReturn() {
     return () => { if (interval) clearInterval(interval); };
   }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart, isMpFailure]);
 
-  const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn;
+  const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn && !paymentFailed;
   const formatBRL = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
   return (
@@ -152,6 +152,27 @@ export default function PaymentReturn() {
             <>
               <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary" />
               <h1 className="font-heading text-2xl font-bold">Processando pagamento...</h1>
+            </>
+          ) : paymentFailed ? (
+            <>
+              <AlertCircle className="h-20 w-20 mx-auto text-destructive" />
+              <h1 className="font-heading text-3xl font-bold">Pagamento não aprovado</h1>
+              <p className="text-muted-foreground">
+                O pagamento não foi concluído. Você pode tentar novamente ou escolher outra forma de pagamento.
+              </p>
+              <div className="flex gap-3 justify-center pt-2 flex-wrap">
+                {refOrderId && (
+                  <Link to={`/checkout?retry=${refOrderId}`}>
+                    <Button className="btn-gold rounded-full">Tentar novamente</Button>
+                  </Link>
+                )}
+                <Link to="/minha-conta">
+                  <Button variant="outline" className="rounded-full">Meus Pedidos</Button>
+                </Link>
+                <Link to="/">
+                  <Button variant="outline" className="rounded-full">Continuar Comprando</Button>
+                </Link>
+              </div>
             </>
           ) : nextPart ? (
             <>
@@ -182,6 +203,11 @@ export default function PaymentReturn() {
                   ? "Seu pedido foi registrado. Assim que o pagamento for confirmado, o status será atualizado automaticamente em \"Meus Pedidos\"."
                   : <>Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.</>}
               </p>
+              {orderStatus && (
+                <p className="text-sm text-muted-foreground">
+                  Status do pedido: <span className="font-semibold capitalize">{orderStatus.replace("_", " ")}</span>
+                </p>
+              )}
               {receiptUrl && (
                 <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="rounded-full">Ver Comprovante</Button>
