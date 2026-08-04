@@ -1,7 +1,4 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 interface CheckoutItem {
@@ -37,8 +34,13 @@ const excludeAllExceptCard = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] create-payment-mp started`, { method: req.method, url: req.url });
+
   try {
-    const { orderId, items, redirectUrl, pixOnly, parts } = await req.json();
+    const body = await req.json();
+    const { orderId, items, redirectUrl, pixOnly, parts } = body;
+    console.log(`[${requestId}] payload`, { orderId, pixOnly: !!pixOnly, split: Array.isArray(parts), itemCount: items?.length });
 
     if (!orderId) {
       return new Response(JSON.stringify({ error: "orderId is required" }), {
@@ -47,7 +49,10 @@ Deno.serve(async (req) => {
     }
 
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-    if (!accessToken) throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
+    if (!accessToken) {
+      console.error(`[${requestId}] MERCADO_PAGO_ACCESS_TOKEN missing`);
+      throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -56,19 +61,23 @@ Deno.serve(async (req) => {
     const { data: order, error: orderErr } = await supabase
       .from("orders").select("*").eq("id", orderId).single();
     if (orderErr || !order) {
+      console.error(`[${requestId}] order not found`, orderErr);
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
+    console.log(`[${requestId}] notification url`, notificationUrl);
 
     // ============ SPLIT MODE ============
     if (Array.isArray(parts) && parts.length === 2) {
       const partsTyped = parts as SplitPart[];
+      console.log(`[${requestId}] split mode`, partsTyped);
 
       // Clear any previous parts for this order (retry-safe)
-      await supabase.from("order_payment_parts").delete().eq("order_id", orderId);
+      const { error: deletePartsErr } = await supabase.from("order_payment_parts").delete().eq("order_id", orderId);
+      if (deletePartsErr) console.error(`[${requestId}] failed to delete old parts`, deletePartsErr);
 
       const results: Array<{ partIndex: number; method: string; initPoint: string; amountCents: number }> = [];
 
@@ -92,19 +101,22 @@ Deno.serve(async (req) => {
           payment_methods: part.method === "pix" ? excludeAllExceptPix : excludeAllExceptCard,
         };
 
+        console.log(`[${requestId}] creating split part ${part.partIndex}`, preference);
         const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
           body: JSON.stringify(preference),
         });
         const data = await response.json();
+        console.log(`[${requestId}] split part ${part.partIndex} response`, { status: response.status, id: data.id });
+
         if (!response.ok) {
-          console.error("MP split part error:", JSON.stringify(data));
+          console.error(`[${requestId}] MP split part error`, JSON.stringify(data));
           throw new Error(`Mercado Pago error [${response.status}]: ${JSON.stringify(data)}`);
         }
         const initPoint = data.init_point || data.sandbox_init_point || "";
 
-        await supabase.from("order_payment_parts").insert({
+        const { error: insertPartErr } = await supabase.from("order_payment_parts").insert({
           order_id: orderId,
           part_index: part.partIndex,
           method: part.method,
@@ -113,14 +125,17 @@ Deno.serve(async (req) => {
           mp_init_point: initPoint,
           status: "pending",
         });
+        if (insertPartErr) console.error(`[${requestId}] failed to insert part ${part.partIndex}`, insertPartErr);
 
         results.push({ partIndex: part.partIndex, method: part.method, initPoint, amountCents: part.amountCents });
       }
 
-      await supabase.from("orders")
+      const { error: updateOrderErr } = await supabase.from("orders")
         .update({ payment_mode: "split", split_config: { parts: partsTyped } })
         .eq("id", orderId);
+      if (updateOrderErr) console.error(`[${requestId}] failed to update order split config`, updateOrderErr);
 
+      console.log(`[${requestId}] split mode completed`, results);
       return new Response(JSON.stringify({ mode: "split", parts: results }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -148,29 +163,56 @@ Deno.serve(async (req) => {
 
     if (pixOnly) preference.payment_methods = excludeAllExceptPix;
 
+    console.log(`[${requestId}] creating single preference`, preference);
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(preference),
     });
     const data = await response.json();
+    console.log(`[${requestId}] single preference response`, { status: response.status, id: data.id });
+
     if (!response.ok) {
-      console.error("Mercado Pago error:", JSON.stringify(data));
+      console.error(`[${requestId}] Mercado Pago error`, JSON.stringify(data));
+
+      // Save error details to the pending payment row for diagnostics
+      await supabase.from("payments")
+        .update({
+          metadata: {
+            mp_error: data,
+            mp_status: response.status,
+            request_id: requestId,
+            created_at: new Date().toISOString(),
+          },
+        })
+        .eq("order_id", orderId)
+        .eq("status", "pending");
+
       throw new Error(`Mercado Pago error [${response.status}]: ${JSON.stringify(data)}`);
     }
     const paymentUrl = data.init_point || data.sandbox_init_point || "";
 
-    await supabase.from("payments")
-      .update({ gateway: "mercadopago", mp_preference_id: data.id ?? null })
+    const { error: paymentUpdateErr } = await supabase.from("payments")
+      .update({
+        gateway: "mercadopago",
+        mp_preference_id: data.id ?? null,
+        metadata: {
+          mp_preference: { id: data.id, init_point: data.init_point, sandbox_init_point: data.sandbox_init_point },
+          request_id: requestId,
+          created_at: new Date().toISOString(),
+        },
+      })
       .eq("order_id", orderId).eq("status", "pending");
+    if (paymentUpdateErr) console.error(`[${requestId}] failed to update payment metadata`, paymentUpdateErr);
 
+    console.log(`[${requestId}] single mode completed`, { paymentUrl, preferenceId: data.id });
     return new Response(JSON.stringify({ payment_url: paymentUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    console.error("Error creating Mercado Pago payment:", error);
+    console.error(`[${requestId}] Error creating Mercado Pago payment:`, error);
     const msg = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
