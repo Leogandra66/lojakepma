@@ -581,6 +581,7 @@ export type Database = {
           id: string
           infinitypay_id: string | null
           infinitypay_link: string | null
+          metadata: Json | null
           mp_preference_id: string | null
           order_id: string
           paid_at: string | null
@@ -598,6 +599,7 @@ export type Database = {
           id?: string
           infinitypay_id?: string | null
           infinitypay_link?: string | null
+          metadata?: Json | null
           mp_preference_id?: string | null
           order_id: string
           paid_at?: string | null
@@ -615,6 +617,7 @@ export type Database = {
           id?: string
           infinitypay_id?: string | null
           infinitypay_link?: string | null
+          metadata?: Json | null
           mp_preference_id?: string | null
           order_id?: string
           paid_at?: string | null
