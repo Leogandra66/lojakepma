@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    const isHttpLocalhost = redirectUrl.startsWith("http://localhost") || redirectUrl.startsWith("http://127.0.0.1");
     const preference: Record<string, unknown> = {
       items: (items as CheckoutItem[]).map((item) => ({
         title: item.description,
@@ -158,8 +159,9 @@ Deno.serve(async (req) => {
       external_reference: orderId,
       notification_url: notificationUrl,
       back_urls: { success: redirectUrl, failure: redirectUrl, pending: redirectUrl },
-      auto_return: "approved",
     };
+    // auto_return requires HTTPS back_urls in production; omit on localhost HTTP to avoid MP 400.
+    if (!isHttpLocalhost) preference.auto_return = "approved";
 
     if (pixOnly) preference.payment_methods = excludeAllExceptPix;
 
