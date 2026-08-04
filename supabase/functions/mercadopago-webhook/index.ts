@@ -1,17 +1,18 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] mercadopago-webhook started`, { method: req.method, url: req.url });
+
   try {
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-    if (!accessToken) throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
+    if (!accessToken) {
+      console.error(`[${requestId}] MERCADO_PAGO_ACCESS_TOKEN missing`);
+      throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,10 +27,11 @@ Deno.serve(async (req) => {
         const body = await req.json();
         topic = topic || body?.type || body?.topic || "";
         paymentId = paymentId || body?.data?.id || body?.id || "";
+        console.log(`[${requestId}] webhook body`, { topic, paymentId, body });
       } catch { /* body may be empty */ }
     }
 
-    console.log("MP webhook:", JSON.stringify({ topic, paymentId }));
+    console.log(`[${requestId}] MP webhook parsed`, { topic, paymentId });
 
     if (topic && topic !== "payment") {
       return new Response(JSON.stringify({ received: true, ignored: true }), {
@@ -46,8 +48,10 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const mpPayment = await mpRes.json();
+    console.log(`[${requestId}] MP payment fetch`, { status: mpRes.status, id: mpPayment.id, status_detail: mpPayment.status_detail });
+
     if (!mpRes.ok) {
-      console.error("Failed to fetch MP payment:", mpRes.status, JSON.stringify(mpPayment));
+      console.error(`[${requestId}] Failed to fetch MP payment:`, mpRes.status, JSON.stringify(mpPayment));
       return new Response(JSON.stringify({ received: true, matched: false }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -55,8 +59,10 @@ Deno.serve(async (req) => {
 
     const externalRef = (mpPayment.external_reference as string | undefined) || "";
     const mpStatus = mpPayment.status as string | undefined;
+    console.log(`[${requestId}] external_reference`, externalRef, "mpStatus", mpStatus);
+
     if (!externalRef) {
-      console.error("MP payment without external_reference:", paymentId);
+      console.error(`[${requestId}] MP payment without external_reference:`, paymentId);
       return new Response(JSON.stringify({ received: true, matched: false }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -74,6 +80,16 @@ Deno.serve(async (req) => {
       return "pending";
     };
 
+    const webhookMetadata = {
+      request_id: requestId,
+      mp_payment_id: paymentId,
+      mp_status: mpStatus,
+      mp_status_detail: mpPayment.status_detail,
+      mp_external_reference: externalRef,
+      received_at: new Date().toISOString(),
+      raw: mpPayment,
+    };
+
     // ===== SPLIT PATH =====
     if (partIndex === 1 || partIndex === 2) {
       const newPartStatus = mapStatus(mpStatus);
@@ -83,16 +99,21 @@ Deno.serve(async (req) => {
         .eq("order_id", orderId).eq("part_index", partIndex)
         .maybeSingle();
       if (!part) {
-        console.error("Split part not found", orderId, partIndex);
+        console.error(`[${requestId}] Split part not found`, orderId, partIndex);
         return new Response(JSON.stringify({ received: true, matched: false }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       if (part.status !== newPartStatus) {
-        const upd: Record<string, unknown> = { status: newPartStatus, mp_payment_id: String(paymentId) };
+        const upd: Record<string, unknown> = {
+          status: newPartStatus,
+          mp_payment_id: String(paymentId),
+          metadata: webhookMetadata,
+        };
         if (newPartStatus === "approved") upd.paid_at = new Date().toISOString();
-        await supabase.from("order_payment_parts").update(upd).eq("id", part.id);
+        const { error: partUpdateErr } = await supabase.from("order_payment_parts").update(upd).eq("id", part.id);
+        if (partUpdateErr) console.error(`[${requestId}] failed to update part`, partUpdateErr);
       }
 
       // Check both parts
@@ -102,23 +123,27 @@ Deno.serve(async (req) => {
       const approvedCount = (allParts ?? []).filter((p) => p.status === "approved").length;
       const hasFailed = (allParts ?? []).some((p) => p.status === "rejected" || p.status === "expired");
 
+      console.log(`[${requestId}] split parts status`, { total, approvedCount, hasFailed });
+
       if (total === 2 && approvedCount === 2) {
         // Idempotent: only if order not yet paid
         const { data: updated } = await supabase.from("orders")
           .update({ status: "paid" }).eq("id", orderId).neq("status", "paid").select("id").maybeSingle();
         if (updated) {
+          console.log(`[${requestId}] order marked as paid`, orderId);
           try {
             await supabase.functions.invoke("notify-telegram-order", {
               body: { kind: "payment_status", orderId, previousStatus: "pending_payment", newStatus: "paid" },
             });
-          } catch (e) { console.error("Telegram notify failed:", e); }
+          } catch (e) { console.error(`[${requestId}] Telegram notify failed:`, e); }
         }
       } else if (hasFailed) {
+        console.log(`[${requestId}] split has failed part`, orderId);
         try {
           await supabase.functions.invoke("notify-telegram-order", {
             body: { kind: "payment_status", orderId, previousStatus: "pending_payment", newStatus: "partial_failed" },
           });
-        } catch (e) { console.error("Telegram partial notify failed:", e); }
+        } catch (e) { console.error(`[${requestId}] Telegram partial notify failed:`, e); }
       }
 
       return new Response(JSON.stringify({ received: true, matched: true, split: true, part: partIndex, status: newPartStatus }), {
@@ -137,25 +162,35 @@ Deno.serve(async (req) => {
       .from("payments").select("*").eq("order_id", orderId).order("created_at", { ascending: false });
     const paymentToUpdate = payments?.[0];
     if (!paymentToUpdate) {
-      console.error("Payment not found for order:", orderId);
+      console.error(`[${requestId}] Payment not found for order:`, orderId);
       return new Response(JSON.stringify({ received: true, matched: false }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     const previousStatus = paymentToUpdate.status;
+    console.log(`[${requestId}] single payment status transition`, { paymentId: paymentToUpdate.id, previousStatus, newStatus });
+
     if (newStatus === previousStatus) {
+      // Still save webhook metadata for traceability
+      await supabase.from("payments").update({ metadata: webhookMetadata }).eq("id", paymentToUpdate.id);
       return new Response(JSON.stringify({ received: true, matched: true, unchanged: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const paymentUpdate: Record<string, unknown> = { status: newStatus, transaction_nsu: String(paymentId) };
+
+    const paymentUpdate: Record<string, unknown> = {
+      status: newStatus,
+      transaction_nsu: String(paymentId),
+      metadata: webhookMetadata,
+    };
     if (newStatus === "paid") {
       paymentUpdate.paid_at = new Date().toISOString();
       if (mpPayment.transaction_details?.external_resource_url) {
         paymentUpdate.receipt_url = mpPayment.transaction_details.external_resource_url;
       }
     }
-    await supabase.from("payments").update(paymentUpdate).eq("id", paymentToUpdate.id);
+    const { error: paymentUpdateErr } = await supabase.from("payments").update(paymentUpdate).eq("id", paymentToUpdate.id);
+    if (paymentUpdateErr) console.error(`[${requestId}] failed to update payment`, paymentUpdateErr);
 
     if (newStatus === "paid") {
       const orderUpdate: Record<string, unknown> = { status: "paid" };
@@ -163,7 +198,8 @@ Deno.serve(async (req) => {
       if (payer.email) orderUpdate.customer_email = payer.email;
       const fullName = [payer.first_name, payer.last_name].filter(Boolean).join(" ").trim();
       if (fullName) orderUpdate.customer_name = fullName;
-      await supabase.from("orders").update(orderUpdate).eq("id", orderId);
+      const { error: orderUpdateErr } = await supabase.from("orders").update(orderUpdate).eq("id", orderId);
+      if (orderUpdateErr) console.error(`[${requestId}] failed to update order`, orderUpdateErr);
     }
 
     try {
@@ -176,15 +212,15 @@ Deno.serve(async (req) => {
           receiptUrl: paymentUpdate.receipt_url ?? paymentToUpdate.receipt_url ?? undefined,
         },
       });
-    } catch (e) { console.error("Telegram notify failed:", e); }
+    } catch (e) { console.error(`[${requestId}] Telegram notify failed:`, e); }
 
     return new Response(JSON.stringify({ received: true, matched: true, order_id: orderId, status: newStatus }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    console.error("Error processing MP webhook:", error);
+    console.error(`[${requestId}] Error processing MP webhook:`, error);
     const msg = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
