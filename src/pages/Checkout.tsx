@@ -569,8 +569,9 @@ export default function Checkout() {
         navigate(`/minha-conta`);
       }
     } catch (err: any) {
-      console.error(err);
-      toast.error("Erro ao finalizar compra: " + (err.message || "tente novamente"));
+      console.error("[Checkout] finalize error:", err);
+      const detail = err?.message || err?.error || err?.msg || "tente novamente";
+      toast.error("Erro ao finalizar compra: " + detail);
     } finally {
       setLoading(false);
     }

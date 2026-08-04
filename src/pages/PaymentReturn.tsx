@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +11,8 @@ export default function PaymentReturn() {
   const [saving, setSaving] = useState(true);
   const [nextPart, setNextPart] = useState<{ initPoint: string; method: string; amountCents: number } | null>(null);
   const [splitDone, setSplitDone] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
+  const [paymentFailed, setPaymentFailed] = useState(false);
 
   // InfinitePay return params
   const orderNsu = searchParams.get("order_nsu");
@@ -28,12 +30,33 @@ export default function PaymentReturn() {
   const currentPart = partParam ? parseInt(partParam, 10) : (refPartStr ? parseInt(refPartStr, 10) : null);
   const isMercadoPago = !!mpExternalRefRaw || !!searchParams.get("payment_id") || !!searchParams.get("preference_id");
   const isSplitReturn = currentPart === 1 || currentPart === 2;
+  const isMpFailure = isMercadoPago && (mpStatus === "failure" || mpStatus === "rejected" || mpStatus === "cancelled");
 
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const loadOrderStatus = async (orderId: string) => {
+      try {
+        const { data, error } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
+        if (error) throw error;
+        setOrderStatus(data?.status ?? null);
+        return data?.status;
+      } catch (e) {
+        console.error("Failed to load order status:", e);
+        return null;
+      }
+    };
+
     const run = async () => {
       // Split return: check other part
       if (isSplitReturn && refOrderId) {
         try {
+          const currentOrderStatus = await loadOrderStatus(refOrderId);
+          if (currentOrderStatus === "paid") {
+            setSplitDone(true);
+            setSaving(false);
+            return;
+          }
           const { data: partsData } = await (supabase as any)
             .from("order_payment_parts")
             .select("part_index, status, mp_init_point, method, amount_cents")
@@ -60,6 +83,23 @@ export default function PaymentReturn() {
       }
 
       if (isMercadoPago) {
+        if (isMpFailure && refOrderId) {
+          setPaymentFailed(true);
+          await loadOrderStatus(refOrderId);
+        } else if (refOrderId) {
+          const status = await loadOrderStatus(refOrderId);
+          if (status !== "paid") {
+            // Poll for webhook confirmation (max ~60s)
+            let attempts = 0;
+            interval = setInterval(async () => {
+              attempts += 1;
+              const refreshed = await loadOrderStatus(refOrderId);
+              if (refreshed === "paid" || attempts >= 12) {
+                if (interval) clearInterval(interval);
+              }
+            }, 5000);
+          }
+        }
         setSaving(false);
         return;
       }
@@ -96,9 +136,11 @@ export default function PaymentReturn() {
       }
     };
     run();
-  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart]);
 
-  const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn;
+    return () => { if (interval) clearInterval(interval); };
+  }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart, isMpFailure]);
+
+  const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn && !paymentFailed;
   const formatBRL = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
   return (
@@ -110,6 +152,27 @@ export default function PaymentReturn() {
             <>
               <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary" />
               <h1 className="font-heading text-2xl font-bold">Processando pagamento...</h1>
+            </>
+          ) : paymentFailed ? (
+            <>
+              <AlertCircle className="h-20 w-20 mx-auto text-destructive" />
+              <h1 className="font-heading text-3xl font-bold">Pagamento não aprovado</h1>
+              <p className="text-muted-foreground">
+                O pagamento não foi concluído. Você pode tentar novamente ou escolher outra forma de pagamento.
+              </p>
+              <div className="flex gap-3 justify-center pt-2 flex-wrap">
+                {refOrderId && (
+                  <Link to={`/checkout?retry=${refOrderId}`}>
+                    <Button className="btn-gold rounded-full">Tentar novamente</Button>
+                  </Link>
+                )}
+                <Link to="/minha-conta">
+                  <Button variant="outline" className="rounded-full">Meus Pedidos</Button>
+                </Link>
+                <Link to="/">
+                  <Button variant="outline" className="rounded-full">Continuar Comprando</Button>
+                </Link>
+              </div>
             </>
           ) : nextPart ? (
             <>
@@ -140,6 +203,11 @@ export default function PaymentReturn() {
                   ? "Seu pedido foi registrado. Assim que o pagamento for confirmado, o status será atualizado automaticamente em \"Meus Pedidos\"."
                   : <>Seu pedido foi registrado com sucesso. Acompanhe o status do pagamento na seção <strong>"Meus Pedidos"</strong> na sua conta.</>}
               </p>
+              {orderStatus && (
+                <p className="text-sm text-muted-foreground">
+                  Status do pedido: <span className="font-semibold capitalize">{orderStatus.replace("_", " ")}</span>
+                </p>
+              )}
               {receiptUrl && (
                 <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="rounded-full">Ver Comprovante</Button>
