@@ -11,6 +11,8 @@ export default function PaymentReturn() {
   const [saving, setSaving] = useState(true);
   const [nextPart, setNextPart] = useState<{ initPoint: string; method: string; amountCents: number } | null>(null);
   const [splitDone, setSplitDone] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
+  const [paymentFailed, setPaymentFailed] = useState(false);
 
   // InfinitePay return params
   const orderNsu = searchParams.get("order_nsu");
@@ -28,6 +30,7 @@ export default function PaymentReturn() {
   const currentPart = partParam ? parseInt(partParam, 10) : (refPartStr ? parseInt(refPartStr, 10) : null);
   const isMercadoPago = !!mpExternalRefRaw || !!searchParams.get("payment_id") || !!searchParams.get("preference_id");
   const isSplitReturn = currentPart === 1 || currentPart === 2;
+  const isMpFailure = isMercadoPago && (mpStatus === "failure" || mpStatus === "rejected" || mpStatus === "cancelled");
 
   useEffect(() => {
     const run = async () => {
