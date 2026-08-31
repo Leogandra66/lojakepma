@@ -8,7 +8,6 @@
 - [x] Atualizar `AdminOrderDetail.tsx`
 - [x] Configurar ambiente sandbox/produção (lógica implementada; token de teste ainda não adicionado)
 - [x] Deploy das Edge Functions
+- [x] Testar fluxo end-to-end (checkout, criação de pedido e geração de preferência Mercado Pago)
 
-## Em andamento
-- [ ] Testar fluxo end-to-end
 
