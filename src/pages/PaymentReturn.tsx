@@ -1,31 +1,33 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, QrCode, CreditCard, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function PaymentReturn() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(true);
   const [nextPart, setNextPart] = useState<{ initPoint: string; method: string; amountCents: number } | null>(null);
   const [splitDone, setSplitDone] = useState(false);
   const [orderStatus, setOrderStatus] = useState<string | null>(null);
   const [paymentFailed, setPaymentFailed] = useState(false);
+  const [failureReason, setFailureReason] = useState<string | null>(null);
+  const [isPixFallback, setIsPixFallback] = useState(false);
+  const [pixLoading, setPixLoading] = useState(false);
 
-  // InfinitePay return params
   const orderNsu = searchParams.get("order_nsu");
   const receiptUrl = searchParams.get("receipt_url");
   const slug = searchParams.get("slug");
   const captureMethod = searchParams.get("capture_method");
   const transactionNsu = searchParams.get("transaction_nsu");
 
-  // Mercado Pago return params
   const mpExternalRefRaw = searchParams.get("external_reference") || "";
   const mpStatus = searchParams.get("status") || searchParams.get("collection_status");
   const partParam = searchParams.get("part");
-  // externalRef format may be "orderId" or "orderId:partIndex"
   const [refOrderId, refPartStr] = mpExternalRefRaw.split(":");
   const currentPart = partParam ? parseInt(partParam, 10) : (refPartStr ? parseInt(refPartStr, 10) : null);
   const isMercadoPago = !!mpExternalRefRaw || !!searchParams.get("payment_id") || !!searchParams.get("preference_id");
@@ -37,22 +39,38 @@ export default function PaymentReturn() {
 
     const loadOrderStatus = async (orderId: string) => {
       try {
-        const { data, error } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
+        const { data, error } = await supabase.from("orders").select("status, total, discount_amount").eq("id", orderId).maybeSingle();
         if (error) throw error;
         setOrderStatus(data?.status ?? null);
-        return data?.status;
+        return data;
       } catch (e) {
         console.error("Failed to load order status:", e);
         return null;
       }
     };
 
+    const loadPaymentFailureReason = async (orderId: string) => {
+      try {
+        const { data } = await supabase
+          .from("payments")
+          .select("metadata, status, mp_status_detail")
+          .eq("order_id", orderId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const meta = data?.metadata as any;
+        const detail = data?.mp_status_detail || meta?.mp_error?.cause?.[0]?.description || meta?.mp_error?.message;
+        if (detail) setFailureReason(detail);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
     const run = async () => {
-      // Split return: check other part
       if (isSplitReturn && refOrderId) {
         try {
-          const currentOrderStatus = await loadOrderStatus(refOrderId);
-          if (currentOrderStatus === "paid") {
+          const currentOrder = await loadOrderStatus(refOrderId);
+          if (currentOrder?.status === "paid") {
             setSplitDone(true);
             setSaving(false);
             return;
@@ -63,16 +81,12 @@ export default function PaymentReturn() {
             .eq("order_id", refOrderId)
             .order("part_index");
           const parts = (partsData ?? []) as any[];
-          const other = (parts ?? []).find((p: any) => p.part_index !== currentPart);
-          const bothApproved = (parts ?? []).length === 2 && (parts ?? []).every((p: any) => p.status === "approved");
+          const other = parts.find((p: any) => p.part_index !== currentPart);
+          const bothApproved = parts.length === 2 && parts.every((p: any) => p.status === "approved");
           if (bothApproved) {
             setSplitDone(true);
           } else if (other && other.status !== "approved" && other.mp_init_point) {
-            setNextPart({
-              initPoint: other.mp_init_point,
-              method: other.method,
-              amountCents: other.amount_cents,
-            });
+            setNextPart({ initPoint: other.mp_init_point, method: other.method, amountCents: other.amount_cents });
           }
         } catch (e) {
           console.error("Failed to load split parts:", e);
@@ -86,15 +100,15 @@ export default function PaymentReturn() {
         if (isMpFailure && refOrderId) {
           setPaymentFailed(true);
           await loadOrderStatus(refOrderId);
+          await loadPaymentFailureReason(refOrderId);
         } else if (refOrderId) {
-          const status = await loadOrderStatus(refOrderId);
-          if (status !== "paid") {
-            // Poll for webhook confirmation (max ~60s)
+          const currentOrder = await loadOrderStatus(refOrderId);
+          if (currentOrder?.status !== "paid") {
             let attempts = 0;
             interval = setInterval(async () => {
               attempts += 1;
               const refreshed = await loadOrderStatus(refOrderId);
-              if (refreshed === "paid" || attempts >= 12) {
+              if (refreshed?.status === "paid" || attempts >= 12) {
                 if (interval) clearInterval(interval);
               }
             }, 5000);
@@ -112,22 +126,12 @@ export default function PaymentReturn() {
       try {
         const { error: paymentError } = await supabase
           .from("payments")
-          .update({
-            receipt_url: receiptUrl,
-            slug: slug,
-            capture_method: captureMethod,
-            transaction_nsu: transactionNsu,
-            status: "paid",
-            paid_at: new Date().toISOString(),
-          })
+          .update({ receipt_url: receiptUrl, slug, capture_method: captureMethod, transaction_nsu: transactionNsu, status: "paid", paid_at: new Date().toISOString() })
           .eq("order_id", orderNsu)
           .eq("status", "pending");
         if (paymentError) console.error("Error updating payment:", paymentError);
 
-        const { error: orderError } = await supabase
-          .from("orders")
-          .update({ status: "paid" })
-          .eq("id", orderNsu);
+        const { error: orderError } = await supabase.from("orders").update({ status: "paid" }).eq("id", orderNsu);
         if (orderError) console.error("Error updating order:", orderError);
       } catch (err) {
         console.error("Error saving payment info:", err);
@@ -139,6 +143,36 @@ export default function PaymentReturn() {
 
     return () => { if (interval) clearInterval(interval); };
   }, [orderNsu, receiptUrl, slug, captureMethod, transactionNsu, isMercadoPago, isSplitReturn, refOrderId, currentPart, isMpFailure]);
+
+  const handlePixFallback = async () => {
+    if (!refOrderId) return;
+    setPixLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/pagamento-concluido`;
+      const { data: orderData } = await supabase.from("orders").select("total, discount_amount").eq("id", refOrderId).maybeSingle();
+      const orderTotal = orderData?.total ?? 0;
+      const discount = orderData?.discount_amount ?? 0;
+      const pixAmount = (orderTotal - discount) * 0.9;
+
+      await supabase.from("payments").delete().eq("order_id", refOrderId).eq("status", "pending");
+      await supabase.from("payments").insert({ order_id: refOrderId, payment_type: "full", amount: pixAmount, status: "pending" });
+
+      const { data, error } = await supabase.functions.invoke("create-payment-mp", {
+        body: { orderId: refOrderId, redirectUrl, pixOnly: true },
+      });
+      if (error) throw error;
+      if (data?.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        toast.error("Não foi possível gerar o PIX. Tente novamente.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Erro ao gerar PIX");
+    } finally {
+      setPixLoading(false);
+    }
+  };
 
   const mpPending = isMercadoPago && mpStatus !== "approved" && !isSplitReturn && !paymentFailed;
   const formatBRL = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
@@ -156,22 +190,31 @@ export default function PaymentReturn() {
           ) : paymentFailed ? (
             <>
               <AlertCircle className="h-20 w-20 mx-auto text-destructive" />
-              <h1 className="font-heading text-3xl font-bold">Pagamento não aprovado</h1>
+              <h1 className="font-heading text-3xl font-bold">Cartão não aprovado</h1>
               <p className="text-muted-foreground">
-                O pagamento não foi concluído. Você pode tentar novamente ou escolher outra forma de pagamento.
+                {failureReason
+                  ? `Motivo: ${failureReason}`
+                  : "O pagamento não foi aprovado pela operadora. Isso pode acontecer por limite, dados incorretos ou análise de risco."}
               </p>
-              <div className="flex gap-3 justify-center pt-2 flex-wrap">
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  size="lg"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handlePixFallback}
+                  disabled={pixLoading}
+                >
+                  {pixLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <QrCode className="mr-2 h-4 w-4" />}
+                  Pagar com PIX (10% de desconto)
+                </Button>
                 {refOrderId && (
-                  <Link to={`/checkout?retry=${refOrderId}`}>
-                    <Button className="btn-gold rounded-full">Tentar novamente</Button>
-                  </Link>
+                  <Button variant="outline" className="w-full" onClick={() => navigate(`/checkout-pro?retry=${refOrderId}`)}>
+                    <CreditCard className="mr-2 h-4 w-4" /> Tentar outro cartão
+                  </Button>
                 )}
-                <Link to="/minha-conta">
-                  <Button variant="outline" className="rounded-full">Meus Pedidos</Button>
-                </Link>
-                <Link to="/">
-                  <Button variant="outline" className="rounded-full">Continuar Comprando</Button>
-                </Link>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Link to="/minha-conta"><Button variant="outline" className="rounded-full">Meus Pedidos</Button></Link>
+                  <Link to="/"><Button variant="outline" className="rounded-full">Continuar Comprando</Button></Link>
+                </div>
               </div>
             </>
           ) : nextPart ? (
@@ -181,23 +224,15 @@ export default function PaymentReturn() {
               <p className="text-muted-foreground">
                 Falta pagar a 2ª parte via <strong>{nextPart.method === "pix" ? "PIX" : "Cartão"}</strong> no valor de <strong>{formatBRL(nextPart.amountCents)}</strong> para concluir seu pedido.
               </p>
-              <Button
-                size="lg"
-                className="btn-gold rounded-full"
-                onClick={() => (window.location.href = nextPart.initPoint)}
-              >
+              <Button size="lg" className="btn-gold rounded-full" onClick={() => (window.location.href = nextPart.initPoint)}>
                 Pagar 2ª parte agora
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Se preferir, pode pagar mais tarde acessando "Meus Pedidos".
-              </p>
+              <p className="text-xs text-muted-foreground">Se preferir, pode pagar mais tarde acessando "Meus Pedidos".</p>
             </>
           ) : (
             <>
               <CheckCircle2 className="h-20 w-20 mx-auto text-primary" />
-              <h1 className="font-heading text-3xl font-bold">
-                {splitDone ? "Pagamento concluído!" : "Obrigado pela sua compra!"}
-              </h1>
+              <h1 className="font-heading text-3xl font-bold">{splitDone ? "Pagamento concluído!" : "Obrigado pela sua compra!"}</h1>
               <p className="text-muted-foreground">
                 {mpPending
                   ? "Seu pedido foi registrado. Assim que o pagamento for confirmado, o status será atualizado automaticamente em \"Meus Pedidos\"."
@@ -214,12 +249,8 @@ export default function PaymentReturn() {
                 </a>
               )}
               <div className="flex gap-3 justify-center pt-2">
-                <Link to="/minha-conta">
-                  <Button className="btn-gold rounded-full">Meus Pedidos</Button>
-                </Link>
-                <Link to="/">
-                  <Button variant="outline" className="rounded-full">Continuar Comprando</Button>
-                </Link>
+                <Link to="/minha-conta"><Button className="btn-gold rounded-full">Meus Pedidos</Button></Link>
+                <Link to="/"><Button variant="outline" className="rounded-full">Continuar Comprando</Button></Link>
               </div>
             </>
           )}

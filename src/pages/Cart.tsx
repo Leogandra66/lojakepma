@@ -95,14 +95,14 @@ export default function Cart() {
                   </Button>
                 </div>
               ) : user ? (
-                <Link to="/checkout" className="block pt-2">
+                <Link to="/checkout-pro" className="block pt-2">
                   <Button size="lg" className="btn-gold w-full rounded-full gap-2">
                     Finalizar Compra <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               ) : (
                 <div className="space-y-2 pt-2">
-                  <Link to="/entrar?redirect=/checkout" className="block">
+                  <Link to="/entrar?redirect=/checkout-pro" className="block">
                     <Button size="lg" className="btn-gold w-full rounded-full">
                       Entrar para Comprar
                     </Button>

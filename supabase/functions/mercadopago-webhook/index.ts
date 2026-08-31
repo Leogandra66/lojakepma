@@ -1,6 +1,14 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+function getAccessToken() {
+  const prodToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+  const testToken = Deno.env.get("MERCADO_PAGO_TEST_ACCESS_TOKEN") || prodToken;
+  // Webhooks from sandbox payments carry a sandbox signature; we use test token for those.
+  // Since we cannot inspect the payload before fetching, prefer test token when available to avoid 401 on sandbox notifications.
+  return testToken || prodToken;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -8,9 +16,9 @@ Deno.serve(async (req) => {
   console.log(`[${requestId}] mercadopago-webhook started`, { method: req.method, url: req.url });
 
   try {
-    const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    const accessToken = getAccessToken();
     if (!accessToken) {
-      console.error(`[${requestId}] MERCADO_PAGO_ACCESS_TOKEN missing`);
+      console.error(`[${requestId}] Mercado Pago access token missing`);
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
     }
 
@@ -181,6 +189,7 @@ Deno.serve(async (req) => {
     const paymentUpdate: Record<string, unknown> = {
       status: newStatus,
       transaction_nsu: String(paymentId),
+      mp_status_detail: mpPayment.status_detail || null,
       metadata: webhookMetadata,
     };
     if (newStatus === "paid") {

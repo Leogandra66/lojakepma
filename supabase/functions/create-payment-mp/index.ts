@@ -7,6 +7,22 @@ interface CheckoutItem {
   description: string;
 }
 
+interface CustomerInfo {
+  name: string;
+  email: string;
+  phone: string;
+  doc: string; // CPF/CNPJ digits only
+  address: {
+    zip: string;
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
+}
+
 interface SplitPart {
   partIndex: 1 | 2;
   method: "card" | "pix";
@@ -31,6 +47,60 @@ const excludeAllExceptCard = {
   ],
 };
 
+function isProductionUrl(url: string) {
+  return url.startsWith("https://loja.kepmabrasil.com.br");
+}
+
+function getAccessToken(redirectUrl: string) {
+  const isProd = isProductionUrl(redirectUrl);
+  const prodToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+  const testToken = Deno.env.get("MERCADO_PAGO_TEST_ACCESS_TOKEN") || prodToken;
+  return isProd ? prodToken : testToken;
+}
+
+function buildPayer(customer: CustomerInfo) {
+  const doc = customer.doc.replace(/\D/g, "");
+  const identification = doc.length === 11
+    ? { type: "CPF", number: doc }
+    : doc.length === 14
+    ? { type: "CNPJ", number: doc }
+    : undefined;
+
+  const phoneDigits = customer.phone.replace(/\D/g, "");
+  const phoneObj = phoneDigits.length >= 10
+    ? {
+        area_code: phoneDigits.slice(0, 2),
+        number: phoneDigits.slice(2),
+      }
+    : undefined;
+
+  const [firstName, ...rest] = customer.name.trim().split(/\s+/);
+  const lastName = rest.join(" ");
+
+  const payer: Record<string, unknown> = {
+    email: customer.email,
+    first_name: firstName || customer.name,
+    last_name: lastName || "",
+  };
+  if (identification) payer.identification = identification;
+  if (phoneObj) payer.phone = phoneObj;
+  return payer;
+}
+
+function buildShipments(customer: CustomerInfo) {
+  return {
+    receiver_address: {
+      zip_code: customer.address.zip.replace(/\D/g, ""),
+      street_name: customer.address.street,
+      street_number: customer.address.number,
+      apartment: customer.address.complement || undefined,
+      city_name: customer.address.city,
+      state_name: customer.address.state,
+      neighborhood_name: customer.address.neighborhood,
+    },
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -39,18 +109,25 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { orderId, items, redirectUrl, pixOnly, parts } = body;
-    console.log(`[${requestId}] payload`, { orderId, pixOnly: !!pixOnly, split: Array.isArray(parts), itemCount: items?.length });
+    const { orderId, items, redirectUrl, pixOnly, parts, customer } = body;
+    console.log(`[${requestId}] payload`, {
+      orderId,
+      pixOnly: !!pixOnly,
+      split: Array.isArray(parts),
+      itemCount: items?.length,
+      hasCustomer: !!customer,
+    });
 
     if (!orderId) {
       return new Response(JSON.stringify({ error: "orderId is required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    const accessToken = getAccessToken(redirectUrl || "");
     if (!accessToken) {
-      console.error(`[${requestId}] MERCADO_PAGO_ACCESS_TOKEN missing`);
+      console.error(`[${requestId}] Mercado Pago access token missing`);
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
     }
 
@@ -59,13 +136,34 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: order, error: orderErr } = await supabase
-      .from("orders").select("*").eq("id", orderId).single();
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .single();
     if (orderErr || !order) {
       console.error(`[${requestId}] order not found`, orderErr);
       return new Response(JSON.stringify({ error: "Order not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Build customer from explicit payload or fallback to stored order fields
+    const effectiveCustomer: CustomerInfo | undefined = customer || {
+      name: order.customer_name || "",
+      email: order.customer_email || "",
+      phone: order.customer_phone || "",
+      doc: order.customer_cpf || "",
+      address: {
+        zip: order.shipping_zip || "",
+        street: order.shipping_street || "",
+        number: order.shipping_number || "",
+        complement: order.shipping_complement || undefined,
+        neighborhood: order.shipping_neighborhood || "",
+        city: order.shipping_city || "",
+        state: order.shipping_state || "",
+      },
+    };
 
     const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
     console.log(`[${requestId}] notification url`, notificationUrl);
@@ -76,7 +174,10 @@ Deno.serve(async (req) => {
       console.log(`[${requestId}] split mode`, partsTyped);
 
       // Clear any previous parts for this order (retry-safe)
-      const { error: deletePartsErr } = await supabase.from("order_payment_parts").delete().eq("order_id", orderId);
+      const { error: deletePartsErr } = await supabase
+        .from("order_payment_parts")
+        .delete()
+        .eq("order_id", orderId);
       if (deletePartsErr) console.error(`[${requestId}] failed to delete old parts`, deletePartsErr);
 
       const results: Array<{ partIndex: number; method: string; initPoint: string; amountCents: number }> = [];
@@ -90,6 +191,8 @@ Deno.serve(async (req) => {
             currency_id: "BRL",
             unit_price: Math.round(part.amountCents) / 100,
           }],
+          payer: buildPayer(effectiveCustomer),
+          shipments: buildShipments(effectiveCustomer),
           external_reference: `${orderId}:${part.partIndex}`,
           notification_url: notificationUrl,
           back_urls: {
@@ -130,7 +233,8 @@ Deno.serve(async (req) => {
         results.push({ partIndex: part.partIndex, method: part.method, initPoint, amountCents: part.amountCents });
       }
 
-      const { error: updateOrderErr } = await supabase.from("orders")
+      const { error: updateOrderErr } = await supabase
+        .from("orders")
         .update({ payment_mode: "split", split_config: { parts: partsTyped } })
         .eq("id", orderId);
       if (updateOrderErr) console.error(`[${requestId}] failed to update order split config`, updateOrderErr);
@@ -141,10 +245,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ============ SINGLE MODE (original) ============
+    // ============ SINGLE MODE ============
     if (!items || !Array.isArray(items) || items.length === 0) {
       return new Response(JSON.stringify({ error: "items are required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -156,6 +261,8 @@ Deno.serve(async (req) => {
         currency_id: "BRL",
         unit_price: Math.round(item.price) / 100,
       })),
+      payer: buildPayer(effectiveCustomer),
+      shipments: buildShipments(effectiveCustomer),
       external_reference: orderId,
       notification_url: notificationUrl,
       back_urls: { success: redirectUrl, failure: redirectUrl, pending: redirectUrl },
@@ -178,7 +285,8 @@ Deno.serve(async (req) => {
       console.error(`[${requestId}] Mercado Pago error`, JSON.stringify(data));
 
       // Save error details to the pending payment row for diagnostics
-      await supabase.from("payments")
+      await supabase
+        .from("payments")
         .update({
           metadata: {
             mp_error: data,
@@ -194,7 +302,8 @@ Deno.serve(async (req) => {
     }
     const paymentUrl = data.init_point || data.sandbox_init_point || "";
 
-    const { error: paymentUpdateErr } = await supabase.from("payments")
+    const { error: paymentUpdateErr } = await supabase
+      .from("payments")
       .update({
         gateway: "mercadopago",
         mp_preference_id: data.id ?? null,
@@ -204,7 +313,8 @@ Deno.serve(async (req) => {
           created_at: new Date().toISOString(),
         },
       })
-      .eq("order_id", orderId).eq("status", "pending");
+      .eq("order_id", orderId)
+      .eq("status", "pending");
     if (paymentUpdateErr) console.error(`[${requestId}] failed to update payment metadata`, paymentUpdateErr);
 
     console.log(`[${requestId}] single mode completed`, { paymentUrl, preferenceId: data.id });
@@ -215,7 +325,8 @@ Deno.serve(async (req) => {
     console.error(`[${requestId}] Error creating Mercado Pago payment:`, error);
     const msg = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

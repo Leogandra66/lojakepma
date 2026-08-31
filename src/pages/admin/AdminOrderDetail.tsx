@@ -338,13 +338,16 @@ export default function AdminOrderDetail() {
               {payments.map((p) => {
                 const meta = (p as any).metadata;
                 const mpError = meta?.mp_error;
+                const isSandbox = meta?.mp_preference?.init_point?.includes("sandbox") || meta?.mp_preference?.sandbox_init_point;
                 return (
                   <li key={p.id} className="py-3">
                     <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium">
+                      <div className="w-full">
+                        <p className="font-medium flex items-center gap-2 flex-wrap">
                           {formatBRL(Number(p.amount))}{" "}
                           <Badge variant={p.status === "paid" ? "default" : "outline"}>{p.status}</Badge>
+                          {isSandbox && <Badge variant="secondary" className="text-[10px]">SANDBOX</Badge>}
+                          {!isSandbox && p.gateway === "mercadopago" && <Badge variant="secondary" className="text-[10px]">PRODUÇÃO</Badge>}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {p.payment_type} • {p.capture_method ?? "-"} •{" "}
@@ -355,6 +358,9 @@ export default function AdminOrderDetail() {
                         )}
                         {p.mp_preference_id && (
                           <p className="text-xs text-muted-foreground font-mono">Preference: {p.mp_preference_id}</p>
+                        )}
+                        {p.mp_status_detail && (
+                          <p className="text-xs text-muted-foreground font-mono">Detalhe: {p.mp_status_detail}</p>
                         )}
                         {mpError && (
                           <div className="mt-2 rounded bg-destructive/10 p-2 text-xs text-destructive">
