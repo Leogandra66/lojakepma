@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Checkout from "./pages/Checkout";
+import CheckoutPro from "./pages/CheckoutPro";
 import PaymentReturn from "./pages/PaymentReturn";
 import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
@@ -64,7 +65,8 @@ const App = () => (
               <Route path="/entrar" element={<Auth />} />
               <Route path="/recuperar-senha" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/checkout" element={<Navigate to="/checkout-pro" replace />} />
+              <Route path="/checkout-pro" element={<CheckoutPro />} />
               <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
