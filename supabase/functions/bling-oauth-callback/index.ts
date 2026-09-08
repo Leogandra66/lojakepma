@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   }
 
   const basic = btoa(`${clientId}:${clientSecret}`);
-  const tokenResp = await fetch("https://www.bling.com.br/Api/v3/oauth/token", {
+  const tokenResp = await fetch("https://api.bling.com.br/Api/v3/oauth/token", {
     method: "POST",
     headers: {
       Authorization: `Basic ${basic}`,
