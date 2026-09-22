@@ -53,13 +53,13 @@ export default function PaymentReturn() {
       try {
         const { data } = await supabase
           .from("payments")
-          .select("metadata, status, mp_status_detail")
+          .select("metadata, status")
           .eq("order_id", orderId)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         const meta = data?.metadata as any;
-        const detail = data?.mp_status_detail || meta?.mp_error?.cause?.[0]?.description || meta?.mp_error?.message;
+        const detail = meta?.mp_status_detail || meta?.mp_error?.cause?.[0]?.description || meta?.mp_error?.message;
         if (detail) setFailureReason(detail);
       } catch (e) {
         console.error(e);

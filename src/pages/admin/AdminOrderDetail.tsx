@@ -359,8 +359,8 @@ export default function AdminOrderDetail() {
                         {p.mp_preference_id && (
                           <p className="text-xs text-muted-foreground font-mono">Preference: {p.mp_preference_id}</p>
                         )}
-                        {p.mp_status_detail && (
-                          <p className="text-xs text-muted-foreground font-mono">Detalhe: {p.mp_status_detail}</p>
+                        {meta?.mp_status_detail && (
+                          <p className="text-xs text-muted-foreground font-mono">Detalhe: {meta.mp_status_detail}</p>
                         )}
                         {mpError && (
                           <div className="mt-2 rounded bg-destructive/10 p-2 text-xs text-destructive">
