@@ -1,6 +1,7 @@
 # Roadmap - Checkout Pro + Correção Mercado Pago
 
 ## Concluído
+- [x] Criar endpoint público de testes para produtos ativos, imagens, preço e estoque
 - [x] Verificar secrets/configurações do Mercado Pago
 - [x] Refatorar Edge Function `create-payment-mp`
 - [x] Criar página `CheckoutPro.tsx`
