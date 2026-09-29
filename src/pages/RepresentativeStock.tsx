@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Loader2, PackageSearch, RefreshCw, Search, X } from "lucide-react";
-import writeXlsxFile from "write-excel-file/browser";
+import writeXlsxFile, { type SheetData } from "write-excel-file/browser";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,7 +163,7 @@ export default function RepresentativeStock() {
       color: "#FFFFFF",
       backgroundColor: "#26221F",
     };
-    const rows = [
+    const rows: SheetData = [
       [
         "Código do produto",
         "Nome do produto",
@@ -191,10 +191,9 @@ export default function RepresentativeStock() {
         { width: 23 },
         ...Array.from({ length: maximumImages }, () => ({ width: 55 })),
       ],
-      fileName: `estoque-kepma-${todayStamp()}.xlsx`,
       sheet: "Produtos",
       stickyRowsCount: 1,
-    });
+    }).toFile(`estoque-kepma-${todayStamp()}.xlsx`);
   }
 
   return (
