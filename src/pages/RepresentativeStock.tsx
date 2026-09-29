@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Loader2, PackageSearch, RefreshCw, Search, X } from "lucide-react";
-import ExcelJS from "exceljs/dist/exceljs.min.js";
+import writeXlsxFile from "write-excel-file";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,53 +157,44 @@ export default function RepresentativeStock() {
       (maximum, product) => Math.max(maximum, product.imageUrls.length),
       0,
     );
-    const exportRows = filteredProducts.map((product) => {
-      return [
-        safeSpreadsheetText(product.bling_code ?? ""),
-        safeSpreadsheetText(product.name),
-        safeSpreadsheetText(product.description ?? ""),
-        product.stock_quantity,
-        ...Array.from({ length: maximumImages }, (_, index) =>
-          safeSpreadsheetText(product.imageUrls[index] ?? ""),
-        ),
-      ];
-    });
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = "Kepma Brasil";
-    const worksheet = workbook.addWorksheet("Produtos", {
-      views: [{ state: "frozen", ySplit: 1 }],
-    });
-    worksheet.columns = [
-      { header: "Código do produto", key: "code", width: 20 },
-      { header: "Nome do produto", key: "name", width: 42 },
-      { header: "Descrição", key: "description", width: 70 },
-      { header: "Quantidade em estoque", key: "stock", width: 23 },
-      ...Array.from({ length: maximumImages }, (_, index) => ({
-        header: `Imagem ${index + 1}`,
-        key: `image_${index + 1}`,
-        width: 55,
-      })),
+    const headerStyle = {
+      fontFamily: "Arial",
+      fontWeight: "bold" as const,
+      color: "#FFFFFF",
+      backgroundColor: "#26221F",
+    };
+    const rows = [
+      [
+        "Código do produto",
+        "Nome do produto",
+        "Descrição",
+        "Quantidade em estoque",
+        ...Array.from({ length: maximumImages }, (_, index) => `Imagem ${index + 1}`),
+      ].map((value) => ({ value, ...headerStyle })),
+      ...filteredProducts.map((product) => [
+        { value: safeSpreadsheetText(product.bling_code ?? ""), fontFamily: "Arial" },
+        { value: safeSpreadsheetText(product.name), fontFamily: "Arial", wrap: true },
+        { value: safeSpreadsheetText(product.description ?? ""), fontFamily: "Arial", wrap: true },
+        { value: product.stock_quantity, type: Number, fontFamily: "Arial" },
+        ...Array.from({ length: maximumImages }, (_, index) => ({
+          value: safeSpreadsheetText(product.imageUrls[index] ?? ""),
+          fontFamily: "Arial",
+          wrap: true,
+        })),
+      ]),
     ];
-    worksheet.addRows(exportRows);
-    worksheet.autoFilter = { from: "A1", to: `${worksheet.getColumn(worksheet.columnCount).letter}1` };
-    worksheet.getRow(1).font = { name: "Arial", bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF26221F" } };
-    worksheet.eachRow((row, rowNumber) => {
-      row.font = rowNumber === 1
-        ? { name: "Arial", bold: true, color: { argb: "FFFFFFFF" } }
-        : { name: "Arial", color: { argb: "FF000000" } };
-      row.alignment = { vertical: "top", wrapText: true };
+    await writeXlsxFile(rows, {
+      columns: [
+        { width: 20 },
+        { width: 42 },
+        { width: 70 },
+        { width: 23 },
+        ...Array.from({ length: maximumImages }, () => ({ width: 55 })),
+      ],
+      fileName: `estoque-kepma-${todayStamp()}.xlsx`,
+      sheet: "Produtos",
+      stickyRowsCount: 1,
     });
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const downloadUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = downloadUrl;
-    anchor.download = `estoque-kepma-${todayStamp()}.xlsx`;
-    anchor.click();
-    URL.revokeObjectURL(downloadUrl);
   }
 
   return (
