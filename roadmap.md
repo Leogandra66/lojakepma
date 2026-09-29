@@ -1,13 +1,13 @@
 # Roadmap
 
 ## Em andamento
-- [ ] Criar página pública de estoque para representantes
-- [ ] Incluir busca por nome e código Bling
-- [ ] Exportar catálogo filtrado para Excel
-- [ ] Bloquear indexação e acesso por menus
 - [ ] Validar a página em computador e celular
 
 ## Concluído
+- [x] Criar página pública de estoque para representantes
+- [x] Incluir busca por nome e código Bling
+- [x] Exportar catálogo filtrado para Excel
+- [x] Bloquear indexação e acesso por menus
 - [x] Criar endpoint público de testes para produtos ativos, imagens, preço e estoque
 - [x] Verificar secrets/configurações do Mercado Pago
 - [x] Refatorar Edge Function `create-payment-mp`
