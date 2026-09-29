@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Loader2, PackageSearch, RefreshCw, Search, X } from "lucide-react";
-import ExcelJS from "exceljs";
+import ExcelJS from "exceljs/dist/exceljs.min.js";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
