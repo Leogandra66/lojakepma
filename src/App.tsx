@@ -31,6 +31,7 @@ import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
 import Unsubscribe from "./pages/Unsubscribe";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import { usePageTracking } from "./hooks/usePageTracking";
+import RepresentativeStock, { PAGE_PATH as REPRESENTATIVE_STOCK_PATH } from "./pages/RepresentativeStock";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path={REPRESENTATIVE_STOCK_PATH} element={<RepresentativeStock />} />
               <Route
                 path="/admin"
                 element={
@@ -88,12 +90,17 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <WhatsAppFloatingButton />
+            <ConditionalWhatsAppButton />
           </BrowserRouter>
         </TooltipProvider>
       </CartProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
+
+function ConditionalWhatsAppButton() {
+  const { pathname } = useLocation();
+  return pathname === REPRESENTATIVE_STOCK_PATH ? null : <WhatsAppFloatingButton />;
+}
 
 export default App;
