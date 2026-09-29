@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Loader2, PackageSearch, RefreshCw, Search, X } from "lucide-react";
-import { utils, writeFile } from "xlsx";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +48,10 @@ function todayStamp() {
     .split("/")
     .reverse()
     .join("-");
+}
+
+function safeSpreadsheetText(value: string) {
+  return /^[=+\-@]/.test(value) ? `'${value}` : value;
 }
 
 export default function RepresentativeStock() {
@@ -148,37 +151,59 @@ export default function RepresentativeStock() {
     );
   }, [products, query]);
 
-  function exportToExcel() {
+  async function exportToExcel() {
+    const ExcelJS = await import("exceljs");
     const maximumImages = filteredProducts.reduce(
       (maximum, product) => Math.max(maximum, product.imageUrls.length),
       0,
     );
     const exportRows = filteredProducts.map((product) => {
-      const row: Record<string, string | number> = {
-        "Código do produto": product.bling_code ?? "",
-        "Nome do produto": product.name,
-        Descrição: product.description ?? "",
-        "Quantidade em estoque": product.stock_quantity,
-      };
-      for (let index = 0; index < maximumImages; index += 1) {
-        row[`Imagem ${index + 1}`] = product.imageUrls[index] ?? "";
-      }
-      return row;
+      return [
+        safeSpreadsheetText(product.bling_code ?? ""),
+        safeSpreadsheetText(product.name),
+        safeSpreadsheetText(product.description ?? ""),
+        product.stock_quantity,
+        ...Array.from({ length: maximumImages }, (_, index) =>
+          safeSpreadsheetText(product.imageUrls[index] ?? ""),
+        ),
+      ];
     });
-
-    const worksheet = utils.json_to_sheet(exportRows);
-    worksheet["!cols"] = [
-      { wch: 20 },
-      { wch: 42 },
-      { wch: 70 },
-      { wch: 23 },
-      ...Array.from({ length: maximumImages }, () => ({ wch: 55 })),
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Kepma Brasil";
+    const worksheet = workbook.addWorksheet("Produtos", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+    worksheet.columns = [
+      { header: "Código do produto", key: "code", width: 20 },
+      { header: "Nome do produto", key: "name", width: 42 },
+      { header: "Descrição", key: "description", width: 70 },
+      { header: "Quantidade em estoque", key: "stock", width: 23 },
+      ...Array.from({ length: maximumImages }, (_, index) => ({
+        header: `Imagem ${index + 1}`,
+        key: `image_${index + 1}`,
+        width: 55,
+      })),
     ];
-    worksheet["!autofilter"] = { ref: worksheet["!ref"] ?? "A1:A1" };
-
-    const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, worksheet, "Produtos");
-    writeFile(workbook, `estoque-kepma-${todayStamp()}.xlsx`, { compression: true });
+    worksheet.addRows(exportRows);
+    worksheet.autoFilter = { from: "A1", to: `${worksheet.getColumn(worksheet.columnCount).letter}1` };
+    worksheet.getRow(1).font = { name: "Arial", bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF26221F" } };
+    worksheet.eachRow((row, rowNumber) => {
+      row.font = rowNumber === 1
+        ? { name: "Arial", bold: true, color: { argb: "FFFFFFFF" } }
+        : { name: "Arial", color: { argb: "FF000000" } };
+      row.alignment = { vertical: "top", wrapText: true };
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const downloadUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = downloadUrl;
+    anchor.download = `estoque-kepma-${todayStamp()}.xlsx`;
+    anchor.click();
+    URL.revokeObjectURL(downloadUrl);
   }
 
   return (
@@ -305,7 +330,7 @@ export default function RepresentativeStock() {
                                 rel="noopener noreferrer"
                                 className="block break-all text-xs text-primary underline-offset-4 hover:underline"
                               >
-                                Imagem {index + 1}
+                                {url}
                               </a>
                             ))}
                           </div>
@@ -339,9 +364,9 @@ export default function RepresentativeStock() {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                          className="break-all text-xs font-medium text-primary underline-offset-4 hover:underline"
                         >
-                          Imagem {index + 1}
+                          Imagem {index + 1}: {url}
                         </a>
                       ))}
                     </div>
