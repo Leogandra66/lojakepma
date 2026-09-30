@@ -37,23 +37,28 @@ Deno.serve(async (req) => {
 
     for (const p of products ?? []) {
       try {
-        const balance = await fetchStock(accessToken, p.bling_code as string, depositoGeralId);
-        if (balance === null) {
+        const blingProduct = await fetchProductData(accessToken, p.bling_code as string, depositoGeralId);
+        if (blingProduct === null) {
           summary.not_found++;
           summary.details.push({ code: p.bling_code, status: "not_found" });
           continue;
         }
         const updates: Record<string, unknown> = {
-          stock_quantity: balance,
+          stock_quantity: blingProduct.balance,
           stock_synced_at: new Date().toISOString(),
         };
-        if (balance === 0) updates.status = "unavailable";
+        if (blingProduct.price !== null) updates.price_b2b = blingProduct.price;
+        if (blingProduct.balance === 0) updates.status = "unavailable";
         else if (p.status === "unavailable") updates.status = "in_stock";
 
         const { error: uErr } = await supabase.from("products").update(updates).eq("id", p.id);
         if (uErr) throw uErr;
         summary.updated++;
-        summary.details.push({ code: p.bling_code, balance });
+        summary.details.push({
+          code: p.bling_code,
+          balance: blingProduct.balance,
+          price_b2b: blingProduct.price,
+        });
       } catch (e) {
         summary.errors++;
         const msg = (e as Error).message;
@@ -134,8 +139,12 @@ async function findDepositoGeral(token: string): Promise<number | null> {
   }
 }
 
-async function fetchStock(token: string, code: string, depositoId: number | null): Promise<number | null> {
-  // 1. Achar produto pelo código (SKU)
+async function fetchProductData(
+  token: string,
+  code: string,
+  depositoId: number | null,
+): Promise<{ balance: number; price: number | null } | null> {
+  // 1. Achar produto pelo código (SKU) e aproveitar o preço de venda retornado pelo cadastro.
   const r = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(code)}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
@@ -144,6 +153,8 @@ async function fetchStock(token: string, code: string, depositoId: number | null
   const list = body?.data ?? [];
   const prod = Array.isArray(list) ? list.find((x: any) => String(x.codigo) === code) ?? list[0] : null;
   if (!prod?.id) return null;
+  const parsedPrice = Number(prod.preco);
+  const price = prod.preco != null && Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : null;
 
   // 2. Consultar saldo, preferindo o depósito Geral quando conhecido
   const saldosUrl = depositoId
@@ -154,7 +165,7 @@ async function fetchStock(token: string, code: string, depositoId: number | null
   });
   if (!s.ok) {
     const inline = prod?.estoque?.saldoVirtualTotal ?? prod?.estoque?.saldoFisico;
-    if (inline != null) return Math.max(0, Math.floor(Number(inline)));
+    if (inline != null) return { balance: Math.max(0, Math.floor(Number(inline))), price };
     throw new Error(`GET /estoques/saldos ${s.status}: ${await s.text()}`);
   }
   const sb = await s.json();
@@ -176,7 +187,7 @@ async function fetchStock(token: string, code: string, depositoId: number | null
     if (saldo != null) break;
   }
   if (saldo == null) return null;
-  return Math.max(0, Math.floor(saldo));
+  return { balance: Math.max(0, Math.floor(saldo)), price };
 }
 
 function json(body: unknown, status = 200) {
