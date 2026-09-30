@@ -32,6 +32,10 @@ import Unsubscribe from "./pages/Unsubscribe";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import { usePageTracking } from "./hooks/usePageTracking";
 import RepresentativeStock, { PAGE_PATH as REPRESENTATIVE_STOCK_PATH } from "./pages/RepresentativeStock";
+import B2BRoute from "./components/B2BRoute";
+import B2BLogin from "./pages/B2BLogin";
+import B2BDashboard from "./pages/B2BDashboard";
+import AdminB2B from "./pages/admin/AdminB2B";
 
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
@@ -71,7 +75,9 @@ const App = () => (
               <Route path="/pagamento-concluido" element={<PaymentReturn />} />
               <Route path="/minha-conta" element={<MyAccount />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
-              <Route path={REPRESENTATIVE_STOCK_PATH} element={<RepresentativeStock />} />
+              <Route path={REPRESENTATIVE_STOCK_PATH} element={<Navigate to="/b2b/entrar" replace />} />
+              <Route path="/b2b/entrar" element={<B2BLogin />} />
+              <Route path="/b2b" element={<B2BRoute><B2BDashboard /></B2BRoute>} />
               <Route
                 path="/admin"
                 element={
@@ -86,6 +92,7 @@ const App = () => (
                 <Route path="pedidos/:id" element={<AdminOrderDetail />} />
                 <Route path="pagamentos" element={<AdminPayments />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="b2b" element={<AdminB2B />} />
                 <Route index element={<AdminProducts />} />
               </Route>
               <Route path="*" element={<NotFound />} />
@@ -100,7 +107,7 @@ const App = () => (
 
 function ConditionalWhatsAppButton() {
   const { pathname } = useLocation();
-  return pathname === REPRESENTATIVE_STOCK_PATH ? null : <WhatsAppFloatingButton />;
+  return pathname === REPRESENTATIVE_STOCK_PATH || pathname.startsWith("/b2b") ? null : <WhatsAppFloatingButton />;
 }
 
 export default App;

@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Package, ArrowLeft, Ticket, ShoppingBag, CreditCard, BarChart3 } from "lucide-react";
+import { Package, ArrowLeft, Ticket, ShoppingBag, CreditCard, BarChart3, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,7 @@ const navItems = [
   { label: "Pedidos", path: "/admin/pedidos", icon: ShoppingBag },
   { label: "Pagamentos", path: "/admin/pagamentos", icon: CreditCard },
   { label: "Cupons", path: "/admin/cupons", icon: Ticket },
+  { label: "B2B", path: "/admin/b2b", icon: BriefcaseBusiness },
 ];
 
 export default function AdminLayout() {
@@ -26,7 +27,7 @@ export default function AdminLayout() {
           </Link>
           <div className="h-6 w-px bg-border" />
           <span className="font-heading font-bold text-lg">Painel Admin</span>
-          <nav className="ml-8 flex gap-1">
+          <nav className="ml-8 flex gap-1 overflow-x-auto">
             {navItems.map((item) => (
               <Link
                 key={item.path}
