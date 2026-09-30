@@ -67,7 +67,7 @@ export function BlingSyncPanel() {
               ? lastSync
                 ? `Última sincronização: ${lastSync.toLocaleString("pt-BR")} · automática a cada 1h`
                 : "Nenhuma sincronização executada ainda · automática a cada 1h"
-              : "Conecte para atualizar o estoque dos produtos com Cód. Bling automaticamente."}
+               : "Conecte para atualizar estoque e preço B2B dos produtos com Cód. Bling automaticamente."}
           </p>
         </div>
       </div>
