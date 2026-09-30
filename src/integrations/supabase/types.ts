@@ -83,6 +83,7 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           address_zip: string | null
+          cnpj: string | null
           company_name: string
           contact_name: string | null
           created_at: string
@@ -91,6 +92,7 @@ export type Database = {
           id: string
           phone: string | null
           rep_account_id: string
+          state_registration: string | null
           updated_at: string
         }
         Insert: {
@@ -101,6 +103,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          cnpj?: string | null
           company_name: string
           contact_name?: string | null
           created_at?: string
@@ -109,6 +112,7 @@ export type Database = {
           id?: string
           phone?: string | null
           rep_account_id: string
+          state_registration?: string | null
           updated_at?: string
         }
         Update: {
@@ -119,6 +123,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          cnpj?: string | null
           company_name?: string
           contact_name?: string | null
           created_at?: string
@@ -127,6 +132,7 @@ export type Database = {
           id?: string
           phone?: string | null
           rep_account_id?: string
+          state_registration?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { toast } from "sonner";
+import { z } from "zod";
 
 type Client = Database["public"]["Tables"]["b2b_clients"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -21,10 +22,39 @@ type PaymentTerm = Database["public"]["Tables"]["b2b_payment_terms"]["Row"];
 type Order = Database["public"]["Tables"]["b2b_orders"]["Row"];
 type OrderItem = Database["public"]["Tables"]["b2b_order_items"]["Row"];
 
-const EMPTY_CLIENT = { company_name: "", document: "", contact_name: "", phone: "", email: "", address_zip: "", address_street: "", address_number: "", address_complement: "", address_neighborhood: "", address_city: "", address_state: "" };
+const EMPTY_CLIENT = { company_name: "", cnpj: "", state_registration: "", contact_name: "", phone: "", email: "", address_zip: "", address_street: "", address_number: "", address_complement: "", address_neighborhood: "", address_city: "", address_state: "" };
 type ClientForm = typeof EMPTY_CLIENT;
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const statusLabel = { aguardando_aprovacao: "Aguardando aprovação", aprovado: "Aprovado", recusado: "Recusado", cancelado: "Cancelado" } as const;
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+const formatCnpj = (value: string) => onlyDigits(value).slice(0, 14).replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+const isValidCnpj = (value: string) => {
+  const cnpj = onlyDigits(value);
+  if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+  const calculateDigit = (length: number) => {
+    let factor = length - 7;
+    let sum = 0;
+    for (let index = 0; index < length; index += 1) {
+      sum += Number(cnpj[index]) * factor;
+      factor -= 1;
+      if (factor < 2) factor = 9;
+    }
+    const result = 11 - (sum % 11);
+    return result > 9 ? 0 : result;
+  };
+  return calculateDigit(12) === Number(cnpj[12]) && calculateDigit(13) === Number(cnpj[13]);
+};
+const optionalField = (max: number) => z.string().trim().max(max, "Campo muito longo");
+const clientSchema = z.object({
+  company_name: z.string().trim().min(1, "Informe a razão social ou nome.").max(160),
+  cnpj: z.string().trim().refine(isValidCnpj, "Informe um CNPJ válido."),
+  state_registration: z.string().trim().min(1, "Informe a inscrição estadual ou Isento.").max(30).regex(/^(?:[Ii][Ss][Ee][Nn][Tt][Oo]|[0-9A-Za-z./-]{2,30})$/, "Informe uma inscrição estadual válida ou Isento."),
+  contact_name: optionalField(120), phone: optionalField(30),
+  email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.").max(255)]),
+  address_zip: optionalField(10), address_street: optionalField(160), address_number: optionalField(30),
+  address_complement: optionalField(100), address_neighborhood: optionalField(100), address_city: optionalField(100), address_state: optionalField(2),
+});
 
 export default function B2BDashboard() {
   const { user, signOut } = useAuth();
@@ -69,8 +99,11 @@ export default function B2BDashboard() {
   const saveClient = useMutation({
     mutationFn: async () => {
       if (!account) throw new Error("Conta comercial não encontrada.");
-      const payload = Object.fromEntries(Object.entries(clientForm).map(([key, value]) => [key, value.trim() || null])) as Database["public"]["Tables"]["b2b_clients"]["Insert"];
-      payload.company_name = clientForm.company_name.trim(); payload.rep_account_id = account.id;
+      const parsed = clientSchema.safeParse(clientForm);
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Revise os dados do cliente.");
+      const normalized = { ...parsed.data, cnpj: onlyDigits(parsed.data.cnpj), state_registration: parsed.data.state_registration.toLocaleLowerCase("pt-BR") === "isento" ? "Isento" : parsed.data.state_registration };
+      const payload = Object.fromEntries(Object.entries(normalized).map(([key, value]) => [key, value || null])) as Database["public"]["Tables"]["b2b_clients"]["Insert"];
+      payload.company_name = normalized.company_name; payload.cnpj = normalized.cnpj; payload.state_registration = normalized.state_registration; payload.rep_account_id = account.id;
       if (editingClient) { const { error } = await supabase.from("b2b_clients").update(payload).eq("id", editingClient.id); if (error) throw error; }
       else { const { error } = await supabase.from("b2b_clients").insert(payload); if (error) throw error; }
     },
@@ -94,7 +127,7 @@ export default function B2BDashboard() {
   });
 
   const filteredProducts = useMemo(() => { const q = search.trim().toLocaleLowerCase("pt-BR"); return products.filter((p) => !q || p.name.toLocaleLowerCase("pt-BR").includes(q) || p.bling_code?.toLocaleLowerCase("pt-BR").includes(q)); }, [products, search]);
-  const filteredClients = useMemo(() => { const q = clientSearch.trim().toLocaleLowerCase("pt-BR"); return clients.filter((c) => !q || c.company_name.toLocaleLowerCase("pt-BR").includes(q) || c.document?.includes(q)); }, [clients, clientSearch]);
+  const filteredClients = useMemo(() => { const q = clientSearch.trim().toLocaleLowerCase("pt-BR"); const digits = onlyDigits(q); return clients.filter((c) => !q || c.company_name.toLocaleLowerCase("pt-BR").includes(q) || (digits && c.cnpj?.includes(digits)) || c.state_registration?.toLocaleLowerCase("pt-BR").includes(q)); }, [clients, clientSearch]);
   const cartProducts = products.filter((p) => (quantities[p.id] ?? 0) > 0);
   const total = cartProducts.reduce((sum, p) => sum + Number(p.price_b2b) * (quantities[p.id] ?? 0), 0);
 
@@ -148,8 +181,8 @@ export default function B2BDashboard() {
         </TabsContent>
 
         <TabsContent value="clientes" className="mt-6">
-          <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row"><div className="relative max-w-lg flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} placeholder="Buscar cliente ou documento" className="pl-9" /></div><Button onClick={() => openClient()}><Plus className="h-4 w-4" /> Novo cliente</Button></div>
-          {clientsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : filteredClients.length === 0 ? <div className="border-y py-20 text-center"><BookUser className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum cliente cadastrado</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filteredClients.map((client) => <article key={client.id} className="rounded-md border bg-card p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">{client.company_name}</h2><p className="mt-1 text-sm text-muted-foreground">{client.contact_name || "Sem contato informado"}</p></div><div className="flex"><Button variant="ghost" size="icon" onClick={() => openClient(client)} aria-label="Editar cliente"><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover ${client.company_name}?`)) deleteClient.mutate(client.id); }} aria-label="Remover cliente"><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div><dl className="mt-5 grid gap-2 text-sm"><div><dt className="text-muted-foreground">Documento</dt><dd>{client.document || "—"}</dd></div><div><dt className="text-muted-foreground">Contato</dt><dd>{[client.phone, client.email].filter(Boolean).join(" · ") || "—"}</dd></div><div><dt className="text-muted-foreground">Cidade</dt><dd>{[client.address_city, client.address_state].filter(Boolean).join(" / ") || "—"}</dd></div></dl></article>)}</div>}
+          <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row"><div className="relative max-w-lg flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} placeholder="Buscar cliente, CNPJ ou inscrição estadual" className="pl-9" /></div><Button onClick={() => openClient()}><Plus className="h-4 w-4" /> Novo cliente</Button></div>
+          {clientsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : filteredClients.length === 0 ? <div className="border-y py-20 text-center"><BookUser className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum cliente cadastrado</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filteredClients.map((client) => <article key={client.id} className="rounded-md border bg-card p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">{client.company_name}</h2><p className="mt-1 text-sm text-muted-foreground">{client.contact_name || "Sem contato informado"}</p></div><div className="flex"><Button variant="ghost" size="icon" onClick={() => openClient(client)} aria-label="Editar cliente"><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover ${client.company_name}?`)) deleteClient.mutate(client.id); }} aria-label="Remover cliente"><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div><dl className="mt-5 grid gap-2 text-sm"><div><dt className="text-muted-foreground">CNPJ</dt><dd>{client.cnpj ? formatCnpj(client.cnpj) : "Pendente"}</dd></div><div><dt className="text-muted-foreground">Inscrição estadual</dt><dd>{client.state_registration || "Pendente"}</dd></div><div><dt className="text-muted-foreground">Contato</dt><dd>{[client.phone, client.email].filter(Boolean).join(" · ") || "—"}</dd></div><div><dt className="text-muted-foreground">Cidade</dt><dd>{[client.address_city, client.address_state].filter(Boolean).join(" / ") || "—"}</dd></div></dl></article>)}</div>}
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6">
@@ -157,7 +190,7 @@ export default function B2BDashboard() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={clientOpen} onOpenChange={setClientOpen}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{editingClient ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader><form onSubmit={(e) => { e.preventDefault(); if (!clientForm.company_name.trim()) return; saveClient.mutate(); }} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2 sm:col-span-2"><Label>Razão social ou nome *</Label><Input value={clientForm.company_name} onChange={(e) => setClientForm({ ...clientForm, company_name: e.target.value })} required /></div>{([['document','Documento'],['contact_name','Pessoa de contato'],['phone','Telefone'],['email','E-mail'],['address_zip','CEP'],['address_street','Rua'],['address_number','Número'],['address_complement','Complemento'],['address_neighborhood','Bairro'],['address_city','Cidade'],['address_state','Estado']] as const).map(([key,label]) => <div key={key} className={key === "address_street" ? "space-y-2 sm:col-span-2" : "space-y-2"}><Label>{label}</Label><Input type={key === "email" ? "email" : "text"} value={clientForm[key]} onChange={(e) => setClientForm({ ...clientForm, [key]: e.target.value })} /></div>)}</div><div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => setClientOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveClient.isPending}>{saveClient.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></div></form></DialogContent></Dialog>
+      <Dialog open={clientOpen} onOpenChange={setClientOpen}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{editingClient ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader><form onSubmit={(e) => { e.preventDefault(); saveClient.mutate(); }} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2 sm:col-span-2"><Label>Razão social ou nome *</Label><Input value={clientForm.company_name} onChange={(e) => setClientForm({ ...clientForm, company_name: e.target.value })} maxLength={160} required /></div><div className="space-y-2"><Label>CNPJ *</Label><Input inputMode="numeric" value={clientForm.cnpj} onChange={(e) => setClientForm({ ...clientForm, cnpj: formatCnpj(e.target.value) })} placeholder="00.000.000/0000-00" maxLength={18} required /></div><div className="space-y-2"><Label>Inscrição estadual *</Label><Input value={clientForm.state_registration} onChange={(e) => setClientForm({ ...clientForm, state_registration: e.target.value })} placeholder="Número ou Isento" maxLength={30} required /></div>{([['contact_name','Pessoa de contato'],['phone','Telefone'],['email','E-mail'],['address_zip','CEP'],['address_street','Rua'],['address_number','Número'],['address_complement','Complemento'],['address_neighborhood','Bairro'],['address_city','Cidade'],['address_state','Estado']] as const).map(([key,label]) => <div key={key} className={key === "address_street" ? "space-y-2 sm:col-span-2" : "space-y-2"}><Label>{label}</Label><Input type={key === "email" ? "email" : "text"} value={clientForm[key]} onChange={(e) => setClientForm({ ...clientForm, [key]: e.target.value })} maxLength={key === "email" ? 255 : key === "address_state" ? 2 : 160} /></div>)}</div><div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => setClientOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveClient.isPending}>{saveClient.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></div></form></DialogContent></Dialog>
     </main>
   );
 }
