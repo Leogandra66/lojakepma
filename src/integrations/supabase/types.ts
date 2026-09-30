@@ -1013,6 +1013,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_b2b_representative: {
+        Args: {
+          _company_name: string
+          _document?: string
+          _email: string
+          _phone?: string
+        }
+        Returns: string
+      }
+      admin_list_products: {
+        Args: never
+        Returns: {
+          active: boolean
+          bling_code: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          electronics_tag: string | null
+          id: string
+          image_url: string | null
+          name: string
+          preorder_estimated_delivery: string | null
+          price: number
+          price_b2b: number | null
+          status: Database["public"]["Enums"]["product_status"]
+          stock_quantity: number
+          stock_synced_at: string | null
+          updated_at: string
+          uses_plek_technology: boolean
+          video_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_b2b_order: {
         Args: {
           _client_id: string
@@ -1030,6 +1068,20 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_b2b_catalog: {
+        Args: never
+        Returns: {
+          active: boolean
+          bling_code: string
+          category: string
+          description: string
+          id: string
+          image_url: string
+          name: string
+          price_b2b: number
+          stock_quantity: number
+        }[]
       }
       has_role: {
         Args: {

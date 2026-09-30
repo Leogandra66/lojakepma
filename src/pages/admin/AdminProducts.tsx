@@ -45,6 +45,7 @@ interface ProductForm {
   name: string;
   description: string;
   price: string;
+  price_b2b: string;
   category: string;
   status: "in_stock" | "preorder" | "unavailable";
   stock_quantity: string;
@@ -59,6 +60,7 @@ const emptyForm: ProductForm = {
   name: "",
   description: "",
   price: "",
+  price_b2b: "",
   category: "",
   status: "in_stock",
   stock_quantity: "0",
@@ -81,10 +83,7 @@ export default function AdminProducts() {
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("admin_list_products");
       if (error) throw error;
       return data as Product[];
     },
@@ -96,6 +95,7 @@ export default function AdminProducts() {
         name: data.name,
         description: data.description || null,
         price: parseFloat(data.price),
+        price_b2b: data.price_b2b ? parseFloat(data.price_b2b) : null,
         category: data.category || null,
         status: data.status,
         stock_quantity: parseInt(data.stock_quantity) || 0,
@@ -136,6 +136,7 @@ export default function AdminProducts() {
         name: `${product.name} CÓPIA`,
         description: product.description || null,
         price: product.price,
+        price_b2b: product.price_b2b,
         category: product.category || null,
         status: "unavailable" as const,
         stock_quantity: 0,
@@ -192,6 +193,7 @@ export default function AdminProducts() {
       name: product.name,
       description: product.description || "",
       price: String(product.price),
+      price_b2b: product.price_b2b === null ? "" : String(product.price_b2b),
       category: product.category || "",
       status: product.status,
       stock_quantity: String(product.stock_quantity),
@@ -267,6 +269,7 @@ export default function AdminProducts() {
                 <TableHead>Produto</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Preço</TableHead>
+                <TableHead>Preço B2B</TableHead>
                 <TableHead>Estoque</TableHead>
                 <TableHead>Cód. Bling</TableHead>
                 <TableHead>Status</TableHead>
@@ -280,6 +283,7 @@ export default function AdminProducts() {
                   <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
                   <TableCell>{p.category || "—"}</TableCell>
                   <TableCell>{formatPrice(p.price)}</TableCell>
+                  <TableCell>{p.price_b2b === null ? "—" : formatPrice(p.price_b2b)}</TableCell>
                   <TableCell>{p.stock_quantity}</TableCell>
                   <TableCell className="text-muted-foreground">{(p as any).bling_code || "—"}</TableCell>
                   <TableCell>
@@ -320,7 +324,7 @@ export default function AdminProducts() {
               ))}
               {filteredProducts?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     {searchQuery ? "Nenhum produto encontrado" : "Nenhum produto cadastrado"}
                   </TableCell>
 
@@ -371,6 +375,19 @@ export default function AdminProducts() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Preço B2B (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.price_b2b}
+                  onChange={(e) => setForm({ ...form, price_b2b: e.target.value })}
+                  placeholder="Preço de atacado"
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

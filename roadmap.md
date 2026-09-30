@@ -15,3 +15,11 @@
 - [x] Configurar ambiente sandbox/produção
 - [x] Deploy das Edge Functions
 - [x] Testar fluxo end-to-end do Mercado Pago
+
+- [x] Criar acesso protegido para representantes aprovados
+- [x] Criar cadastro e edição da carteira de clientes B2B
+- [x] Criar catálogo B2B com montagem e envio de pedidos
+- [x] Criar histórico e detalhes dos pedidos do representante
+- [x] Adicionar preço B2B ao cadastro administrativo de produtos
+- [x] Criar administração de representantes, condições e pedidos B2B
+- [x] Validar bloqueio público, acesso aprovado e reserva transacional de estoque
