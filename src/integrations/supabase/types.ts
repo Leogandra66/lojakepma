@@ -139,6 +139,154 @@ export type Database = {
           },
         ]
       }
+      b2b_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          line_total: number
+          order_id: string
+          product_code: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_total: number
+          order_id: string
+          product_code?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          order_id?: string
+          product_code?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_orders: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_term_id: string
+          payment_term_snapshot: string
+          rep_account_id: string
+          status: Database["public"]["Enums"]["b2b_order_status"]
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_term_id: string
+          payment_term_snapshot: string
+          rep_account_id: string
+          status?: Database["public"]["Enums"]["b2b_order_status"]
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_term_id?: string
+          payment_term_snapshot?: string
+          rep_account_id?: string
+          status?: Database["public"]["Enums"]["b2b_order_status"]
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_orders_payment_term_id_fkey"
+            columns: ["payment_term_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_payment_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_orders_rep_account_id_fkey"
+            columns: ["rep_account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_payment_terms: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          installment_days: number[]
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          installment_days?: number[]
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          installment_days?: number[]
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bling_auth: {
         Row: {
           access_token: string | null
@@ -717,6 +865,7 @@ export type Database = {
           name: string
           preorder_estimated_delivery: string | null
           price: number
+          price_b2b: number | null
           status: Database["public"]["Enums"]["product_status"]
           stock_quantity: number
           stock_synced_at: string | null
@@ -736,6 +885,7 @@ export type Database = {
           name: string
           preorder_estimated_delivery?: string | null
           price: number
+          price_b2b?: number | null
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
           stock_synced_at?: string | null
@@ -755,6 +905,7 @@ export type Database = {
           name?: string
           preorder_estimated_delivery?: string | null
           price?: number
+          price_b2b?: number | null
           status?: Database["public"]["Enums"]["product_status"]
           stock_quantity?: number
           stock_synced_at?: string | null
@@ -862,6 +1013,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_b2b_order: {
+        Args: {
+          _client_id: string
+          _items: Json
+          _notes: string
+          _payment_term_id: string
+        }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -883,6 +1043,10 @@ export type Database = {
         Returns: undefined
       }
       is_approved_b2b: { Args: { _user_id: string }; Returns: boolean }
+      is_approved_representative: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -904,10 +1068,19 @@ export type Database = {
           read_ct: number
         }[]
       }
+      review_b2b_order: {
+        Args: { _approve: boolean; _order_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
       b2b_account_type: "lojista" | "representante"
+      b2b_order_status:
+        | "aguardando_aprovacao"
+        | "aprovado"
+        | "recusado"
+        | "cancelado"
       b2b_status: "pendente" | "aprovado" | "recusado"
       discount_type: "percentage" | "fixed"
       order_status:
@@ -1049,6 +1222,12 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       b2b_account_type: ["lojista", "representante"],
+      b2b_order_status: [
+        "aguardando_aprovacao",
+        "aprovado",
+        "recusado",
+        "cancelado",
+      ],
       b2b_status: ["pendente", "aprovado", "recusado"],
       discount_type: ["percentage", "fixed"],
       order_status: [
