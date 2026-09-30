@@ -23,3 +23,4 @@
 - [x] Adicionar preço B2B ao cadastro administrativo de produtos
 - [x] Criar administração de representantes, condições e pedidos B2B
 - [x] Validar bloqueio público, acesso aprovado e reserva transacional de estoque
+- [x] Exigir CNPJ e inscrição estadual no cadastro de clientes B2B
