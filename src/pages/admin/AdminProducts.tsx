@@ -83,10 +83,7 @@ export default function AdminProducts() {
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("admin_list_products");
       if (error) throw error;
       return data as Product[];
     },

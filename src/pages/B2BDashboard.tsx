@@ -51,7 +51,7 @@ export default function B2BDashboard() {
   });
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ["b2b-products"],
-    queryFn: async () => { const { data, error } = await supabase.from("products").select("id,name,description,bling_code,stock_quantity,price_b2b,image_url,category,active").eq("active", true).not("price_b2b", "is", null).order("name"); if (error) throw error; return (data as Product[]).filter((p) => p.category?.trim().toLocaleLowerCase("pt-BR") !== "eletrônica".toLocaleLowerCase("pt-BR")); },
+    queryFn: async () => { const { data, error } = await supabase.rpc("get_b2b_catalog"); if (error) throw error; return data as Product[]; },
   });
   const { data: terms = [] } = useQuery({
     queryKey: ["b2b-terms"],
