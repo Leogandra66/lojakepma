@@ -1,0 +1,1 @@
+DROP TABLE public.product_wholesale_prices;

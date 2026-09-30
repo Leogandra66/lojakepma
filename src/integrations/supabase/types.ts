@@ -817,41 +817,6 @@ export type Database = {
           },
         ]
       }
-      product_wholesale_prices: {
-        Row: {
-          created_at: string
-          id: string
-          min_quantity: number
-          price: number
-          product_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          min_quantity?: number
-          price: number
-          product_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          min_quantity?: number
-          price?: number
-          product_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_wholesale_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: true
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products: {
         Row: {
           active: boolean
