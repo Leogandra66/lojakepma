@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookUser, ChevronDown, ChevronUp, ClipboardList, Eye, Loader2, LogOut, Minus, Package, Pencil, Play, Plus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
+import { BookUser, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardList, Eye, Loader2, LogOut, Minus, Package, Pencil, Play, Plus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ type ClientForm = typeof EMPTY_CLIENT;
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const statusLabel = { aguardando_aprovacao: "Aguardando aprovação", aprovado: "Aprovado", recusado: "Recusado", cancelado: "Cancelado" } as const;
 const OUT_OF_STATE_DISCOUNT = 0.14;
+const PRODUCTS_PER_PAGE = 6;
 const BRAZILIAN_STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as const;
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
@@ -82,6 +83,7 @@ export default function B2BDashboard() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState("catalogo");
   const [search, setSearch] = useState("");
+  const [catalogPage, setCatalogPage] = useState(1);
   const [clientSearch, setClientSearch] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedClient, setSelectedClient] = useState("");
@@ -155,6 +157,8 @@ export default function B2BDashboard() {
   });
 
   const filteredProducts = useMemo(() => { const q = search.trim().toLocaleLowerCase("pt-BR"); return products.filter((p) => !q || p.name.toLocaleLowerCase("pt-BR").includes(q) || p.bling_code?.toLocaleLowerCase("pt-BR").includes(q)); }, [products, search]);
+  const catalogPageCount = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const paginatedProducts = filteredProducts.slice((catalogPage - 1) * PRODUCTS_PER_PAGE, catalogPage * PRODUCTS_PER_PAGE);
   const filteredClients = useMemo(() => { const q = clientSearch.trim().toLocaleLowerCase("pt-BR"); const digits = onlyDigits(q); return clients.filter((c) => !q || c.company_name.toLocaleLowerCase("pt-BR").includes(q) || (digits && c.cnpj?.includes(digits)) || c.state_registration?.toLocaleLowerCase("pt-BR").includes(q)); }, [clients, clientSearch]);
   const selectedClientData = clients.find((client) => client.id === selectedClient);
   const selectedClientState = selectedClientData?.address_state?.trim().toUpperCase() ?? "";
@@ -164,6 +168,10 @@ export default function B2BDashboard() {
   const cartProducts = products.filter((p) => (quantities[p.id] ?? 0) > 0);
   const total = cartProducts.reduce((sum, p) => sum + effectivePrice(p) * (quantities[p.id] ?? 0), 0);
   const detailVideoId = detailProduct?.video_url?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)?.[1];
+
+  useEffect(() => {
+    setCatalogPage((current) => Math.min(current, catalogPageCount));
+  }, [catalogPageCount]);
 
   function setQuantity(id: string, quantity: number) { setQuantities((current) => ({ ...current, [id]: Math.max(0, Math.min(10000, quantity || 0)) })); }
   function openClient(client?: Client) { setEditingClient(client ?? null); setClientForm(client ? Object.fromEntries(Object.keys(EMPTY_CLIENT).map((key) => [key, String(client[key as keyof Client] ?? "")])) as ClientForm : EMPTY_CLIENT); setClientOpen(true); }
@@ -189,18 +197,21 @@ export default function B2BDashboard() {
         <TabsContent value="catalogo" className="mt-6">
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <section>
-              <div className="mb-5 flex items-center gap-3"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar produto ou código" className="pl-9" /></div><Badge variant="outline">{filteredProducts.length} produtos</Badge></div>
+              <div className="mb-5 flex items-center gap-3"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} placeholder="Buscar produto ou código" className="pl-9" /></div><Badge variant="outline">{filteredProducts.length} produtos</Badge></div>
               {hasOutOfStateDiscount && <div className="mb-5 border-l-4 border-primary bg-primary/5 px-4 py-3 text-sm"><strong>Preço para {selectedClientState}:</strong> desconto de 14% já aplicado em todo o catálogo.</div>}
               {selectedClient && !hasClientState && <div className="mb-5 border-l-4 border-destructive bg-destructive/5 px-4 py-3 text-sm text-destructive">Complete o estado deste cliente para visualizar os preços corretos e enviar o pedido.</div>}
-              {productsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : <div className="divide-y border-y">
-                {filteredProducts.map((product) => { const quantity = quantities[product.id] ?? 0; return (
+              {productsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : filteredProducts.length === 0 ? <div className="border-y py-20 text-center"><Package className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum produto encontrado</p></div> : <>
+                <div className="divide-y border-y">
+                {paginatedProducts.map((product) => { const quantity = quantities[product.id] ?? 0; return (
                   <article key={product.id} className="grid gap-4 py-5 sm:grid-cols-[72px_minmax(0,1fr)_140px] sm:items-center">
                     <div className="h-[72px] w-[72px] overflow-hidden rounded-md bg-muted">{product.image_url ? <img src={product.image_url} alt="" className="h-full w-full object-contain" /> : <Package className="m-5 h-8 w-8 text-muted-foreground" />}</div>
                      <div><div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold">{product.name}</h2>{product.stock_quantity === 0 && <Badge variant="secondary">Sem estoque</Badge>}</div><p className="mt-1 font-mono text-xs text-muted-foreground">{product.bling_code || "Sem código"}</p><p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{product.description || "Sem descrição."}</p><div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"><div>{hasOutOfStateDiscount && <span className="mr-2 text-xs text-muted-foreground line-through">{money(Number(product.price_b2b))}</span>}<strong>{selectedClient && !hasClientState ? "Selecione a UF" : money(effectivePrice(product))}</strong></div><span className="text-muted-foreground">Estoque: {product.stock_quantity}</span><Button variant="link" className="h-auto gap-1 p-0" onClick={() => setDetailProduct(product)}><Eye className="h-4 w-4" /> Ver detalhes</Button></div></div>
                     <div className="flex h-10 items-center justify-between rounded-md border"><Button variant="ghost" size="icon" onClick={() => setQuantity(product.id, quantity - 1)} disabled={quantity === 0} aria-label="Diminuir"><Minus className="h-4 w-4" /></Button><Input aria-label={`Quantidade de ${product.name}`} type="number" min="0" max="10000" value={quantity || ""} onChange={(e) => setQuantity(product.id, Number(e.target.value))} className="h-9 w-16 border-0 p-1 text-center focus-visible:ring-0" /><Button variant="ghost" size="icon" onClick={() => setQuantity(product.id, quantity + 1)} aria-label="Aumentar"><Plus className="h-4 w-4" /></Button></div>
                   </article>
                 ); })}
-              </div>}
+                </div>
+                {catalogPageCount > 1 && <nav className="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="Paginação do catálogo"><Button variant="outline" size="icon" onClick={() => setCatalogPage((page) => Math.max(1, page - 1))} disabled={catalogPage === 1} aria-label="Página anterior"><ChevronLeft className="h-4 w-4" /></Button>{Array.from({ length: catalogPageCount }, (_, index) => index + 1).map((page) => <Button key={page} variant={page === catalogPage ? "default" : "outline"} size="icon" onClick={() => setCatalogPage(page)} aria-label={`Página ${page}`} aria-current={page === catalogPage ? "page" : undefined}>{page}</Button>)}<Button variant="outline" size="icon" onClick={() => setCatalogPage((page) => Math.min(catalogPageCount, page + 1))} disabled={catalogPage === catalogPageCount} aria-label="Próxima página"><ChevronRight className="h-4 w-4" /></Button></nav>}
+              </>}
             </section>
             <aside className="h-fit border-t-4 border-primary bg-card p-5 shadow-sm xl:sticky xl:top-5">
               <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Novo pedido</h2><Badge>{cartProducts.length}</Badge></div>
