@@ -28,6 +28,7 @@ export default function B2BLogin() {
   const [phone, setPhone] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [signupComplete, setSignupComplete] = useState(false);
+  const [existingEmail, setExistingEmail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [checking, setChecking] = useState(Boolean(user));
   const [access, setAccess] = useState<"approved" | "pending" | "refused" | "none" | null>(null);
@@ -92,6 +93,10 @@ export default function B2BLogin() {
         },
       });
       if (error) throw error;
+      if (data.user && data.user.identities?.length === 0) {
+        setExistingEmail(true);
+        return;
+      }
       setSignupComplete(true);
       if (data.session) setAccess("pending");
     } catch (error) {
@@ -152,7 +157,14 @@ export default function B2BLogin() {
           <h2 className="text-3xl font-semibold">{mode === "login" ? "Acesso B2B" : "Cadastro de representante"}</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">{mode === "login" ? "Entre com o e-mail e a senha associados ao seu cadastro comercial." : "Crie sua conta e envie a solicitação para análise da equipe Kepma."}</p>
 
-          {signupComplete ? (
+          {existingEmail ? (
+            <div className="mt-8 space-y-4 border-l-2 border-primary pl-5">
+              <p className="font-medium">Este e-mail já possui uma conta na loja.</p>
+              <p className="text-sm leading-6 text-muted-foreground">Entre com a senha dessa conta. Depois do login, você poderá solicitar o acesso como representante.</p>
+              <Button onClick={() => { setMode("login"); setExistingEmail(false); }}>Entrar com esta conta</Button>
+              <Link to="/recuperar-senha" className="block text-sm text-primary hover:underline">Esqueci minha senha</Link>
+            </div>
+          ) : signupComplete ? (
             <div className="mt-8 space-y-4 border-l-2 border-primary pl-5">
               <p className="font-medium">Cadastro recebido.</p>
               <p className="text-sm leading-6 text-muted-foreground">Confirme seu e-mail. Depois da confirmação, sua solicitação ficará aguardando aprovação administrativa.</p>
