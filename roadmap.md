@@ -26,3 +26,5 @@
 - [x] Exigir CNPJ e inscrição estadual no cadastro de clientes B2B
 - [x] Isolar as consultas públicas da loja do campo de preço B2B
 - [x] Permitir cadastro de representante com aprovação administrativa obrigatória
+- [x] Aplicar desconto B2B de 14% para clientes fora de MG com validação no pedido
+- [x] Exibir galeria, descrição completa e vídeo nos detalhes do catálogo B2B
