@@ -24,3 +24,4 @@
 - [x] Criar administração de representantes, condições e pedidos B2B
 - [x] Validar bloqueio público, acesso aprovado e reserva transacional de estoque
 - [x] Exigir CNPJ e inscrição estadual no cadastro de clientes B2B
+- [x] Isolar as consultas públicas da loja do campo de preço B2B
