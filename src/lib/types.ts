@@ -1,6 +1,6 @@
 import type { Database } from "@/integrations/supabase/types";
 
-export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "price_b2b">;
+export type Product = Database["public"]["Tables"]["products"]["Row"];
 export type Order = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderItem = Database["public"]["Tables"]["order_items"]["Row"];
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
