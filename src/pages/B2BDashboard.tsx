@@ -29,8 +29,20 @@ type ClientForm = typeof EMPTY_CLIENT;
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const statusLabel = { aguardando_aprovacao: "Aguardando aprovação", aprovado: "Aprovado", recusado: "Recusado", cancelado: "Cancelado" } as const;
 const OUT_OF_STATE_DISCOUNT = 0.14;
+const BRAZILIAN_STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as const;
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
+const CLIENT_FIELD_MAX_LENGTH: Record<Exclude<keyof ClientForm, "company_name" | "cnpj" | "state_registration" | "address_state">, number> = {
+  contact_name: 120,
+  phone: 30,
+  email: 255,
+  address_zip: 10,
+  address_street: 160,
+  address_number: 30,
+  address_complement: 100,
+  address_neighborhood: 100,
+  address_city: 100,
+};
 const formatCnpj = (value: string) => onlyDigits(value).slice(0, 14).replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
 const isValidCnpj = (value: string) => {
   const cnpj = onlyDigits(value);
@@ -53,10 +65,16 @@ const clientSchema = z.object({
   company_name: z.string().trim().min(1, "Informe a razão social ou nome.").max(160),
   cnpj: z.string().trim().refine(isValidCnpj, "Informe um CNPJ válido."),
   state_registration: z.string().trim().min(1, "Informe a inscrição estadual ou Isento.").max(30).regex(/^(?:[Ii][Ss][Ee][Nn][Tt][Oo]|[0-9A-Za-z./-]{2,30})$/, "Informe uma inscrição estadual válida ou Isento."),
-  contact_name: optionalField(120), phone: optionalField(30),
-  email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.").max(255)]),
-  address_zip: optionalField(10), address_street: optionalField(160), address_number: optionalField(30),
-  address_complement: optionalField(100), address_neighborhood: optionalField(100), address_city: optionalField(100), address_state: optionalField(2),
+  contact_name: z.string().trim().min(1, "Informe a pessoa de contato.").max(120),
+  phone: z.string().trim().min(1, "Informe o telefone.").max(30),
+  email: z.string().trim().email("Informe um e-mail válido.").max(255),
+  address_zip: z.string().trim().min(1, "Informe o CEP.").max(10),
+  address_street: z.string().trim().min(1, "Informe a rua.").max(160),
+  address_number: z.string().trim().min(1, "Informe o número.").max(30),
+  address_complement: optionalField(100),
+  address_neighborhood: z.string().trim().min(1, "Informe o bairro.").max(100),
+  address_city: z.string().trim().min(1, "Informe a cidade.").max(100),
+  address_state: z.enum(BRAZILIAN_STATES, { errorMap: () => ({ message: "Selecione o estado." }) }),
 });
 
 export default function B2BDashboard() {
@@ -208,7 +226,7 @@ export default function B2BDashboard() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={clientOpen} onOpenChange={setClientOpen}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{editingClient ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader><form onSubmit={(e) => { e.preventDefault(); saveClient.mutate(); }} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2 sm:col-span-2"><Label>Razão social ou nome *</Label><Input value={clientForm.company_name} onChange={(e) => setClientForm({ ...clientForm, company_name: e.target.value })} maxLength={160} required /></div><div className="space-y-2"><Label>CNPJ *</Label><Input inputMode="numeric" value={clientForm.cnpj} onChange={(e) => setClientForm({ ...clientForm, cnpj: formatCnpj(e.target.value) })} placeholder="00.000.000/0000-00" maxLength={18} required /></div><div className="space-y-2"><Label>Inscrição estadual *</Label><Input value={clientForm.state_registration} onChange={(e) => setClientForm({ ...clientForm, state_registration: e.target.value })} placeholder="Número ou Isento" maxLength={30} required /></div>{([['contact_name','Pessoa de contato'],['phone','Telefone'],['email','E-mail'],['address_zip','CEP'],['address_street','Rua'],['address_number','Número'],['address_complement','Complemento'],['address_neighborhood','Bairro'],['address_city','Cidade'],['address_state','Estado']] as const).map(([key,label]) => <div key={key} className={key === "address_street" ? "space-y-2 sm:col-span-2" : "space-y-2"}><Label>{label}</Label><Input type={key === "email" ? "email" : "text"} value={clientForm[key]} onChange={(e) => setClientForm({ ...clientForm, [key]: e.target.value })} maxLength={key === "email" ? 255 : key === "address_state" ? 2 : 160} /></div>)}</div><div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => setClientOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveClient.isPending}>{saveClient.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></div></form></DialogContent></Dialog>
+      <Dialog open={clientOpen} onOpenChange={setClientOpen}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{editingClient ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader><form onSubmit={(e) => { e.preventDefault(); saveClient.mutate(); }} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2 sm:col-span-2"><Label>Razão social ou nome *</Label><Input value={clientForm.company_name} onChange={(e) => setClientForm({ ...clientForm, company_name: e.target.value })} maxLength={160} required /></div><div className="space-y-2"><Label>CNPJ *</Label><Input inputMode="numeric" value={clientForm.cnpj} onChange={(e) => setClientForm({ ...clientForm, cnpj: formatCnpj(e.target.value) })} placeholder="00.000.000/0000-00" maxLength={18} required /></div><div className="space-y-2"><Label>Inscrição estadual *</Label><Input value={clientForm.state_registration} onChange={(e) => setClientForm({ ...clientForm, state_registration: e.target.value })} placeholder="Número ou Isento" maxLength={30} required /></div>{([['contact_name','Pessoa de contato'],['phone','Telefone'],['email','E-mail'],['address_zip','CEP'],['address_street','Rua'],['address_number','Número'],['address_complement','Complemento'],['address_neighborhood','Bairro'],['address_city','Cidade']] as const).map(([key,label]) => { const required = key !== "address_complement"; return <div key={key} className={key === "address_street" ? "space-y-2 sm:col-span-2" : "space-y-2"}><Label>{label}{required ? " *" : ""}</Label><Input type={key === "email" ? "email" : "text"} value={clientForm[key]} onChange={(e) => setClientForm({ ...clientForm, [key]: e.target.value })} maxLength={CLIENT_FIELD_MAX_LENGTH[key]} required={required} /></div>; })}<div className="space-y-2"><Label>Estado *</Label><Select value={clientForm.address_state} onValueChange={(address_state) => setClientForm({ ...clientForm, address_state })} required><SelectTrigger aria-label="Estado"><SelectValue placeholder="Selecione a UF" /></SelectTrigger><SelectContent>{BRAZILIAN_STATES.map((state) => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent></Select></div></div><div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => setClientOpen(false)}>Cancelar</Button><Button type="submit" disabled={saveClient.isPending}>{saveClient.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></div></form></DialogContent></Dialog>
 
       <Dialog open={Boolean(detailProduct)} onOpenChange={(open) => { if (!open) setDetailProduct(null); }}><DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto"><DialogHeader><DialogTitle>{detailProduct?.name}</DialogTitle></DialogHeader>{detailProduct && <div className="grid gap-8 md:grid-cols-2"><div className="min-w-0 rounded-md bg-secondary/40 p-4">{imagesLoading ? <Loader2 className="mx-auto my-24 h-6 w-6 animate-spin" /> : <ProductImageGallery images={productImages} fallbackUrl={detailProduct.image_url} productName={detailProduct.name} showPlekLogo={detailProduct.uses_plek_technology} />}</div><div className="min-w-0"><p className="font-mono text-xs text-muted-foreground">{detailProduct.bling_code || "Sem código"}</p><div className="mt-4 flex flex-wrap items-baseline gap-3">{hasOutOfStateDiscount && <span className="text-sm text-muted-foreground line-through">{money(Number(detailProduct.price_b2b))}</span>}<strong className="text-2xl">{selectedClient && !hasClientState ? "Complete a UF do cliente" : money(effectivePrice(detailProduct))}</strong></div>{hasOutOfStateDiscount && <Badge className="mt-2">14% de desconto para {selectedClientState}</Badge>}<p className="mt-3 text-sm text-muted-foreground">Estoque disponível: {detailProduct.stock_quantity}</p><div className="mt-7 border-t pt-6"><h3 className="font-semibold">Descrição completa</h3><p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">{detailProduct.description || "Sem descrição cadastrada."}</p></div>{detailVideoId && <div className="mt-7 border-t pt-6"><h3 className="mb-3 flex items-center gap-2 font-semibold"><Play className="h-4 w-4" /> Vídeo do produto</h3><div className="aspect-video overflow-hidden rounded-md"><iframe className="h-full w-full" src={`https://www.youtube.com/embed/${detailVideoId}`} title={`Vídeo - ${detailProduct.name}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div></div>}</div></div>}</DialogContent></Dialog>
     </main>

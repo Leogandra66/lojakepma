@@ -28,3 +28,4 @@
 - [x] Permitir cadastro de representante com aprovação administrativa obrigatória
 - [x] Aplicar desconto B2B de 14% para clientes fora de MG com validação no pedido
 - [x] Exibir galeria, descrição completa e vídeo nos detalhes do catálogo B2B
+- [x] Exigir todos os dados do cliente B2B, exceto complemento, com seleção de UF
