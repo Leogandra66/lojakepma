@@ -37,6 +37,7 @@ const PRICE_RANGES = [
 
 const CATEGORIES = ["B1", "A1", "G1", "F1", "F0 Pro", "F0B Fênix", "EC Plus", "FC Mini", "Eletrônica"];
 const PAGE_SIZE = 12;
+const PUBLIC_PRODUCT_FIELDS = "id,name,description,price,image_url,category,status,stock_quantity,preorder_estimated_delivery,video_url,electronics_tag,uses_plek_technology,created_at,updated_at,active,bling_code,stock_synced_at";
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export default function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select(PUBLIC_PRODUCT_FIELDS)
         .order("status", { ascending: true })
         .order("name")
         .eq("active", true);

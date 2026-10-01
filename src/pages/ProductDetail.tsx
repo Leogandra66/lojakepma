@@ -12,6 +12,8 @@ import { ShoppingCart, ArrowLeft, CalendarDays, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { track } from "@/lib/analytics";
 
+const PUBLIC_PRODUCT_FIELDS = "id,name,description,price,image_url,category,status,stock_quantity,preorder_estimated_delivery,video_url,electronics_tag,uses_plek_technology,created_at,updated_at,active,bling_code,stock_synced_at";
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
@@ -19,9 +21,15 @@ export default function ProductDetail() {
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").eq("id", id!).single();
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("products")
+        .select(PUBLIC_PRODUCT_FIELDS)
+        .eq("id", id)
+        .eq("active", true)
+        .maybeSingle();
       if (error) throw error;
-      return data as Product;
+      return data as Product | null;
     },
     enabled: !!id,
   });
@@ -29,10 +37,11 @@ export default function ProductDetail() {
   const { data: productImages = [] } = useQuery({
     queryKey: ["product-images", id],
     queryFn: async () => {
+      if (!id) return [];
       const { data, error } = await supabase
         .from("product_images")
         .select("*")
-        .eq("product_id", id!)
+        .eq("product_id", id)
         .order("position");
       if (error) throw error;
       return data;
