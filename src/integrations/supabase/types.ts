@@ -1052,6 +1052,8 @@ export type Database = {
           name: string
           price_b2b: number
           stock_quantity: number
+          uses_plek_technology: boolean
+          video_url: string
         }[]
       }
       has_role: {

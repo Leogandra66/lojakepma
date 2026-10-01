@@ -5,3 +5,4 @@
 - Public B2C product queries must explicitly select public columns and never request `price_b2b`; this prevents B2B pricing permissions from affecting the storefront.
 - B2B client tax identity uses normalized, per-representative unique `cnpj` plus required `state_registration`; legacy rows remain nullable until edited.
 - Representative self-registration always creates a pending B2B account; only the separate admin role can approve access, and representatives never receive admin privileges.
+- B2B order pricing is derived server-side from the selected client's state: MG uses `price_b2b`, other states receive 14% off, and a missing state blocks ordering; this preserves trustworthy item price snapshots.
