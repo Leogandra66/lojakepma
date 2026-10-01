@@ -25,3 +25,4 @@
 - [x] Validar bloqueio público, acesso aprovado e reserva transacional de estoque
 - [x] Exigir CNPJ e inscrição estadual no cadastro de clientes B2B
 - [x] Isolar as consultas públicas da loja do campo de preço B2B
+- [x] Permitir cadastro de representante com aprovação administrativa obrigatória

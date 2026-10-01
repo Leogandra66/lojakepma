@@ -1091,6 +1091,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      request_b2b_representative_access: {
+        Args: { _company_name: string; _document?: string; _phone?: string }
+        Returns: string
+      }
       review_b2b_order: {
         Args: { _approve: boolean; _order_id: string }
         Returns: undefined
