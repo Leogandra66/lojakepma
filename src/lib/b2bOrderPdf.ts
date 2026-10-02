@@ -206,9 +206,9 @@ export function createB2BOrderPdf(data: B2BOrderPdfData) {
     summaryY = 20;
   }
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
+  doc.setFontSize(10);
   doc.setTextColor(28, 26, 24);
-  doc.text("TOTAL DO PEDIDO", 135, summaryY + 5);
+  doc.text("TOTAL DO PEDIDO", 118, summaryY + 5);
   doc.setFontSize(15);
   doc.text(formatMoney(Number(data.order.total)), pageWidth - margin, summaryY + 5, { align: "right" });
   if (data.order.notes) {
