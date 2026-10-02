@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookUser, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardList, Eye, Loader2, LogOut, Minus, Package, Pencil, Play, Plus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
+import { BookUser, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardList, Download, Eye, Loader2, LogOut, Minus, Package, Pencil, Play, Plus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import kepmaLogo from "@/assets/kepma-logo.webp";
 import { toast } from "sonner";
 import { z } from "zod";
+import { downloadB2BOrderPdf, imageUrlToPngDataUrl } from "@/lib/b2bOrderPdf";
 
 type Client = Database["public"]["Tables"]["b2b_clients"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -94,6 +95,7 @@ export default function B2BDashboard() {
   const [clientForm, setClientForm] = useState<ClientForm>(EMPTY_CLIENT);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [downloadingOrder, setDownloadingOrder] = useState<string | null>(null);
 
   const { data: account } = useQuery({
     queryKey: ["b2b-account", user?.id], enabled: Boolean(user),
@@ -176,6 +178,26 @@ export default function B2BDashboard() {
   function setQuantity(id: string, quantity: number) { setQuantities((current) => ({ ...current, [id]: Math.max(0, Math.min(10000, quantity || 0)) })); }
   function openClient(client?: Client) { setEditingClient(client ?? null); setClientForm(client ? Object.fromEntries(Object.keys(EMPTY_CLIENT).map((key) => [key, String(client[key as keyof Client] ?? "")])) as ClientForm : EMPTY_CLIENT); setClientOpen(true); }
   const clientName = (id: string) => clients.find((client) => client.id === id)?.company_name ?? "Cliente";
+  async function downloadOrder(order: Order, items: OrderItem[]) {
+    const client = clients.find((item) => item.id === order.client_id);
+    if (!client || !account) { toast.error("Não foi possível localizar os dados deste pedido."); return; }
+    setDownloadingOrder(order.id);
+    try {
+      const logoDataUrl = await imageUrlToPngDataUrl(kepmaLogo);
+      await downloadB2BOrderPdf({
+        order: { ...order, total: Number(order.total) },
+        items: items.map((item) => ({ ...item, unit_price: Number(item.unit_price), line_total: Number(item.line_total) })),
+        client,
+        representative: { company_name: account.company_name, document: account.document, phone: account.phone, email: account.email || user?.email },
+        logoDataUrl,
+      });
+      toast.success("PDF gerado com sucesso.");
+    } catch {
+      toast.error("Não foi possível gerar o PDF deste pedido.");
+    } finally {
+      setDownloadingOrder(null);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -233,7 +255,7 @@ export default function B2BDashboard() {
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6">
-          {ordersLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : orders.length === 0 ? <div className="border-y py-20 text-center"><ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum pedido enviado</p></div> : <div className="divide-y border-y">{orders.map((order: Order) => { const items = orderItems.filter((item) => item.order_id === order.id); const expanded = expandedOrder === order.id; return <article key={order.id} className="py-5"><button className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setExpandedOrder(expanded ? null : order.id)}><div><p className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8).toUpperCase()}</p><h2 className="mt-1 font-semibold">{clientName(order.client_id)}</h2><p className="mt-1 text-sm text-muted-foreground">{new Date(order.created_at).toLocaleString("pt-BR")} · {order.payment_term_snapshot}</p></div><div className="flex items-center gap-4"><div className="text-right"><Badge variant={order.status === "recusado" ? "destructive" : order.status === "aprovado" ? "default" : "outline"}>{statusLabel[order.status]}</Badge><p className="mt-2 font-semibold">{money(Number(order.total))}</p></div>{expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</div></button>{expanded && <div className="mt-5 border-t pt-4"><div className="space-y-2">{items.map((item: OrderItem) => <div key={item.id} className="flex justify-between gap-3 text-sm"><span>{item.quantity}× {item.product_name} <span className="text-muted-foreground">({item.product_code || "s/c"})</span></span><span>{money(Number(item.line_total))}</span></div>)}</div>{order.notes && <p className="mt-4 text-sm text-muted-foreground">Observações: {order.notes}</p>}</div>}</article>; })}</div>}
+          {ordersLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : orders.length === 0 ? <div className="border-y py-20 text-center"><ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum pedido enviado</p></div> : <div className="divide-y border-y">{orders.map((order: Order) => { const items = orderItems.filter((item) => item.order_id === order.id); const expanded = expandedOrder === order.id; return <article key={order.id} className="py-5"><button className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setExpandedOrder(expanded ? null : order.id)}><div><p className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8).toUpperCase()}</p><h2 className="mt-1 font-semibold">{clientName(order.client_id)}</h2><p className="mt-1 text-sm text-muted-foreground">{new Date(order.created_at).toLocaleString("pt-BR")} · {order.payment_term_snapshot}</p></div><div className="flex items-center gap-4"><div className="text-right"><Badge variant={order.status === "recusado" ? "destructive" : order.status === "aprovado" ? "default" : "outline"}>{statusLabel[order.status]}</Badge><p className="mt-2 font-semibold">{money(Number(order.total))}</p></div>{expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</div></button>{expanded && <div className="mt-5 border-t pt-4"><div className="space-y-2">{items.map((item: OrderItem) => <div key={item.id} className="flex justify-between gap-3 text-sm"><span>{item.quantity}× {item.product_name} <span className="text-muted-foreground">({item.product_code || "s/c"})</span></span><span>{money(Number(item.line_total))}</span></div>)}</div>{order.notes && <p className="mt-4 text-sm text-muted-foreground">Observações: {order.notes}</p>}<Button variant="outline" className="mt-5 gap-2" onClick={() => void downloadOrder(order, items)} disabled={downloadingOrder === order.id}>{downloadingOrder === order.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Baixar PDF</Button></div>}</article>; })}</div>}
         </TabsContent>
       </Tabs>
 
