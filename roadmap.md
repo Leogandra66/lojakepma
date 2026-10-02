@@ -31,3 +31,4 @@
 - [x] Exigir todos os dados do cliente B2B, exceto complemento, com seleção de UF
 - [x] Paginar o catálogo B2B em 6 produtos por página
 - [x] Posicionar o bloco de novo pedido antes dos produtos no B2B mobile
+- [x] Permitir ao representante baixar pedidos B2B em PDF sem custo por emissão
