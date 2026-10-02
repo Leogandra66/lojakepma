@@ -74,6 +74,7 @@ export async function imageUrlToPngDataUrl(url: string): Promise<string | null> 
       canvas.height = image.naturalHeight;
       const context = canvas.getContext("2d");
       if (!context) return null;
+      context.filter = "invert(1)";
       context.drawImage(image, 0, 0);
       return canvas.toDataURL("image/png");
     } finally {
