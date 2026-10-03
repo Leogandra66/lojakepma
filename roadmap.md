@@ -32,3 +32,4 @@
 - [x] Paginar o catálogo B2B em 6 produtos por página
 - [x] Posicionar o bloco de novo pedido antes dos produtos no B2B mobile
 - [x] Permitir ao representante baixar pedidos B2B em PDF sem custo por emissão
+- [x] Filtrar o catálogo B2B por categoria em conjunto com a busca e a paginação
