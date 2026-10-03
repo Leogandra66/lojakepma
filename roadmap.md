@@ -29,7 +29,7 @@
 - [x] Aplicar desconto B2B de 14% para clientes fora de MG com validação no pedido
 - [x] Exibir galeria, descrição completa e vídeo nos detalhes do catálogo B2B
 - [x] Exigir todos os dados do cliente B2B, exceto complemento, com seleção de UF
-- [x] Paginar o catálogo B2B em 6 produtos por página
+- [x] Paginar o catálogo B2B em 10 produtos por página
 - [x] Posicionar o bloco de novo pedido antes dos produtos no B2B mobile
 - [x] Permitir ao representante baixar pedidos B2B em PDF sem custo por emissão
 - [x] Filtrar o catálogo B2B por categoria em conjunto com a busca e a paginação
