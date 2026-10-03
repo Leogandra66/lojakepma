@@ -54,6 +54,11 @@ interface ProductForm {
   video_url: string;
   electronics_tag: string;
   uses_plek_technology: boolean;
+  ean_gtin: string;
+  package_weight_kg: string;
+  package_height_cm: string;
+  package_width_cm: string;
+  package_length_cm: string;
 }
 
 const emptyForm: ProductForm = {
@@ -69,7 +74,29 @@ const emptyForm: ProductForm = {
   video_url: "",
   electronics_tag: "",
   uses_plek_technology: false,
+  ean_gtin: "",
+  package_weight_kg: "",
+  package_height_cm: "",
+  package_width_cm: "",
+  package_length_cm: "",
 };
+
+// Valida EAN-8, UPC-A (12), EAN-13 e GTIN-14 pelo dígito verificador (módulo 10).
+function isValidGtin(code: string): boolean {
+  if (!/^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(code)) return false;
+  const digits = code.split("").map(Number);
+  const check = digits.pop()!;
+  const sum = digits
+    .reverse()
+    .reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+// Converte texto (aceita vírgula decimal) em número positivo ou null.
+function parsePositive(value: string): number | null {
+  const n = parseFloat(value.replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
@@ -91,6 +118,21 @@ export default function AdminProducts() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: ProductForm) => {
+      const ean = data.ean_gtin.replace(/\D/g, "");
+      if (ean && !isValidGtin(ean)) {
+        throw new Error("EAN/GTIN inválido. Confira os dígitos (8, 12, 13 ou 14 números).");
+      }
+      const packageFields = [
+        ["Peso", data.package_weight_kg],
+        ["Altura", data.package_height_cm],
+        ["Largura", data.package_width_cm],
+        ["Comprimento", data.package_length_cm],
+      ] as const;
+      for (const [label, raw] of packageFields) {
+        if (raw.trim() && parsePositive(raw) === null) {
+          throw new Error(`${label} da embalagem deve ser um número maior que zero.`);
+        }
+      }
       const payload = {
         name: data.name,
         description: data.description || null,
@@ -106,6 +148,11 @@ export default function AdminProducts() {
           : null,
         electronics_tag: data.electronics_tag || null,
         uses_plek_technology: data.uses_plek_technology,
+        ean_gtin: ean || null,
+        package_weight_kg: parsePositive(data.package_weight_kg),
+        package_height_cm: parsePositive(data.package_height_cm),
+        package_width_cm: parsePositive(data.package_width_cm),
+        package_length_cm: parsePositive(data.package_length_cm),
       };
 
       if (editingProduct) {
@@ -144,6 +191,11 @@ export default function AdminProducts() {
         preorder_estimated_delivery: null,
         electronics_tag: (product as any).electronics_tag || null,
         uses_plek_technology: (product as any).uses_plek_technology ?? false,
+        // EAN/GTIN é único por produto, então não é copiado no clone.
+        package_weight_kg: product.package_weight_kg,
+        package_height_cm: product.package_height_cm,
+        package_width_cm: product.package_width_cm,
+        package_length_cm: product.package_length_cm,
       };
       const { error } = await supabase.from("products").insert(payload);
       if (error) throw error;
@@ -202,6 +254,11 @@ export default function AdminProducts() {
       video_url: (product as any).video_url || "",
       electronics_tag: (product as any).electronics_tag || "",
       uses_plek_technology: (product as any).uses_plek_technology ?? false,
+      ean_gtin: product.ean_gtin || "",
+      package_weight_kg: product.package_weight_kg === null ? "" : String(product.package_weight_kg),
+      package_height_cm: product.package_height_cm === null ? "" : String(product.package_height_cm),
+      package_width_cm: product.package_width_cm === null ? "" : String(product.package_width_cm),
+      package_length_cm: product.package_length_cm === null ? "" : String(product.package_length_cm),
     });
     setDialogOpen(true);
   }
@@ -430,6 +487,67 @@ export default function AdminProducts() {
               <p className="text-xs text-muted-foreground mt-1">
                 Use o mesmo código cadastrado no Bling. É por ele que o estoque é atualizado automaticamente.
               </p>
+            </div>
+            <div>
+              <Label>EAN / GTIN</Label>
+              <Input
+                inputMode="numeric"
+                maxLength={14}
+                value={form.ean_gtin}
+                onChange={(e) => setForm({ ...form, ean_gtin: e.target.value.replace(/\D/g, "") })}
+                placeholder="Código de barras (8, 12, 13 ou 14 dígitos)"
+              />
+            </div>
+
+            <div className="rounded-md border p-3 space-y-3">
+              <Label className="text-base font-semibold">Dados da embalagem</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Peso (kg)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.001"
+                    value={form.package_weight_kg}
+                    onChange={(e) => setForm({ ...form, package_weight_kg: e.target.value })}
+                    placeholder="Ex.: 2.500"
+                  />
+                </div>
+                <div>
+                  <Label>Altura (cm)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.1"
+                    value={form.package_height_cm}
+                    onChange={(e) => setForm({ ...form, package_height_cm: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Largura (cm)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.1"
+                    value={form.package_width_cm}
+                    onChange={(e) => setForm({ ...form, package_width_cm: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Comprimento (cm)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.1"
+                    value={form.package_length_cm}
+                    onChange={(e) => setForm({ ...form, package_length_cm: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
             {form.status === "preorder" && (
               <div>
