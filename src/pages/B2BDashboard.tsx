@@ -79,6 +79,22 @@ const clientSchema = z.object({
   address_state: z.enum(BRAZILIAN_STATES, { errorMap: () => ({ message: "Selecione o estado." }) }),
 });
 
+// Ordem comercial das categorias no filtro do catálogo B2B (por faixa de preço).
+// Categorias que não estiverem nesta lista aparecem depois, em ordem alfabética.
+const CATEGORY_ORDER = ["B1", "A1", "G1", "F1", "F0PRO", "F0B FÊNIX", "EC PLUS", "MINI"];
+
+// Ignora maiúsculas, acentos, espaços e pontuação para casar o nome da categoria.
+const normalizeCategory = (value: string) =>
+  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+
+const CATEGORY_RANK = new Map(CATEGORY_ORDER.map((name, index) => [normalizeCategory(name), index]));
+
+function compareCategories(a: string, b: string) {
+  const rankA = CATEGORY_RANK.get(normalizeCategory(a)) ?? Number.MAX_SAFE_INTEGER;
+  const rankB = CATEGORY_RANK.get(normalizeCategory(b)) ?? Number.MAX_SAFE_INTEGER;
+  return rankA - rankB || a.localeCompare(b, "pt-BR");
+}
+
 export default function B2BDashboard() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
@@ -159,7 +175,7 @@ export default function B2BDashboard() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const categories = useMemo(() => Array.from(new Set(products.map((product) => product.category?.trim()).filter((category): category is string => Boolean(category)))).sort((a, b) => a.localeCompare(b, "pt-BR")), [products]);
+  const categories = useMemo(() => Array.from(new Set(products.map((product) => product.category?.trim()).filter((category): category is string => Boolean(category)))).sort(compareCategories), [products]);
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLocaleLowerCase("pt-BR");
     return products.filter((product) => {
