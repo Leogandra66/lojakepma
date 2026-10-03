@@ -30,7 +30,7 @@ type ClientForm = typeof EMPTY_CLIENT;
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const statusLabel = { aguardando_aprovacao: "Aguardando aprovação", aprovado: "Aprovado", recusado: "Recusado", cancelado: "Cancelado" } as const;
 const OUT_OF_STATE_DISCOUNT = 0.14;
-const PRODUCTS_PER_PAGE = 6;
+const PRODUCTS_PER_PAGE = 10;
 const BRAZILIAN_STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as const;
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");

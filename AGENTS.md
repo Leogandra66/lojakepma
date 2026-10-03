@@ -6,5 +6,5 @@
 - B2B clients require complete tax, contact and address data except address complement; legacy rows remain nullable until edited, and state is restricted to a valid Brazilian UF.
 - Representative self-registration always creates a pending B2B account; only the separate admin role can approve access, and representatives never receive admin privileges.
 - B2B order pricing is derived server-side from the selected client's state: MG uses `price_b2b`, other states receive 14% off, and a missing state blocks ordering; this preserves trustworthy item price snapshots.
-- B2B catalogue search and category filtering run client-side before six-item pagination so product selection remains intact across pages.
+- B2B catalogue search and category filtering run client-side before ten-item pagination so product selection remains intact across pages.
 - B2B order PDFs are generated locally from saved order snapshots; no external document service or recalculation of historical prices is allowed.
