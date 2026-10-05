@@ -13,6 +13,13 @@ const PRODUCT_SELECT = [
   "category",
   "status",
   "stock_quantity",
+  "price_b2b",
+  "bling_code",
+  "ean_gtin",
+  "package_weight_kg",
+  "package_height_cm",
+  "package_width_cm",
+  "package_length_cm",
   "preorder_estimated_delivery",
   "video_url",
   "electronics_tag",
@@ -94,14 +101,16 @@ Deno.serve(async (req) => {
     const offset = (page - 1) * limit;
     const client = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } },
     );
 
     let productsQuery = client
       .from("products")
       .select(PRODUCT_SELECT, { count: "exact" })
-      .eq("active", true);
+      .eq("active", true)
+      .not("ean_gtin", "is", null)
+      .neq("ean_gtin", "");
 
     if (id) productsQuery = productsQuery.eq("id", id);
     if (category) productsQuery = productsQuery.eq("category", category);
@@ -140,6 +149,15 @@ Deno.serve(async (req) => {
       description: product.description,
       category: product.category,
       price: Number(product.price),
+      price_b2b: product.price_b2b === null ? null : Number(product.price_b2b),
+      bling_sku: product.bling_code,
+      ean_gtin: product.ean_gtin,
+      package_weight_kg: product.package_weight_kg === null ? null : Number(product.package_weight_kg),
+      package_dimensions_cm: {
+        height: product.package_height_cm === null ? null : Number(product.package_height_cm),
+        width: product.package_width_cm === null ? null : Number(product.package_width_cm),
+        length: product.package_length_cm === null ? null : Number(product.package_length_cm),
+      },
       status: product.status,
       stock_quantity: product.stock_quantity,
       preorder_estimated_delivery: product.preorder_estimated_delivery,

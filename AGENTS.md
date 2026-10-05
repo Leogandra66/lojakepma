@@ -8,3 +8,4 @@
 - B2B order pricing is derived server-side from the selected client's state: MG uses `price_b2b`, other states receive 14% off, and a missing state blocks ordering; this preserves trustworthy item price snapshots.
 - B2B catalogue search and category filtering run client-side before ten-item pagination so product selection remains intact across pages.
 - B2B order PDFs are generated locally from saved order snapshots; no external document service or recalculation of historical prices is allowed.
+- The public product integration endpoint exposes B2B price, Bling SKU, GTIN, gross package weight and dimensions only for active products with a registered GTIN; its explicit server-side projection must not broaden direct public table access.
