@@ -830,15 +830,10 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
-          ean_gtin: string | null
           electronics_tag: string | null
           id: string
           image_url: string | null
           name: string
-          package_height_cm: number | null
-          package_length_cm: number | null
-          package_weight_kg: number | null
-          package_width_cm: number | null
           preorder_estimated_delivery: string | null
           price: number
           price_b2b: number | null
@@ -855,15 +850,10 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          ean_gtin?: string | null
           electronics_tag?: string | null
           id?: string
           image_url?: string | null
           name: string
-          package_height_cm?: number | null
-          package_length_cm?: number | null
-          package_weight_kg?: number | null
-          package_width_cm?: number | null
           preorder_estimated_delivery?: string | null
           price: number
           price_b2b?: number | null
@@ -880,15 +870,10 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          ean_gtin?: string | null
           electronics_tag?: string | null
           id?: string
           image_url?: string | null
           name?: string
-          package_height_cm?: number | null
-          package_length_cm?: number | null
-          package_weight_kg?: number | null
-          package_width_cm?: number | null
           preorder_estimated_delivery?: string | null
           price?: number
           price_b2b?: number | null
