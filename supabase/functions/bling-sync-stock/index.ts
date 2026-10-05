@@ -48,6 +48,11 @@ Deno.serve(async (req) => {
           stock_synced_at: new Date().toISOString(),
         };
         if (blingProduct.price !== null) updates.price_b2b = blingProduct.price;
+        if (blingProduct.gtin !== null) updates.ean_gtin = blingProduct.gtin;
+        if (blingProduct.grossWeight !== null) updates.package_weight_kg = blingProduct.grossWeight;
+        if (blingProduct.heightCm !== null) updates.package_height_cm = blingProduct.heightCm;
+        if (blingProduct.widthCm !== null) updates.package_width_cm = blingProduct.widthCm;
+        if (blingProduct.lengthCm !== null) updates.package_length_cm = blingProduct.lengthCm;
         if (blingProduct.balance === 0) updates.status = "unavailable";
         else if (p.status === "unavailable") updates.status = "in_stock";
 
@@ -58,6 +63,11 @@ Deno.serve(async (req) => {
           code: p.bling_code,
           balance: blingProduct.balance,
           price_b2b: blingProduct.price,
+          ean_gtin: blingProduct.gtin,
+          package_weight_kg: blingProduct.grossWeight,
+          package_height_cm: blingProduct.heightCm,
+          package_width_cm: blingProduct.widthCm,
+          package_length_cm: blingProduct.lengthCm,
         });
       } catch (e) {
         summary.errors++;
@@ -122,7 +132,7 @@ async function getAccessToken(supabase: any): Promise<string> {
 
 async function findDepositoGeral(token: string): Promise<number | null> {
   try {
-    const r = await fetch(`${BLING_API}/depositos`, {
+    const r = await blingFetch(`${BLING_API}/depositos`, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
     if (!r.ok) {
@@ -143,9 +153,17 @@ async function fetchProductData(
   token: string,
   code: string,
   depositoId: number | null,
-): Promise<{ balance: number; price: number | null } | null> {
-  // 1. Achar produto pelo código (SKU) e aproveitar o preço de venda retornado pelo cadastro.
-  const r = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(code)}`, {
+): Promise<{
+  balance: number;
+  price: number | null;
+  gtin: string | null;
+  grossWeight: number | null;
+  heightCm: number | null;
+  widthCm: number | null;
+  lengthCm: number | null;
+} | null> {
+  // 1. Achar produto pelo código (SKU).
+  const r = await blingFetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(code)}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
   if (!r.ok) throw new Error(`GET /produtos ${r.status}: ${await r.text()}`);
@@ -153,19 +171,46 @@ async function fetchProductData(
   const list = body?.data ?? [];
   const prod = Array.isArray(list) ? list.find((x: any) => String(x.codigo) === code) ?? list[0] : null;
   if (!prod?.id) return null;
-  const parsedPrice = Number(prod.preco);
-  const price = prod.preco != null && Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : null;
 
-  // 2. Consultar saldo, preferindo o depósito Geral quando conhecido
+  // 2. O cadastro detalhado contém preço, EAN/GTIN, peso bruto e dimensões.
+  const detailResponse = await blingFetch(`${BLING_API}/produtos/${prod.id}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  });
+  if (!detailResponse.ok) {
+    throw new Error(`GET /produtos/${prod.id} ${detailResponse.status}: ${await detailResponse.text()}`);
+  }
+  const detailBody = await detailResponse.json();
+  const detail = detailBody?.data ?? {};
+  const price = positiveOrZero(detail.preco ?? prod.preco);
+  const gtinDigits = String(detail.gtin ?? "").replace(/\D/g, "");
+  const gtin = [8, 12, 13, 14].includes(gtinDigits.length) ? gtinDigits : null;
+  const grossWeight = positiveOrNull(detail.pesoBruto);
+  const dimensions = detail.dimensoes ?? {};
+  const dimensionUnit = dimensions.unidadeMedida;
+  const heightCm = dimensionToCm(dimensions.altura, dimensionUnit);
+  const widthCm = dimensionToCm(dimensions.largura, dimensionUnit);
+  const lengthCm = dimensionToCm(dimensions.profundidade ?? dimensions.comprimento, dimensionUnit);
+
+  // 3. Consultar saldo, preferindo o depósito Geral quando conhecido.
   const saldosUrl = depositoId
     ? `${BLING_API}/estoques/saldos?idsProdutos[]=${prod.id}&idsDepositos[]=${depositoId}`
     : `${BLING_API}/estoques/saldos?idsProdutos[]=${prod.id}`;
-  const s = await fetch(saldosUrl, {
+  const s = await blingFetch(saldosUrl, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
   if (!s.ok) {
     const inline = prod?.estoque?.saldoVirtualTotal ?? prod?.estoque?.saldoFisico;
-    if (inline != null) return { balance: Math.max(0, Math.floor(Number(inline))), price };
+    if (inline != null) {
+      return {
+        balance: Math.max(0, Math.floor(Number(inline))),
+        price,
+        gtin,
+        grossWeight,
+        heightCm,
+        widthCm,
+        lengthCm,
+      };
+    }
     throw new Error(`GET /estoques/saldos ${s.status}: ${await s.text()}`);
   }
   const sb = await s.json();
@@ -187,7 +232,44 @@ async function fetchProductData(
     if (saldo != null) break;
   }
   if (saldo == null) return null;
-  return { balance: Math.max(0, Math.floor(saldo)), price };
+  return {
+    balance: Math.max(0, Math.floor(saldo)),
+    price,
+    gtin,
+    grossWeight,
+    heightCm,
+    widthCm,
+    lengthCm,
+  };
+}
+
+function positiveOrNull(value: unknown): number | null {
+  const parsed = Number(value);
+  return value != null && Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function positiveOrZero(value: unknown): number | null {
+  const parsed = Number(value);
+  return value != null && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function dimensionToCm(value: unknown, unit: unknown): number | null {
+  const parsed = positiveOrNull(value);
+  if (parsed === null) return null;
+  const normalizedUnit = String(unit ?? "CENTIMETROS").trim().toUpperCase();
+  // Bling: 1 = metros, 2 = centímetros, 3 = milímetros.
+  if (normalizedUnit === "1" || normalizedUnit === "METROS" || normalizedUnit === "M") return parsed * 100;
+  if (normalizedUnit === "3" || normalizedUnit === "MILIMETROS" || normalizedUnit === "MM") return parsed / 10;
+  return parsed;
+}
+
+let lastBlingRequestAt = 0;
+
+async function blingFetch(input: string, init: RequestInit): Promise<Response> {
+  const waitMs = Math.max(0, 350 - (Date.now() - lastBlingRequestAt));
+  if (waitMs > 0) await sleep(waitMs);
+  lastBlingRequestAt = Date.now();
+  return fetch(input, init);
 }
 
 function json(body: unknown, status = 200) {
