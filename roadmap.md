@@ -34,3 +34,6 @@
 - [x] Permitir ao representante baixar pedidos B2B em PDF sem custo por emissão
 - [x] Filtrar o catálogo B2B por categoria em conjunto com a busca e a paginação
 - [x] Sincronizar EAN/GTIN, peso bruto e dimensões dos produtos pelo Bling
+
+## Em andamento
+- [ ] Ampliar o endpoint público com preço B2B, SKU Bling, EAN/GTIN, peso bruto e dimensões, retornando somente produtos ativos com EAN
