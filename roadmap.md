@@ -33,3 +33,4 @@
 - [x] Posicionar o bloco de novo pedido antes dos produtos no B2B mobile
 - [x] Permitir ao representante baixar pedidos B2B em PDF sem custo por emissão
 - [x] Filtrar o catálogo B2B por categoria em conjunto com a busca e a paginação
+- [x] Sincronizar EAN/GTIN, peso bruto e dimensões dos produtos pelo Bling
