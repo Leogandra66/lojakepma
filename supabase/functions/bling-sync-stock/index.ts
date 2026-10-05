@@ -186,7 +186,7 @@ async function fetchProductData(
   const gtin = [8, 12, 13, 14].includes(gtinDigits.length) ? gtinDigits : null;
   const grossWeight = positiveOrNull(detail.pesoBruto);
   const dimensions = detail.dimensoes ?? {};
-  const dimensionUnit = String(dimensions.unidadeMedida ?? "CENTIMETROS");
+  const dimensionUnit = dimensions.unidadeMedida;
   const heightCm = dimensionToCm(dimensions.altura, dimensionUnit);
   const widthCm = dimensionToCm(dimensions.largura, dimensionUnit);
   const lengthCm = dimensionToCm(dimensions.profundidade ?? dimensions.comprimento, dimensionUnit);
@@ -253,12 +253,13 @@ function positiveOrZero(value: unknown): number | null {
   return value != null && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-function dimensionToCm(value: unknown, unit: string): number | null {
+function dimensionToCm(value: unknown, unit: unknown): number | null {
   const parsed = positiveOrNull(value);
   if (parsed === null) return null;
-  const normalizedUnit = unit.trim().toUpperCase();
-  if (normalizedUnit === "METROS" || normalizedUnit === "M") return parsed * 100;
-  if (normalizedUnit === "MILIMETROS" || normalizedUnit === "MM") return parsed / 10;
+  const normalizedUnit = String(unit ?? "CENTIMETROS").trim().toUpperCase();
+  // Bling: 1 = metros, 2 = centímetros, 3 = milímetros.
+  if (normalizedUnit === "1" || normalizedUnit === "METROS" || normalizedUnit === "M") return parsed * 100;
+  if (normalizedUnit === "3" || normalizedUnit === "MILIMETROS" || normalizedUnit === "MM") return parsed / 10;
   return parsed;
 }
 
