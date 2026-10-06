@@ -4,6 +4,29 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
+type ProductRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | string;
+  price_b2b: number | string | null;
+  bling_code: string | null;
+  ean_gtin: string;
+  package_weight_kg: number | string | null;
+  package_height_cm: number | string | null;
+  package_width_cm: number | string | null;
+  package_length_cm: number | string | null;
+  image_url: string | null;
+  category: string | null;
+  status: string;
+  stock_quantity: number;
+  preorder_estimated_delivery: string | null;
+  video_url: string | null;
+  electronics_tag: string | null;
+  uses_plek_technology: boolean;
+  created_at: string;
+  updated_at: string;
+};
 const PRODUCT_SELECT = [
   "id",
   "name",
@@ -123,7 +146,8 @@ Deno.serve(async (req) => {
 
     if (productsError) throw productsError;
 
-    const productIds = (products ?? []).map((product) => product.id);
+    const productRows = (products ?? []) as unknown as ProductRow[];
+    const productIds = productRows.map((product) => product.id);
     const imagesByProduct = new Map<string, Array<{ id: string; url: string; position: number }>>();
 
     if (productIds.length > 0) {
@@ -143,7 +167,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const data = (products ?? []).map((product) => ({
+    const data = productRows.map((product) => ({
       id: product.id,
       name: product.name,
       description: product.description,
