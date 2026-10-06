@@ -4,6 +4,7 @@ import { BookUser, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardL
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -101,6 +102,7 @@ export default function B2BDashboard() {
   const [tab, setTab] = useState("catalogo");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [onlyInStock, setOnlyInStock] = useState(false);
   const [catalogPage, setCatalogPage] = useState(1);
   const [clientSearch, setClientSearch] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -181,9 +183,10 @@ export default function B2BDashboard() {
     return products.filter((product) => {
       const matchesSearch = !q || product.name.toLocaleLowerCase("pt-BR").includes(q) || product.bling_code?.toLocaleLowerCase("pt-BR").includes(q);
       const matchesCategory = selectedCategory === "all" || product.category?.trim() === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesStock = !onlyInStock || product.stock_quantity > 0;
+      return matchesSearch && matchesCategory && matchesStock;
     });
-  }, [products, search, selectedCategory]);
+  }, [products, search, selectedCategory, onlyInStock]);
   const catalogPageCount = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const paginatedProducts = filteredProducts.slice((catalogPage - 1) * PRODUCTS_PER_PAGE, catalogPage * PRODUCTS_PER_PAGE);
   const filteredClients = useMemo(() => { const q = clientSearch.trim().toLocaleLowerCase("pt-BR"); const digits = onlyDigits(q); return clients.filter((c) => !q || c.company_name.toLocaleLowerCase("pt-BR").includes(q) || (digits && c.cnpj?.includes(digits)) || c.state_registration?.toLocaleLowerCase("pt-BR").includes(q)); }, [clients, clientSearch]);
@@ -244,7 +247,7 @@ export default function B2BDashboard() {
         <TabsContent value="catalogo" className="mt-6">
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <section>
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} placeholder="Buscar produto ou código" className="pl-9" /></div><Select value={selectedCategory} onValueChange={(category) => { setSelectedCategory(category); setCatalogPage(1); }}><SelectTrigger className="w-full sm:w-56" aria-label="Filtrar por categoria"><SelectValue placeholder="Todas as categorias" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><Badge variant="outline" className="w-fit">{filteredProducts.length} produtos</Badge></div>
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} placeholder="Buscar produto ou código" className="pl-9" /></div><Select value={selectedCategory} onValueChange={(category) => { setSelectedCategory(category); setCatalogPage(1); }}><SelectTrigger className="w-full sm:w-56" aria-label="Filtrar por categoria"><SelectValue placeholder="Todas as categorias" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><div className="flex w-fit items-center gap-2"><Checkbox id="only-in-stock" checked={onlyInStock} onCheckedChange={(checked) => { setOnlyInStock(checked === true); setCatalogPage(1); }} /><Label htmlFor="only-in-stock" className="cursor-pointer text-sm font-normal text-muted-foreground">Somente com estoque</Label></div><Badge variant="outline" className="w-fit">{filteredProducts.length} produtos</Badge></div>
               {hasOutOfStateDiscount && <div className="mb-5 border-l-4 border-primary bg-primary/5 px-4 py-3 text-sm"><strong>Preço para {selectedClientState}:</strong> desconto de 14% já aplicado em todo o catálogo.</div>}
               {selectedClient && !hasClientState && <div className="mb-5 border-l-4 border-destructive bg-destructive/5 px-4 py-3 text-sm text-destructive">Complete o estado deste cliente para visualizar os preços corretos e enviar o pedido.</div>}
               {productsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : filteredProducts.length === 0 ? <div className="border-y py-20 text-center"><Package className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum produto encontrado</p></div> : <>

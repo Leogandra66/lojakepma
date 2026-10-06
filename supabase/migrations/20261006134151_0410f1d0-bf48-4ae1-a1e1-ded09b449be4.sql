@@ -1,0 +1,1 @@
+DELETE FROM public.b2b_accounts WHERE user_id = 'f85b5ebf-5207-4890-9687-48120d29e443' AND company_name = 'Teste temporário de tela';

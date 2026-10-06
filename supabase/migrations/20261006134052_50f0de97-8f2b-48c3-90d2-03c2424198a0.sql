@@ -1,0 +1,2 @@
+INSERT INTO public.b2b_accounts (user_id, account_type, status, company_name, document, phone, email)
+VALUES ('f85b5ebf-5207-4890-9687-48120d29e443', 'representante', 'aprovado', 'Teste temporário de tela', '00000000000000', '31900000000', 'leogandra@gmail.com');
