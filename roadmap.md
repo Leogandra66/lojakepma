@@ -36,3 +36,4 @@
 - [x] Sincronizar EAN/GTIN, peso bruto e dimensões dos produtos pelo Bling
 
 - [x] Ampliar o endpoint público com preço B2B, SKU Bling, EAN/GTIN, peso bruto e dimensões, retornando somente produtos ativos com EAN
+- [x] Corrigir as medidas de embalagem vindas do Bling para centímetros reais no banco e no endpoint público
