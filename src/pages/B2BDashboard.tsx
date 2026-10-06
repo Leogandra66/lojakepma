@@ -4,6 +4,7 @@ import { BookUser, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardL
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -101,6 +102,7 @@ export default function B2BDashboard() {
   const [tab, setTab] = useState("catalogo");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [onlyInStock, setOnlyInStock] = useState(false);
   const [catalogPage, setCatalogPage] = useState(1);
   const [clientSearch, setClientSearch] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -181,9 +183,10 @@ export default function B2BDashboard() {
     return products.filter((product) => {
       const matchesSearch = !q || product.name.toLocaleLowerCase("pt-BR").includes(q) || product.bling_code?.toLocaleLowerCase("pt-BR").includes(q);
       const matchesCategory = selectedCategory === "all" || product.category?.trim() === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesStock = !onlyInStock || product.stock_quantity > 0;
+      return matchesSearch && matchesCategory && matchesStock;
     });
-  }, [products, search, selectedCategory]);
+  }, [products, search, selectedCategory, onlyInStock]);
   const catalogPageCount = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const paginatedProducts = filteredProducts.slice((catalogPage - 1) * PRODUCTS_PER_PAGE, catalogPage * PRODUCTS_PER_PAGE);
   const filteredClients = useMemo(() => { const q = clientSearch.trim().toLocaleLowerCase("pt-BR"); const digits = onlyDigits(q); return clients.filter((c) => !q || c.company_name.toLocaleLowerCase("pt-BR").includes(q) || (digits && c.cnpj?.includes(digits)) || c.state_registration?.toLocaleLowerCase("pt-BR").includes(q)); }, [clients, clientSearch]);
