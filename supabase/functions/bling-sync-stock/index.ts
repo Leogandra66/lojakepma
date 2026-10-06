@@ -186,10 +186,9 @@ async function fetchProductData(
   const gtin = [8, 12, 13, 14].includes(gtinDigits.length) ? gtinDigits : null;
   const grossWeight = positiveOrNull(detail.pesoBruto);
   const dimensions = detail.dimensoes ?? {};
-  const dimensionUnit = dimensions.unidadeMedida;
-  const heightCm = dimensionToCm(dimensions.altura, dimensionUnit);
-  const widthCm = dimensionToCm(dimensions.largura, dimensionUnit);
-  const lengthCm = dimensionToCm(dimensions.profundidade ?? dimensions.comprimento, dimensionUnit);
+  const heightCm = dimensionToCm(dimensions.altura);
+  const widthCm = dimensionToCm(dimensions.largura);
+  const lengthCm = dimensionToCm(dimensions.profundidade ?? dimensions.comprimento);
 
   // 3. Consultar saldo, preferindo o depósito Geral quando conhecido.
   const saldosUrl = depositoId
@@ -253,13 +252,14 @@ function positiveOrZero(value: unknown): number | null {
   return value != null && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-function dimensionToCm(value: unknown, unit: unknown): number | null {
+function dimensionToCm(value: unknown): number | null {
   const parsed = positiveOrNull(value);
   if (parsed === null) return null;
-  const normalizedUnit = String(unit ?? "CENTIMETROS").trim().toUpperCase();
-  // Bling: 1 = metros, 2 = centímetros, 3 = milímetros.
-  if (normalizedUnit === "1" || normalizedUnit === "METROS" || normalizedUnit === "M") return parsed * 100;
-  if (normalizedUnit === "3" || normalizedUnit === "MILIMETROS" || normalizedUnit === "MM") return parsed / 10;
+  // O cadastro do Bling já traz altura, largura e comprimento em centímetros
+  // (ex.: 18, 51, 110). A flag unidadeMedida é inconsistente entre cadastros e
+  // nunca deve causar conversão. Só valores abaixo de 1 cm são cadastros em
+  // metros (ex.: 0.15 = 15 cm) e continuam multiplicados por 100.
+  if (parsed < 1) return parsed * 100;
   return parsed;
 }
 
