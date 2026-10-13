@@ -18,6 +18,7 @@ import kepmaLogo from "@/assets/kepma-logo.webp";
 import { toast } from "sonner";
 import { z } from "zod";
 import { downloadB2BOrderPdf, imageUrlToPngDataUrl } from "@/lib/b2bOrderPdf";
+import { downloadB2BStockPdf } from "@/lib/b2bStockPdf";
 
 type Client = Database["public"]["Tables"]["b2b_clients"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -206,6 +207,15 @@ export default function B2BDashboard() {
   function setQuantity(id: string, quantity: number) { setQuantities((current) => ({ ...current, [id]: Math.max(0, Math.min(10000, quantity || 0)) })); }
   function openClient(client?: Client) { setEditingClient(client ?? null); setClientForm(client ? Object.fromEntries(Object.keys(EMPTY_CLIENT).map((key) => [key, String(client[key as keyof Client] ?? "")])) as ClientForm : EMPTY_CLIENT); setClientOpen(true); }
   const clientName = (id: string) => clients.find((client) => client.id === id)?.company_name ?? "Cliente";
+  const [downloadingStock, setDownloadingStock] = useState(false);
+  async function downloadStockReport() {
+    setDownloadingStock(true);
+    try {
+      const logoDataUrl = await imageUrlToPngDataUrl(kepmaLogo);
+      downloadB2BStockPdf({ products, representative: { company_name: account?.company_name, phone: account?.phone, email: account?.email || user?.email }, logoDataUrl });
+      toast.success("Relatório de disponibilidade gerado.");
+    } catch { toast.error("Não foi possível gerar o relatório."); } finally { setDownloadingStock(false); }
+  }
   async function downloadOrder(order: Order, items: OrderItem[]) {
     const client = clients.find((item) => item.id === order.client_id);
     if (!client || !account) { toast.error("Não foi possível localizar os dados deste pedido."); return; }
@@ -247,7 +257,7 @@ export default function B2BDashboard() {
         <TabsContent value="catalogo" className="mt-6">
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <section>
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} placeholder="Buscar produto ou código" className="pl-9" /></div><Select value={selectedCategory} onValueChange={(category) => { setSelectedCategory(category); setCatalogPage(1); }}><SelectTrigger className="w-full sm:w-56" aria-label="Filtrar por categoria"><SelectValue placeholder="Todas as categorias" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><div className="flex w-fit items-center gap-2"><Checkbox id="only-in-stock" checked={onlyInStock} onCheckedChange={(checked) => { setOnlyInStock(checked === true); setCatalogPage(1); }} /><Label htmlFor="only-in-stock" className="cursor-pointer text-sm font-normal text-muted-foreground">Somente com estoque</Label></div><Badge variant="outline" className="w-fit">{filteredProducts.length} produtos</Badge></div>
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} placeholder="Buscar produto ou código" className="pl-9" /></div><Select value={selectedCategory} onValueChange={(category) => { setSelectedCategory(category); setCatalogPage(1); }}><SelectTrigger className="w-full sm:w-56" aria-label="Filtrar por categoria"><SelectValue placeholder="Todas as categorias" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><div className="flex w-fit items-center gap-2"><Checkbox id="only-in-stock" checked={onlyInStock} onCheckedChange={(checked) => { setOnlyInStock(checked === true); setCatalogPage(1); }} /><Label htmlFor="only-in-stock" className="cursor-pointer text-sm font-normal text-muted-foreground">Somente com estoque</Label></div><Badge variant="outline" className="w-fit">{filteredProducts.length} produtos</Badge><Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => void downloadStockReport()} disabled={downloadingStock || products.length === 0}>{downloadingStock ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Relatório de disponibilidade</Button></div>
               {hasOutOfStateDiscount && <div className="mb-5 border-l-4 border-primary bg-primary/5 px-4 py-3 text-sm"><strong>Preço para {selectedClientState}:</strong> desconto de 14% já aplicado em todo o catálogo.</div>}
               {selectedClient && !hasClientState && <div className="mb-5 border-l-4 border-destructive bg-destructive/5 px-4 py-3 text-sm text-destructive">Complete o estado deste cliente para visualizar os preços corretos e enviar o pedido.</div>}
               {productsLoading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin" /> : filteredProducts.length === 0 ? <div className="border-y py-20 text-center"><Package className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-4 font-medium">Nenhum produto encontrado</p></div> : <>
