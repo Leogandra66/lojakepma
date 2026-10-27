@@ -1,9 +1,19 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { InstitutionalLayout, INSTITUTIONAL_VIDEO_ID, useSeries, YouTube } from "./shared";
 
 export default function InstitucionalHome() {
   const { data: series = [], isLoading } = useSeries();
   const heroImgs = series.flatMap((s) => s.images).slice(0, 6);
+  const galleryImgs = Array.from(new Set(series.flatMap((s) => s.images))).slice(0, 12);
+  const [slide, setSlide] = useState(0);
+  const go = (d: number) => setSlide((s) => (s + d + galleryImgs.length) % galleryImgs.length);
+  useEffect(() => {
+    if (galleryImgs.length < 2) return;
+    const t = setInterval(() => setSlide((s) => (s + 1) % galleryImgs.length), 5000);
+    return () => clearInterval(t);
+  }, [galleryImgs.length, slide]);
   return (
     <InstitutionalLayout title="Kepma Brasil">
       <section className="relative flex min-h-[85vh] items-center overflow-hidden">
@@ -25,11 +35,20 @@ export default function InstitucionalHome() {
         <YouTube id={INSTITUTIONAL_VIDEO_ID} />
       </section>
 
-      {heroImgs.length > 1 && (
-        <section className="container grid grid-cols-2 gap-3 pb-20 md:grid-cols-3">
-          {heroImgs.slice(1).map((src, i) => (
-            <img key={src} src={src} alt="Violão Kepma" loading="lazy" className={`h-full w-full rounded-2xl object-cover ${i === 0 ? "md:col-span-2 md:row-span-2" : "aspect-square"}`} />
-          ))}
+      {galleryImgs.length > 0 && (
+        <section className="container pb-20">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl bg-background/5">
+            {galleryImgs.map((src, i) => (
+              <img key={src} src={src} alt="Violão Kepma" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === slide ? "opacity-100" : "opacity-0"}`} />
+            ))}
+            <button type="button" aria-label="Foto anterior" onClick={() => go(-1)} className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-foreground/60 text-background backdrop-blur transition hover:bg-foreground/80"><ChevronLeft /></button>
+            <button type="button" aria-label="Próxima foto" onClick={() => go(1)} className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-foreground/60 text-background backdrop-blur transition hover:bg-foreground/80"><ChevronRight /></button>
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+              {galleryImgs.map((src, i) => (
+                <button key={src} type="button" aria-label={`Ir para foto ${i + 1}`} onClick={() => setSlide(i)} className={`h-2 rounded-full transition-all ${i === slide ? "w-6 bg-background" : "w-2 bg-background/50"}`} />
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
