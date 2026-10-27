@@ -10,6 +10,9 @@ import Index from "./pages/Index";
 import HistoriaKepma from "./pages/HistoriaKepma";
 import ComoFunciona from "./pages/ComoFunciona";
 import ConhecaFabrica from "./pages/ConhecaFabrica";
+import InstitucionalHome from "./pages/institucional/InstitucionalHome";
+import InstitucionalSerie from "./pages/institucional/InstitucionalSerie";
+import { InstitucionalArtistas, InstitucionalFabrica, InstitucionalHistoria } from "./pages/institucional/InstitucionalPages";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
@@ -63,6 +66,11 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/historia" element={<HistoriaKepma />} />
+              <Route path="/institucional" element={<InstitucionalHome />} />
+              <Route path="/institucional/series/:slug" element={<InstitucionalSerie />} />
+              <Route path="/institucional/historia" element={<InstitucionalHistoria />} />
+              <Route path="/institucional/fabrica" element={<InstitucionalFabrica />} />
+              <Route path="/institucional/artistas" element={<InstitucionalArtistas />} />
               <Route path="/como-funciona" element={<ComoFunciona />} />
               <Route path="/conheca-a-fabrica" element={<ConhecaFabrica />} />
               <Route path="/produto/:id" element={<ProductDetail />} />
