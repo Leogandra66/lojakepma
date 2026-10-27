@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { InstitutionalLayout, INSTITUTIONAL_VIDEO_ID, useSeries, YouTube } from "./shared";
+import launchVideo from "@/assets/kepma-a1-das-lancamento.mp4.asset.json";
 
 export default function InstitucionalHome() {
   const { data: series = [], isLoading } = useSeries();
@@ -51,6 +52,13 @@ export default function InstitucionalHome() {
           </div>
         </section>
       )}
+
+      <section className="container pb-20">
+        <p className="mb-2 text-sm uppercase tracking-[0.4em] text-primary">Kepma A1 DAS</p>
+        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Lançamento Mundial</h2>
+        <video src={launchVideo.url} controls playsInline preload="metadata" className="aspect-video w-full rounded-3xl bg-background/5 object-cover" />
+      </section>
+
 
       <section id="series" className="container py-20">
         <h2 className="mb-2 font-display text-3xl font-bold md:text-4xl">As séries</h2>
