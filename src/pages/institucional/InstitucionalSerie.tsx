@@ -26,7 +26,6 @@ export default function InstitucionalSerie() {
   const common: Spec[] = parsed.length
     ? parsed[0].specs.filter((sp) => parsed.every((x) => x.specs.some((o) => o.label === sp.label && o.value === sp.value)))
     : [];
-  const commonKeys = new Set(common.map((c) => `${c.label}|${c.value}`));
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
   const imgs = s?.images ?? [];
   const img = (i: number) => (imgs.length ? imgs[i % imgs.length] : null);
@@ -39,7 +38,6 @@ export default function InstitucionalSerie() {
           <>
             <p className="mt-8 text-sm uppercase tracking-[0.4em] text-primary">Série</p>
             <h1 className="font-display text-5xl font-bold md:text-7xl">{s.name}</h1>
-            <p className="mt-4 text-background/60">{s.products.length} modelo(s)</p>
 
             {img(0) && <img src={img(0)!} alt={s.name} className="mt-12 aspect-[16/9] w-full rounded-3xl object-cover" />}
 
