@@ -2,6 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ReactNode, useEffect } from "react";
+import kepmaLogo from "@/assets/kepma-logo.png.asset.json";
 
 export const INSTITUTIONAL_VIDEO_ID = "TABwoa5Gdh8";
 export const slugify = (s: string) =>
