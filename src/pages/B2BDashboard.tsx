@@ -83,7 +83,7 @@ const clientSchema = z.object({
 
 // Ordem comercial das categorias no filtro do catálogo B2B (por faixa de preço).
 // Categorias que não estiverem nesta lista aparecem depois, em ordem alfabética.
-const CATEGORY_ORDER = ["B1", "A1", "G1", "F1", "F0PRO", "F0B FÊNIX", "EC PLUS", "MINI"];
+const CATEGORY_ORDER = ["B1", "A1", "G1S", "F1", "F0PRO", "F0B FÊNIX", "EC PLUS", "MINI"];
 
 // Ignora maiúsculas, acentos, espaços e pontuação para casar o nome da categoria.
 const normalizeCategory = (value: string) =>
