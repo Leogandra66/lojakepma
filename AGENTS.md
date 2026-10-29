@@ -1,5 +1,7 @@
 # Project Architecture
 
+- Institutional home cards use a locally curated photo selection and ordering, separate from catalogue queries; this keeps visual curation from changing storefront, B2B or product records.
+
 - The representative catalogue is a protected B2B module backed by dedicated clients, terms, orders and transactional approval RPCs; this isolates wholesale operations from the B2C cart and payments.
 - Bling synchronization writes sale prices only to `products.price_b2b` and maps GTIN, gross weight and package dimensions to the product logistics fields; `products.price` is B2C-managed and must never be changed by Bling. Bling package dimensions arrive already in centimeters, so the `unidadeMedida` flag must never trigger a conversion; only values below 1 are meters and may be scaled, and the endpoint must return the stored numbers unchanged.
 - Public B2C product queries must explicitly select public columns and never request `price_b2b`; this prevents B2B pricing permissions from affecting the storefront.

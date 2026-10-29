@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { InstitutionalLayout, useSeries } from "./shared";
 import launchVideo from "@/assets/kepma-a1-das-lancamento.mp4.asset.json";
+import { SERIES_CARDS, orderInstitutionalSeries } from "./seriesCards";
 
 export default function InstitucionalHome() {
   const { data: series = [], isLoading } = useSeries();
+  const cardSeries = orderInstitutionalSeries(series);
   const heroImgs = series.flatMap((s) => s.images).slice(0, 6);
   return (
     <InstitutionalLayout title="Kepma Brasil">
@@ -26,11 +28,12 @@ export default function InstitucionalHome() {
         <p className="mb-8 text-background/60">Escolha uma série para ver mais fotos e detalhes.</p>
         {isLoading ? <p className="text-background/60">Carregando…</p> : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {series.map((s) => (
-              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-square overflow-hidden rounded-2xl bg-background/5">
-                {s.cover && <img src={s.cover} alt={s.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 to-transparent" />
-                <div className="absolute bottom-4 left-4">
+            {cardSeries.map((s) => (
+              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-square overflow-hidden rounded-lg border border-background/10 bg-foreground">
+                <div className="absolute inset-x-0 top-3 bottom-16 flex items-center justify-center">
+                  <img src={SERIES_CARDS.find(card => card.name === s.name)?.cover ?? s.cover ?? undefined} alt={s.name} loading="lazy" className="h-full w-full object-contain px-4 transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" />
+                </div>
+                <div className="absolute bottom-4 inset-x-4 text-center">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-background/60">Série</p>
                   <h3 className="font-display text-xl font-bold md:text-2xl">{s.name}</h3>
                 </div>
