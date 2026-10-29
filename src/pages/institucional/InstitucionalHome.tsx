@@ -21,52 +21,37 @@ export default function InstitucionalHome() {
         </div>
       </section>
 
-      <section className="container py-20">
-        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Kepma em movimento</h2>
-        <YouTube id={INSTITUTIONAL_VIDEO_ID} />
-      </section>
-
-      {galleryImgs.length > 0 && (
-        <section className="container pb-20">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl bg-background/5">
-            {galleryImgs.map((src, i) => (
-              <img key={src} src={src} alt="Violão Kepma" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === slide ? "opacity-100" : "opacity-0"}`} />
-            ))}
-            <button type="button" aria-label="Foto anterior" onClick={() => go(-1)} className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-foreground/60 text-background backdrop-blur transition hover:bg-foreground/80"><ChevronLeft /></button>
-            <button type="button" aria-label="Próxima foto" onClick={() => go(1)} className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-foreground/60 text-background backdrop-blur transition hover:bg-foreground/80"><ChevronRight /></button>
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-              {galleryImgs.map((src, i) => (
-                <button key={src} type="button" aria-label={`Ir para foto ${i + 1}`} onClick={() => setSlide(i)} className={`h-2 rounded-full transition-all ${i === slide ? "w-6 bg-background" : "w-2 bg-background/50"}`} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="container pb-20">
-        <p className="mb-2 text-sm uppercase tracking-[0.4em] text-primary">Kepma A1 DAS</p>
-        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Lançamento Mundial</h2>
-        <video src={launchVideo.url} controls playsInline preload="metadata" className="aspect-video w-full rounded-3xl bg-background/5 object-cover" />
-      </section>
-
-
-      <section id="series" className="container py-20">
+      <section id="series" className="container py-16">
         <h2 className="mb-2 font-display text-3xl font-bold md:text-4xl">As séries</h2>
-        <p className="mb-10 text-background/60">Escolha uma série para ver mais fotos e detalhes.</p>
+        <p className="mb-8 text-background/60">Escolha uma série para ver mais fotos e detalhes.</p>
         {isLoading ? <p className="text-background/60">Carregando…</p> : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {series.map((s) => (
-              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-[4/5] overflow-hidden rounded-3xl bg-background/5">
+              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-square overflow-hidden rounded-2xl bg-background/5">
                 {s.cover && <img src={s.cover} alt={s.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 to-transparent" />
-                <div className="absolute bottom-6 left-6">
-                  <p className="text-xs uppercase tracking-[0.3em] text-background/60">Série</p>
-                  <h3 className="font-display text-3xl font-bold">{s.name}</h3>
+                <div className="absolute bottom-4 left-4">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-background/60">Série</p>
+                  <h3 className="font-display text-xl font-bold md:text-2xl">{s.name}</h3>
                 </div>
               </Link>
             ))}
           </div>
         )}
+      </section>
+
+      <section className="container pb-20">
+        <p className="mb-2 text-sm uppercase tracking-[0.4em] text-primary">Kepma A1 DAS</p>
+        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Lançamento Mundial</h2>
+        <video src={launchVideo.url} controls playsInline preload="metadata" className="aspect-video w-full rounded-3xl bg-background/5 object-cover" />
+        <div className="mx-auto mt-8 max-w-3xl text-center">
+          <h3 className="font-display text-xl font-bold md:text-2xl">O sistema DAS</h3>
+          <p className="mt-3 text-background/70">
+            Presente na linha A1 DAS, o Dual Adjustment System permite ajustar o ângulo do braço e a altura das cordas
+            com precisão, sem forçar o braço do violão. São 8 níveis de regulagem — de 1,3 mm a 3,5 mm — feitos com uma
+            única chave universal, que também ajusta a curvatura do braço. Mais conforto para tocar, do seu jeito.
+          </p>
+        </div>
       </section>
 
       <section className="container grid gap-6 pb-24 md:grid-cols-3">
