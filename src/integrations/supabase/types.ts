@@ -1076,6 +1076,17 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_institutional_series: {
+        Args: never
+        Returns: {
+          category: string
+          description: string
+          id: string
+          image_url: string
+          images: string[]
+          name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
