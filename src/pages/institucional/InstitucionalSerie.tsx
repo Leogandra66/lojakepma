@@ -62,35 +62,7 @@ export default function InstitucionalSerie() {
               </section>
             )}
 
-            <h2 className="mt-24 mb-10 font-display text-3xl font-bold">Modelos</h2>
-            <div className="space-y-20">
-              {parsed.map(({ p, specs }, i) => {
-                const own = specs.filter((sp) => !commonKeys.has(`${sp.label}|${sp.value}`));
-                const photo = p.image_url ?? img(i + 2);
-                return (
-                  <article key={p.id} className="grid gap-10 md:grid-cols-2 md:items-center">
-                    {photo && <img src={photo} alt={p.name} loading="lazy" className={`aspect-square w-full rounded-3xl object-cover ${i % 2 ? "md:order-2" : ""}`} />}
-                    <div>
-                      <h3 className="font-display text-2xl font-bold md:text-3xl">{p.name}</h3>
-                      {own.length > 0 ? (
-                        <dl className="mt-6 divide-y divide-background/10 border-y border-background/10">
-                          {own.map((c) => (
-                            <div key={c.label + c.value} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
-                              <dt className="text-background/50">{c.label}</dt>
-                              <dd>{c.value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      ) : (
-                        <p className="mt-4 text-background/60">Segue a ficha técnica da linha {s.name}.</p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-
-            {imgs.length > 3 && (
+            {imgs.length > 2 && (
               <div className="mt-24 columns-1 gap-4 sm:columns-2 lg:columns-3">
                 {imgs.slice(2).map((src) => (
                   <img key={src} src={src} alt={s.name} loading="lazy" className="mb-4 w-full break-inside-avoid rounded-2xl" />
