@@ -1,20 +1,10 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { InstitutionalLayout, INSTITUTIONAL_VIDEO_ID, useSeries, YouTube } from "./shared";
+import { InstitutionalLayout, useSeries } from "./shared";
 import launchVideo from "@/assets/kepma-a1-das-lancamento.mp4.asset.json";
 
 export default function InstitucionalHome() {
   const { data: series = [], isLoading } = useSeries();
   const heroImgs = series.flatMap((s) => s.images).slice(0, 6);
-  const galleryImgs = Array.from(new Set(series.flatMap((s) => s.images))).slice(0, 12);
-  const [slide, setSlide] = useState(0);
-  const go = (d: number) => setSlide((s) => (s + d + galleryImgs.length) % galleryImgs.length);
-  useEffect(() => {
-    if (galleryImgs.length < 2) return;
-    const t = setInterval(() => setSlide((s) => (s + 1) % galleryImgs.length), 5000);
-    return () => clearInterval(t);
-  }, [galleryImgs.length, slide]);
   return (
     <InstitutionalLayout title="Kepma Brasil">
       <section className="relative flex min-h-[85vh] items-center overflow-hidden">
