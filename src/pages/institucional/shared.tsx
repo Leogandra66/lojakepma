@@ -52,7 +52,9 @@ export function InstitutionalLayout({ children, title }: { children: ReactNode; 
     <div className="min-h-screen bg-foreground text-background">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-background/10 bg-foreground/80 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between gap-4">
-          <Link to="/institucional" className="font-display text-xl font-bold tracking-[0.3em]">KEPMA</Link>
+          <Link to="/institucional" aria-label="Kepma Brasil — Início" className="flex shrink-0 items-center">
+            <img src={kepmaLogo.url} alt="Kepma" className="h-9 w-auto md:h-10" />
+          </Link>
           <nav className="hidden gap-8 text-sm md:flex">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => isActive ? "text-background" : "text-background/60 hover:text-background transition-colors"}>{l.label}</NavLink>
