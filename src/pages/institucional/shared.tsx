@@ -14,27 +14,25 @@ export function useSeries() {
   return useQuery({
     queryKey: ["institutional-series"],
     queryFn: async (): Promise<SeriesItem[]> => {
-      const { data: products, error } = await supabase
-        .from("products")
-        .select("id,name,description,image_url,category")
-        .eq("active", true)
-        .neq("category", "Eletrônica")
-        .order("name");
+      // Institucional: todos os modelos da linha (inclusive sem estoque/fora da loja)
+      const { data: rows, error } = await supabase.rpc("get_institutional_series");
       if (error) throw error;
-      const ids = (products ?? []).map((p) => p.id);
-      const { data: imgs } = ids.length
-        ? await supabase.from("product_images").select("product_id,image_url,position").in("product_id", ids).order("position")
-        : { data: [] as { product_id: string; image_url: string }[] };
-      const map = new Map<string, SeriesItem>();
-      for (const p of products ?? []) {
+      const map = new Map<string, SeriesItem & { perProduct: string[][] }>();
+      for (const p of rows ?? []) {
         const name = p.category || "Outros";
-        if (!map.has(name)) map.set(name, { name, slug: slugify(name), cover: null, images: [], products: [] });
+        if (!map.has(name)) map.set(name, { name, slug: slugify(name), cover: null, images: [], products: [], perProduct: [] });
         const s = map.get(name)!;
-        s.products.push(p);
-        if (p.image_url) { s.images.push(p.image_url); s.cover ??= p.image_url; }
-        for (const i of (imgs ?? []).filter((i) => i.product_id === p.id)) s.images.push(i.image_url);
+        s.products.push({ id: p.id, name: p.name, description: p.description, image_url: p.image_url });
+        s.cover ??= p.image_url;
+        s.perProduct.push([p.image_url, ...(p.images ?? [])].filter(Boolean) as string[]);
       }
-      return [...map.values()].map((s) => ({ ...s, images: [...new Set(s.images)] }));
+      // Mistura as fotos intercalando os modelos da linha
+      return [...map.values()].map(({ perProduct, ...s }) => {
+        const mixed: string[] = [];
+        const max = Math.max(0, ...perProduct.map((l) => l.length));
+        for (let i = 0; i < max; i++) for (const l of perProduct) if (l[i]) mixed.push(l[i]);
+        return { ...s, images: [...new Set(mixed)] };
+      });
     },
   });
 }

@@ -8,6 +8,13 @@
       "when": 1792011964409,
       "tag": "0000_b2b_commercial_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793277772724,
+      "tag": "0001_institutional_series_catalog",
+      "breakpoints": true
     }
   ]
 }

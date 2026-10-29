@@ -84,7 +84,6 @@ export default function InstitucionalSerie() {
                       ) : (
                         <p className="mt-4 text-background/60">Segue a ficha técnica da linha {s.name}.</p>
                       )}
-                      <Link to={`/produto/${p.id}`} className="mt-6 inline-block text-sm text-primary">Ver na loja →</Link>
                     </div>
                   </article>
                 );
