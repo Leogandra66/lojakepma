@@ -23,6 +23,25 @@ export default function InstitucionalHome() {
         </div>
       </section>
 
+      <section className="container py-16">
+        <p className="mb-2 text-sm uppercase tracking-[0.4em] text-primary">Kepma A1 DAS</p>
+        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Lançamento Mundial</h2>
+        <video src={launchVideo.url} controls playsInline preload="metadata" className="aspect-video w-full rounded-3xl bg-background/5 object-cover" />
+        <div className="mx-auto mt-8 max-w-3xl text-center">
+          <h3 className="font-display text-xl font-bold md:text-2xl">O sistema DAS</h3>
+          <p className="mt-3 text-background/70">
+            Presente na linha A1 DAS, o sistema permite ajustar o ângulo do braço e a altura das cordas com precisão
+            usando apenas uma chave Allen — sem precisar desparafusar o braço, como é feito nos outros modelos da marca.
+            São 8 níveis de regulagem, de 1,3 mm a 3,5 mm. Mais conforto para tocar, do seu jeito.
+          </p>
+          <div className="mt-8 rounded-3xl border border-primary/40 bg-primary/10 p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-primary">Pré-lançamento no Brasil</p>
+            <p className="mt-2 font-display text-2xl font-bold">Em breve no Brasil</p>
+            <Link to="/institucional/das" className="mt-4 inline-block rounded-full bg-background px-6 py-3 font-medium text-foreground">Saiba mais</Link>
+          </div>
+        </div>
+      </section>
+
       <section id="series" className="container py-16">
         <h2 className="mb-2 font-display text-3xl font-bold md:text-4xl">As séries</h2>
         <p className="mb-8 text-background/60">Escolha uma série para ver mais fotos e detalhes.</p>
@@ -41,20 +60,6 @@ export default function InstitucionalHome() {
             ))}
           </div>
         )}
-      </section>
-
-      <section className="container pb-20">
-        <p className="mb-2 text-sm uppercase tracking-[0.4em] text-primary">Kepma A1 DAS</p>
-        <h2 className="mb-8 font-display text-3xl font-bold md:text-4xl">Lançamento Mundial</h2>
-        <video src={launchVideo.url} controls playsInline preload="metadata" className="aspect-video w-full rounded-3xl bg-background/5 object-cover" />
-        <div className="mx-auto mt-8 max-w-3xl text-center">
-          <h3 className="font-display text-xl font-bold md:text-2xl">O sistema DAS</h3>
-          <p className="mt-3 text-background/70">
-            Presente na linha A1 DAS, o Dual Adjustment System permite ajustar o ângulo do braço e a altura das cordas
-            com precisão, sem forçar o braço do violão. São 8 níveis de regulagem — de 1,3 mm a 3,5 mm — feitos com uma
-            única chave universal, que também ajusta a curvatura do braço. Mais conforto para tocar, do seu jeito.
-          </p>
-        </div>
       </section>
 
       <section className="container grid gap-6 pb-24 md:grid-cols-3">
