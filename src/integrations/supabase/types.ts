@@ -401,6 +401,30 @@ export type Database = {
         }
         Relationships: []
       }
+      das_prelaunch_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
