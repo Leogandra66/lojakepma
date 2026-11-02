@@ -24,6 +24,11 @@ const VIDEOS = [
     title: "Kepma DAS — vídeo do Bilibili",
     caption: "",
   },
+  {
+    src: "https://www.youtube-nocookie.com/embed/IxGz_OEcu4o?rel=0",
+    title: "Kepma DAS — vídeo do YouTube",
+    caption: "",
+  },
 ];
 
 export default function InstitucionalDas() {
