@@ -36,7 +36,7 @@ export default function InstitucionalHome() {
           </p>
           <div className="mt-8 rounded-3xl border border-primary/40 bg-primary/10 p-6">
             <p className="text-xs uppercase tracking-[0.3em] text-primary">Pré-lançamento no Brasil</p>
-            <p className="mt-2 font-display text-2xl font-bold">Em breve no Brasil</p>
+            <p className="mt-2 font-display text-2xl font-bold">Conheça o violão A1 DAS</p>
             <Link to="/institucional/das" className="mt-4 inline-block rounded-full bg-background px-6 py-3 font-medium text-foreground">Saiba mais</Link>
           </div>
         </div>
