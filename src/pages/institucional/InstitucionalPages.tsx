@@ -1,4 +1,4 @@
-import { InstitutionalLayout, useSeries, YouTube } from "./shared";
+import { InstitutionalLayout, YouTube } from "./shared";
 
 function Hero({ kicker, title, text }: { kicker: string; title: string; text: string }) {
   return (
@@ -11,26 +11,11 @@ function Hero({ kicker, title, text }: { kicker: string; title: string; text: st
 }
 
 export function InstitucionalHistoria() {
-  const { data = [] } = useSeries();
-  const imgs = data.flatMap((s) => s.images).slice(0, 3);
-  const steps = [
-    ["2009", "Fundação em Changsha, Hunan, por Jack Peng e Kevin Liu, ex-engenheiros mecânicos."],
-    ["Crescimento", "Investimento em automação de alta precisão para garantir consistência em larga escala."],
-    ["Hoje", "Uma das marcas chinesas mais conceituadas do mundo — sem produzir para terceiros nem terceirizar."],
-  ];
   return (
     <InstitutionalLayout title="História">
       <Hero kicker="Nossa história" title="De engenheiros a referência mundial" text="A Kepma nasceu da união entre engenharia e paixão pela música." />
-      <section className="container grid gap-8 pb-16 md:grid-cols-3">
-        {steps.map(([y, t]) => (
-          <div key={y} className="border-t border-primary pt-6">
-            <h3 className="font-display text-3xl font-bold">{y}</h3>
-            <p className="mt-3 text-background/70">{t}</p>
-          </div>
-        ))}
-      </section>
-      <section className="container grid gap-4 pb-24 md:grid-cols-3">
-        {imgs.map((s) => <img key={s} src={s} alt="Kepma" loading="lazy" className="aspect-[3/4] w-full rounded-2xl object-cover" />)}
+      <section className="container pb-24">
+        <YouTube id="IYIWk4QUlbc" />
       </section>
     </InstitutionalLayout>
   );
