@@ -1,4 +1,4 @@
-import { InstitutionalLayout, INSTITUTIONAL_VIDEO_ID, useSeries, YouTube } from "./shared";
+import { InstitutionalLayout, useSeries, YouTube } from "./shared";
 
 function Hero({ kicker, title, text }: { kicker: string; title: string; text: string }) {
   return (
