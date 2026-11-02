@@ -1,4 +1,4 @@
-import { InstitutionalLayout, INSTITUTIONAL_VIDEO_ID, useSeries, YouTube } from "./shared";
+import { InstitutionalLayout, useSeries, YouTube } from "./shared";
 
 function Hero({ kicker, title, text }: { kicker: string; title: string; text: string }) {
   return (
@@ -37,14 +37,16 @@ export function InstitucionalHistoria() {
 }
 
 export function InstitucionalFabrica() {
-  const { data = [] } = useSeries();
-  const imgs = data.flatMap((s) => s.images).slice(3, 9);
+  const videos = ["l1AfcPzCqik", "JCjSxSSqRqs"];
   return (
     <InstitutionalLayout title="A Fábrica">
       <Hero kicker="A fábrica" title="Tecnologia de ponta, controle total" text="Cada etapa — da seleção da madeira ao acabamento — acontece dentro da própria Kepma." />
-      <section className="container pb-16"><YouTube id={INSTITUTIONAL_VIDEO_ID} /></section>
-      <section className="container grid grid-cols-2 gap-4 pb-24 md:grid-cols-3">
-        {imgs.map((s) => <img key={s} src={s} alt="Produção Kepma" loading="lazy" className="aspect-square w-full rounded-2xl object-cover" />)}
+      <section className="container grid gap-8 pb-24 lg:grid-cols-2">
+        {videos.map((id) => (
+          <div key={id}>
+            <YouTube id={id} />
+          </div>
+        ))}
       </section>
     </InstitutionalLayout>
   );
