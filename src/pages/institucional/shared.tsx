@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ReactNode, useEffect } from "react";
 import kepmaLogo from "@/assets/kepma-logo.png.asset.json";
+import { applyGalleryCuration } from "./seriesAccessories";
 
 export const INSTITUTIONAL_VIDEO_ID = "TABwoa5Gdh8";
 export const slugify = (s: string) =>
@@ -26,12 +27,12 @@ export function useSeries() {
         s.cover ??= p.image_url;
         s.perProduct.push([p.image_url, ...(p.images ?? [])].filter(Boolean) as string[]);
       }
-      // Mistura as fotos intercalando os modelos da linha
+      // Mistura as fotos intercalando os modelos da linha e aplica a curadoria local
       return [...map.values()].map(({ perProduct, ...s }) => {
         const mixed: string[] = [];
         const max = Math.max(0, ...perProduct.map((l) => l.length));
         for (let i = 0; i < max; i++) for (const l of perProduct) if (l[i]) mixed.push(l[i]);
-        return { ...s, images: [...new Set(mixed)] };
+        return { ...s, images: applyGalleryCuration(s.name, [...new Set(mixed)]) };
       });
     },
   });
