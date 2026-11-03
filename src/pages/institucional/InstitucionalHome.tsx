@@ -47,9 +47,9 @@ export default function InstitucionalHome() {
         {isLoading ? <p className="text-background/60">Carregando…</p> : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {cardSeries.map((s) => (
-              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-square overflow-hidden rounded-lg border border-background/10 bg-foreground">
-                <div className="absolute inset-x-0 top-3 bottom-16 flex items-center justify-center">
-                  <img src={SERIES_CARDS.find(card => card.name === s.name)?.cover ?? s.cover ?? undefined} alt={s.name} loading="lazy" className="h-full w-full object-contain px-4 transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" />
+              <Link key={s.slug} to={`/institucional/series/${s.slug}`} className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-background/10 bg-foreground">
+                <div className="absolute inset-x-0 top-4 bottom-20 flex items-center justify-center">
+                  <img src={SERIES_CARDS.find(card => card.name === s.name)?.cover ?? s.cover ?? undefined} alt={s.name} loading="lazy" decoding="async" className="h-full w-full object-contain px-2 transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" />
                 </div>
                 <div className="absolute bottom-4 inset-x-4 text-center">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-background/60">Série</p>
