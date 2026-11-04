@@ -17,10 +17,9 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     expect(out).toEqual(["https://exemplo.com/a1-1.webp", "https://exemplo.com/a1-2.webp", TKL_CASE_URL]);
   });
 
-  it("leaves other series untouched", () => {
-    const imgs = ["https://exemplo.com/g1s.webp", BAG_URL];
-    const out = applyGalleryCuration("G1S", imgs);
-    expect(out).toEqual(imgs);
+  it("never adds the case to other series, and filters the excluded bag photo globally", () => {
+    const out = applyGalleryCuration("G1S", ["https://exemplo.com/g1s.webp", BAG_URL]);
+    expect(out).toEqual(["https://exemplo.com/g1s.webp"]);
     expect(CASE_SERIES.has("G1S")).toBe(false);
   });
 
