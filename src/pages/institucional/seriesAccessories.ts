@@ -1,6 +1,6 @@
 // Curadoria local de acessórios nas galerias institucionais (isolada da loja).
 // Os modelos das séries B1 e A1 não acompanham bag: acompanham case TKL rígido.
-import tklCase from "@/assets/tkl-case.png.asset.json";
+import tklCase from "@/assets/tkl-case-real.jpg.asset.json";
 
 export const TKL_CASE_URL = tklCase.url;
 
