@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { InstitutionalLayout, useSeries } from "./shared";
+import { TKL_CASE_URL } from "./seriesAccessories";
 
 type Spec = { label: string; value: string };
 
 // Só exibe fotos com resolução suficiente para uma boa apresentação
 const MIN_SIDE = 900;
+// Imagens curadas localmente (ex.: case TKL) são sempre aceitas
+const CURATED_IMAGES = new Set([TKL_CASE_URL]);
 
 function parseDescription(desc: string | null) {
   const specs: Spec[] = [];
@@ -30,7 +33,7 @@ function useQualityImages(urls: string[]) {
     Promise.all(
       urls.map((src) => new Promise<string | null>((res) => {
         const im = new Image();
-        im.onload = () => res(Math.min(im.naturalWidth, im.naturalHeight) >= MIN_SIDE ? src : null);
+        im.onload = () => res(CURATED_IMAGES.has(src) || Math.min(im.naturalWidth, im.naturalHeight) >= MIN_SIDE ? src : null);
         im.onerror = () => res(null);
         im.src = src;
       })),
