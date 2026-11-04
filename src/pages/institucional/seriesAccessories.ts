@@ -2,7 +2,7 @@
 // Os modelos das séries B1 e A1 não acompanham bag: acompanham case TKL rígido.
 import tklCase from "@/assets/tkl-case-real.jpg.asset.json";
 
-import a1Ga from "@/assets/a1-grand-auditorium.jpg.asset.json";
+import a1Ga from "@/assets/a1-grand-auditorium-hd.png.asset.json";
 import a1Om from "@/assets/a1-orchestra.jpg.asset.json";
 
 export const TKL_CASE_URL = tklCase.url;
