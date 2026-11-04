@@ -33,7 +33,7 @@ function useQualityImages(urls: string[]) {
     Promise.all(
       urls.map((src) => new Promise<string | null>((res) => {
         const im = new Image();
-        im.onload = () => res(Math.min(im.naturalWidth, im.naturalHeight) >= MIN_SIDE ? src : null);
+        im.onload = () => res(CURATED_IMAGES.has(src) || Math.min(im.naturalWidth, im.naturalHeight) >= MIN_SIDE ? src : null);
         im.onerror = () => res(null);
         im.src = src;
       })),
