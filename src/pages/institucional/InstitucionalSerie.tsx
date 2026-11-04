@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { InstitutionalLayout, useSeries } from "./shared";
-import { TKL_CASE_URL } from "./seriesAccessories";
+import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
 
 type Spec = { label: string; value: string };
 
 // Só exibe fotos com resolução suficiente para uma boa apresentação
 const MIN_SIDE = 900;
 // Imagens curadas localmente (ex.: case TKL) são sempre aceitas
-const CURATED_IMAGES = new Set([TKL_CASE_URL]);
+const CURATED_IMAGES = CURATED_URLS;
 
 function parseDescription(desc: string | null) {
   const specs: Spec[] = [];
@@ -105,9 +105,13 @@ export default function InstitucionalSerie() {
   const s = data.find((x) => x.slug === slug);
 
   const parsed = (s?.products ?? []).map((p) => ({ p, ...parseDescription(p.description) }));
-  const common: Spec[] = parsed.length
+  const baseCommon: Spec[] = parsed.length
     ? parsed[0].specs.filter((sp) => parsed.every((x) => x.specs.some((o) => o.label === sp.label && o.value === sp.value)))
     : [];
+  const shapes = s ? SERIES_BODY_SHAPES[s.name] : undefined;
+  const common: Spec[] = shapes
+    ? [{ label: "Shapes de corpo", value: shapes }, ...baseCommon.filter((c) => !/shape|formato do corpo|corpo$/i.test(c.label))]
+    : baseCommon;
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
   const good = useQualityImages(s?.images ?? []);
 
