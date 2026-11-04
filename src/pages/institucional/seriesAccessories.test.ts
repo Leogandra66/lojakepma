@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
@@ -14,7 +14,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
 
   it("appends the TKL case to the A1 gallery without removing other photos", () => {
     const out = applyGalleryCuration("A1", ["https://exemplo.com/a1-1.webp", "https://exemplo.com/a1-2.webp"]);
-    expect(out).toEqual(["https://exemplo.com/a1-1.webp", "https://exemplo.com/a1-2.webp", TKL_CASE_URL]);
+    expect(out).toEqual([...EXTRA_SERIES_IMAGES.A1, "https://exemplo.com/a1-1.webp", "https://exemplo.com/a1-2.webp", TKL_CASE_URL]);
   });
 
   it("never adds the case to other series, and filters the excluded bag photo globally", () => {
@@ -25,5 +25,10 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
 
   it("curation only excludes the known bag photo", () => {
     expect([...EXCLUDED_GALLERY_URLS]).toEqual([BAG_URL]);
+  });
+
+  it("A1, B1 and F1 list the three body shapes", () => {
+    for (const k of ["A1", "B1", "F1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
+    expect(SERIES_BODY_SHAPES.G1S).toBeUndefined();
   });
 });
