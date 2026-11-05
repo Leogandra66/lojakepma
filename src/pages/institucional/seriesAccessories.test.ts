@@ -19,7 +19,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
 
   it("never adds the case to other series, and filters the excluded bag photo globally", () => {
     const out = applyGalleryCuration("G1S", ["https://exemplo.com/g1s.webp", BAG_URL]);
-    expect(out).toEqual(["https://exemplo.com/g1s.webp"]);
+    expect(out).toEqual([...EXTRA_SERIES_IMAGES.G1S, "https://exemplo.com/g1s.webp"]);
     expect(CASE_SERIES.has("G1S")).toBe(false);
   });
 
@@ -29,6 +29,10 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
 
   it("A1, B1 and F1 list the three body shapes", () => {
     for (const k of ["A1", "B1", "F1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
-    expect(SERIES_BODY_SHAPES.G1S).toBeUndefined();
+  });
+
+  it("G1S lists Grand Auditorium and Dreadnought in colors N, BS and WA, with four curated photos", () => {
+    expect(SERIES_BODY_SHAPES.G1S).toBe("Grand Auditorium e Dreadnought, nas cores N, BS e WA");
+    expect(EXTRA_SERIES_IMAGES.G1S).toHaveLength(4);
   });
 });
