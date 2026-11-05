@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
@@ -25,6 +25,19 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
 
   it("curation only excludes the known bag photo", () => {
     expect([...EXCLUDED_GALLERY_URLS]).toEqual([BAG_URL]);
+  });
+
+  it("removes the nine selected F1 photos without excluding them from other series", () => {
+    const removed = [...F1_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776343635323-0.png",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/43a4536c-0c83-465d-b8ce-5eec9da326fd/1777237987648-0-byp0vq.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776343665645-0.png",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776995572601-0-tm8p3l.webp",
+    ];
+    expect(removed).toHaveLength(9);
+    expect(applyGalleryCuration("F1", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
   it("A1, B1 and F1 list the three body shapes", () => {

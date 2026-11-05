@@ -37,8 +37,22 @@ export const EXCLUDED_GALLERY_URLS = new Set([
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp",
 ]);
 
+// Seleção F1: retirar as fotos originais 1, 4, 6, 7, 8, 10, 11, 12 e 13.
+// URLs fixas preservam a seleção mesmo quando a ordem do catálogo mudar.
+export const F1_EXCLUDED_GALLERY_URLS = new Set([
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b1706821-4263-4795-be34-c88999bc221d/1792030680270-0-1r4gn9.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776343647935-0.png",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b1706821-4263-4795-be34-c88999bc221d/1792029918489-2-cehyax.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776343668929-1.png",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b1706821-4263-4795-be34-c88999bc221d/1792029920375-3-mpmnks.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/e1fbbed9-5004-451c-8424-dbc86d2efb36/1777237884116-0-ezwwwm.jpg",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/af18abaa-56fe-45df-8acf-a157d6989493/1777237593730-0-q5h1kv.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b1706821-4263-4795-be34-c88999bc221d/1792030764784-0-lybi7d.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/dc1b5cf2-8c27-4f0a-a2de-38d46d51c5bf/1776995589524-0-08t6jj.webp",
+]);
+
 export function applyGalleryCuration(seriesName: string, images: string[]): string[] {
-  const filtered = images.filter((u) => !EXCLUDED_GALLERY_URLS.has(u));
+  const filtered = images.filter((u) => !EXCLUDED_GALLERY_URLS.has(u) && (seriesName !== "F1" || !F1_EXCLUDED_GALLERY_URLS.has(u)));
   const withExtras = [...(EXTRA_SERIES_IMAGES[seriesName] ?? []), ...filtered];
   return CASE_SERIES.has(seriesName) ? [...withExtras, TKL_CASE_URL] : withExtras;
 }
