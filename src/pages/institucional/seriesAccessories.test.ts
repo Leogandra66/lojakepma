@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EC_PLUS_EXCLUDED_GALLERY_URLS, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
@@ -50,6 +50,21 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(6);
     expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+  });
+
+  it("removes the five selected EC Plus photos without excluding them from other series", () => {
+    const removed = [...EC_PLUS_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/106f549e-9a16-4456-86c1-c3c38017f27a/1780320411212-0-0pqty4.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/f10e3015-e9b9-4daa-928d-8a26fd5b84d4/1780943008989-0-b7gl7d.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/93b926b8-e66d-462e-8a0f-5712646646ff/1779399848940-0-el6h0t.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218287205-0.png",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/f10e3015-e9b9-4daa-928d-8a26fd5b84d4/1776218572370-0.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218304473-0.png",
+    ];
+    expect(removed).toHaveLength(5);
+    expect(applyGalleryCuration("EC Plus", [...removed, ...retained])).toEqual(retained);
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
