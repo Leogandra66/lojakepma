@@ -53,6 +53,21 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
+  it("removes the five selected EC Plus photos without excluding them from other series", () => {
+    const removed = [...EC_PLUS_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/106f549e-9a16-4456-86c1-c3c38017f27a/1780320411212-0-0pqty4.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/f10e3015-e9b9-4daa-928d-8a26fd5b84d4/1780943008989-0-b7gl7d.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/93b926b8-e66d-462e-8a0f-5712646646ff/1779399848940-0-el6h0t.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218287205-0.png",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/f10e3015-e9b9-4daa-928d-8a26fd5b84d4/1776218572370-0.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218304473-0.png",
+    ];
+    expect(removed).toHaveLength(5);
+    expect(applyGalleryCuration("EC Plus", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+  });
+
   it("A1, B1 and F1 list the three body shapes", () => {
     for (const k of ["A1", "B1", "F1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
   });
