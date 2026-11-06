@@ -40,6 +40,19 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
+  it("removes the six selected F0B Fênix photos without excluding them from other series", () => {
+    const removed = [...F0B_FENIX_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463255862-0-4y1fa7.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463868707-0-y1u8pp.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463631455-0-qcuprl.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463661785-1-x731u5.webp",
+    ];
+    expect(removed).toHaveLength(6);
+    expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F1", removed)).toEqual(removed);
+  });
+
   it("A1, B1 and F1 list the three body shapes", () => {
     for (const k of ["A1", "B1", "F1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
   });
