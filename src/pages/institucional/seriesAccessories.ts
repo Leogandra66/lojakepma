@@ -56,8 +56,27 @@ export const F1_EXCLUDED_GALLERY_URLS = new Set([
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/dc1b5cf2-8c27-4f0a-a2de-38d46d51c5bf/1776995589524-0-08t6jj.webp",
 ]);
 
+// Seleção F0B Fênix: retirar as fotos 3, 4, 7, 8, 9 e 10 da galeria exibida.
+export const F0B_FENIX_EXCLUDED_GALLERY_URLS = new Set([
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/6f68123c-75b5-416e-902e-a0bacea315d7/1776689573367-0.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/103c8fb1-f1d4-427e-b1be-fcd56fa32bfa/1778615694398-0-dq5yr1.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/103c8fb1-f1d4-427e-b1be-fcd56fa32bfa/1778615571932-0-gt7bs3.jpg",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463326000-0-pvbgny.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463362174-0-u2ejh1.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/6f68123c-75b5-416e-902e-a0bacea315d7/1777463425712-0-9rmtee.webp",
+]);
+
+// Exclusões por série: a curadoria de uma linha nunca afeta as demais.
+export const SERIES_EXCLUDED_GALLERY_URLS: Record<string, Set<string>> = {
+  F1: F1_EXCLUDED_GALLERY_URLS,
+  "F0B Fênix": F0B_FENIX_EXCLUDED_GALLERY_URLS,
+};
+
 export function applyGalleryCuration(seriesName: string, images: string[]): string[] {
-  const filtered = images.filter((u) => !EXCLUDED_GALLERY_URLS.has(u) && (seriesName !== "F1" || !F1_EXCLUDED_GALLERY_URLS.has(u)));
+  const seriesExcluded = SERIES_EXCLUDED_GALLERY_URLS[seriesName];
+  const filtered = images.filter(
+    (u) => !EXCLUDED_GALLERY_URLS.has(u) && !(seriesExcluded?.has(u) ?? false),
+  );
   const withExtras = [...(EXTRA_SERIES_IMAGES[seriesName] ?? []), ...filtered];
   return CASE_SERIES.has(seriesName) ? [...withExtras, TKL_CASE_URL] : withExtras;
 }

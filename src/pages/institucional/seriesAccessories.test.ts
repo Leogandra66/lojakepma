@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
@@ -37,6 +37,19 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(9);
     expect(applyGalleryCuration("F1", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES.F1, ...retained]);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+  });
+
+  it("removes the six selected F0B Fênix photos without excluding them from other series", () => {
+    const removed = [...F0B_FENIX_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463255862-0-4y1fa7.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463868707-0-y1u8pp.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463631455-0-qcuprl.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463661785-1-x731u5.webp",
+    ];
+    expect(removed).toHaveLength(6);
+    expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual(retained);
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
