@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EC_PLUS_EXCLUDED_GALLERY_URLS, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
