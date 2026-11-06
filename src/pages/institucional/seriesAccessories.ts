@@ -9,6 +9,10 @@ import g1sDN from "@/assets/g1s-dreadnought-n.webp.asset.json";
 import g1sGaCores from "@/assets/g1s-ga-cores.webp.asset.json";
 import g1sDWa from "@/assets/g1s-dreadnought-wa.png.asset.json";
 import g1sDNat from "@/assets/g1s-dreadnought-natural.png.asset.json";
+import f1D from "@/assets/f1-dreadnought-oficial.webp.asset.json";
+import f1Ga from "@/assets/f1-grand-auditorium-oficial.jpg.asset.json";
+import f1OmBs from "@/assets/f1-orchestra-sunburst.jpg.asset.json";
+import f1OmN from "@/assets/f1-orchestra-natural.jpg.asset.json";
 
 export const TKL_CASE_URL = tklCase.url;
 
@@ -17,6 +21,7 @@ export const EXTRA_SERIES_IMAGES: Record<string, string[]> = {
   A1: [a1Ga.url, a1Om.url],
   B1: [b1D.url],
   G1S: [g1sGaCores.url, g1sDWa.url, g1sDN.url, g1sDNat.url],
+  F1: [f1D.url, f1Ga.url, f1OmBs.url, f1OmN.url],
 };
 
 // Shapes de corpo disponíveis por série (exibidos na ficha técnica)
