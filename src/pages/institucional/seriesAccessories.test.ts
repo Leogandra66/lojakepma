@@ -36,7 +36,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
       "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/cd50465c-03ee-46a5-bae0-679915ed0292/1776995572601-0-tm8p3l.webp",
     ];
     expect(removed).toHaveLength(9);
-    expect(applyGalleryCuration("F1", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F1", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES.F1, ...retained]);
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
