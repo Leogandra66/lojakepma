@@ -50,7 +50,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(6);
     expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual(retained);
-    expect(applyGalleryCuration("F1", removed)).toEqual(removed);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
   it("A1, B1 and F1 list the three body shapes", () => {
