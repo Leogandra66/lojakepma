@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGalleryCuration, CASE_SERIES, EC_PLUS_EXCLUDED_GALLERY_URLS, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
+import { applyGalleryCuration, CASE_SERIES, EC_PLUS_EXCLUDED_GALLERY_URLS, EXCLUDED_GALLERY_URLS, EXTRA_SERIES_IMAGES, F0B_FENIX_EXCLUDED_GALLERY_URLS, F1_EXCLUDED_GALLERY_URLS, FC_MINI_EXCLUDED_GALLERY_URLS, SERIES_BODY_SHAPES, TKL_CASE_URL } from "./seriesAccessories";
 
 const BAG_URL =
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/2f5a1311-a2ca-4cba-8fc8-cb2e0bacefab/1776995312583-0-qa6y95.webp";
@@ -65,6 +65,21 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(5);
     expect(applyGalleryCuration("EC Plus", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+  });
+
+  it("removes the six selected FC Mini photos without excluding them from other series", () => {
+    const removed = [...FC_MINI_EXCLUDED_GALLERY_URLS];
+    const retained = [
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/3be91f55-98ac-42b8-b302-58f76f0d2d24/1776524698563-1.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/3be91f55-98ac-42b8-b302-58f76f0d2d24/1776737139894-0-15o31i.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/ba04e594-1f15-41a4-b7e3-15768e572448/1783000460282-2-718wso.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/3be91f55-98ac-42b8-b302-58f76f0d2d24/1776737223411-0-o8q5wl.jpg",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/ba04e594-1f15-41a4-b7e3-15768e572448/1783000461830-4-1km0y4.webp",
+      "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/59016e11-4a38-49d6-948a-251442428c8e/1776996015993-0-am4pg5.webp",
+    ];
+    expect(removed).toHaveLength(6);
+    expect(applyGalleryCuration("FC Mini", [...removed, ...retained])).toEqual(retained);
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
