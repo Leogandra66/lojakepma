@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { InstitutionalLayout, useSeries } from "./shared";
 import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
+import { SERIES_TEXTS } from "./seriesTexts";
 
 type Spec = { label: string; value: string };
 
@@ -113,6 +114,7 @@ export default function InstitucionalSerie() {
     ? [{ label: "Shapes de corpo", value: shapes }, ...baseCommon.filter((c) => !/shape|formato do corpo|corpo$/i.test(c.label))]
     : baseCommon;
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
+  const curatedText = s ? SERIES_TEXTS[s.name] : undefined;
   const good = useQualityImages(s?.images ?? []);
 
   return (
@@ -127,7 +129,12 @@ export default function InstitucionalSerie() {
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-primary">Série</p>
               <h1 className="mt-2 font-display text-4xl font-bold md:text-5xl">{s.name}</h1>
-              {lineText.map((t) => <p key={t} className="mt-4 text-background/70">{t}</p>)}
+              {curatedText ? curatedText.map((b, i) => (
+                <div key={`${b.heading ?? "p"}-${i}`}>
+                  {b.heading && <h2 className="mt-8 font-display text-lg font-semibold text-background">{b.heading}</h2>}
+                  <p className="mt-3 text-background/70">{b.body}</p>
+                </div>
+              )) : lineText.map((t) => <p key={t} className="mt-4 text-background/70">{t}</p>)}
               {common.length > 0 && (
                 <>
                   <h2 className="mt-10 text-xs uppercase tracking-[0.3em] text-background/50">Ficha técnica</h2>
