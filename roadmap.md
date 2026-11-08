@@ -40,6 +40,4 @@
 - [x] Adicionar ao catálogo B2B a opção "Somente com estoque"
 
 - [x] Retirar fotos rejeitadas das galerias F1, F0B Fênix e EC Plus do institucional
-
-## Em andamento
-- [ ] Retirar fotos 2, 5, 8, 9, 10 e 12 da galeria FC Mini do institucional
+- [x] Retirar fotos 2, 5, 8, 9, 10 e 12 da galeria FC Mini do institucional
