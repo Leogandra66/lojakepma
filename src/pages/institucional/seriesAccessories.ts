@@ -75,11 +75,22 @@ export const EC_PLUS_EXCLUDED_GALLERY_URLS = new Set([
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/106f549e-9a16-4456-86c1-c3c38017f27a/1780320450402-0-lj0sy8.jpg",
 ]);
 
+// Seleção FC Mini: retirar as fotos 2, 5, 8, 9, 10 e 12 da galeria exibida.
+export const FC_MINI_EXCLUDED_GALLERY_URLS = new Set([
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b899c7ab-013d-4837-a844-fd2e8460dbe7/1776563421619-1.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b899c7ab-013d-4837-a844-fd2e8460dbe7/1776563601558-0.jpg",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/b6c141d8-4285-4cf2-9546-15ee3001616f/1780943228313-0-9bacng.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/771f1652-7162-4dae-a78b-09de446309f6/1776737263220-0-1c2wsm.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/59016e11-4a38-49d6-948a-251442428c8e/1776995937189-0-sz7wja.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/59016e11-4a38-49d6-948a-251442428c8e/1776996020169-0-ucvwiu.jpg",
+]);
+
 // Exclusões por série: a curadoria de uma linha nunca afeta as demais.
 export const SERIES_EXCLUDED_GALLERY_URLS: Record<string, Set<string>> = {
   F1: F1_EXCLUDED_GALLERY_URLS,
   "F0B Fênix": F0B_FENIX_EXCLUDED_GALLERY_URLS,
   "EC Plus": EC_PLUS_EXCLUDED_GALLERY_URLS,
+  "FC Mini": FC_MINI_EXCLUDED_GALLERY_URLS,
 };
 
 export function applyGalleryCuration(seriesName: string, images: string[]): string[] {
