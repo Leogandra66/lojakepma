@@ -6,17 +6,17 @@ export type SeriesTextBlock = { heading?: string; body: string };
 export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
   "FC Mini": [
     {
-      body: `Ao pensar em guitarras compactas para viagem, geralmente se pensa em um som menor. Uma espécie de compromisso – guitarra menor = menos volume, timbre mais fraco, etc. Bem, isso acabou… superamos as desvantagens das guitarras menores e criamos uma série de guitarras de tamanho ¾ que produzem o timbre e o volume de uma guitarra de tamanho normal.`,
+      body: `Ao pensar em violões compactos para viagem, geralmente se pensa em um som menor. Uma espécie de compromisso – violão menor = menos volume, timbre mais fraco, etc. Bem, isso acabou… superamos as desvantagens dos violões menores e criamos uma série de violões de tamanho ¾ que produzem o timbre e o volume de um violão de tamanho normal.`,
     },
     {
-      body: `A nova guitarra Kepma FC Mini ¾ Cutaway, tecnologicamente avançada, oferece melhorias sonoras significativas para um instrumento de tamanho ¾, fazendo com que ela soe e toque como uma guitarra acústica de tamanho normal. E, por ser cutaway, você tem acesso total ao braço, podendo executar solos acústicos incríveis em toda a extensão do braço.`,
+      body: `O novo violão Kepma FC Mini ¾ Cutaway, tecnologicamente avançado, oferece melhorias sonoras significativas para um instrumento de tamanho ¾, fazendo com que ele soe e toque como um violão acústico de tamanho normal. E, por ser cutaway, você tem acesso total ao braço, podendo executar solos acústicos incríveis em toda a extensão do braço.`,
     },
     {
-      body: `Existem diversas inovações e características exclusivas que diferenciam essas guitarras das demais... além do preço/valor. A Kepma é uma empresa focada em tecnologia, com o objetivo de combinar ciência e arte para produzir os melhores instrumentos do mundo.`,
+      body: `Existem diversas inovações e características exclusivas que diferenciam esses violões dos demais... além do preço/valor. A Kepma é uma empresa focada em tecnologia, com o objetivo de combinar ciência e arte para produzir os melhores instrumentos do mundo.`,
     },
     {
       heading: `Primeiro, o tampo sólido…`,
-      body: `Já mencionamos que esta guitarra tem um tampo sólido torreficado? O processo exclusivo de torrefação da Kepma utiliza uma combinação de calor e umidade controlados durante um determinado período para extrair a umidade, os óleos e a seiva das estruturas celulares da madeira para a superfície, que é então lixada. Não nos limitamos a "cozinhar" e "queimar" a madeira como outros fabricantes — este processo adiciona resistência e estabilidade extras aos tampos, tornando-os menos reativos às mudanças nas condições atmosféricas. Cada tampo sólido da Kepma passa por este processo altamente controlado, resultando em tampos que reagem melhor à vibração das cordas, são mais "vibrantes" e definitivamente mais estáveis.`,
+      body: `Já mencionamos que este violão tem um tampo sólido torreficado? O processo exclusivo de torrefação da Kepma utiliza uma combinação de calor e umidade controlados durante um determinado período para extrair a umidade, os óleos e a seiva das estruturas celulares da madeira para a superfície, que é então lixada. Não nos limitamos a "cozinhar" e "queimar" a madeira como outros fabricantes — este processo adiciona resistência e estabilidade extras aos tampos, tornando-os menos reativos às mudanças nas condições atmosféricas. Cada tampo sólido da Kepma passa por este processo altamente controlado, resultando em tampos que reagem melhor à vibração das cordas, são mais "vibrantes" e definitivamente mais estáveis.`,
     },
     {
       heading: `Design exclusivo de braço aparafusado em 4 pontos redesenhado`,
@@ -35,7 +35,7 @@ export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
     },
     {
       heading: `Topo mais fino`,
-      body: `A série FC Mini utiliza um tampo de abeto maciço mais fino, com 2,75 mm de espessura. Essa redução na espessura facilita a vibração em um único estágio no tampo, aprimorando significativamente as frequências graves, que normalmente são um desafio para guitarras menores… um som de guitarra grande em uma guitarra de tamanho ¾.`,
+      body: `A série FC Mini utiliza um tampo de abeto maciço mais fino, com 2,75 mm de espessura. Essa redução na espessura facilita a vibração em um único estágio no tampo, aprimorando significativamente as frequências graves, que normalmente são um desafio para violões menores… um som de violão grande em um violão de tamanho ¾.`,
     },
     {
       heading: `Tecnologia Arch Back`,

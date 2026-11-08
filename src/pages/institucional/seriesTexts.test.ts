@@ -19,7 +19,8 @@ describe("curated institutional series texts", () => {
 
   it("keeps the FC Mini technical figures stated by the brand", () => {
     const all = fcMini.map((b) => `${b.heading ?? ""} ${b.body}`).join(" ");
-    expect(all).toContain("Ao pensar em guitarras compactas para viagem");
+    expect(all).toContain("Ao pensar em violões compactos para viagem");
+    expect(all.toLowerCase()).not.toContain("guitarra");
     expect(all).toContain("2,75 mm");
     expect(all).toContain("0,052 mm");
     expect(all).toContain("355 mm");
