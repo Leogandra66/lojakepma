@@ -38,12 +38,15 @@ export function InstitucionalFabrica() {
 }
 
 export function InstitucionalArtistas() {
+  const videos = ["MbO_cLrgD9A", "0BgPGJqk6Vk", "ipZRrvkYSGw", "MggRYVv_2Pk"];
   return (
     <InstitutionalLayout title="Artistas">
-      <Hero kicker="Artistas" title="Quem toca Kepma" text="Em breve, os artistas que levam a Kepma aos palcos do Brasil e do mundo." />
-      <section className="container grid gap-6 pb-24 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex aspect-[3/4] items-end rounded-3xl border border-dashed border-background/20 p-6 text-background/40">Artista em breve</div>
+      <Hero kicker="Artistas" title="Quem toca Kepma" text="Artistas que levam a Kepma aos palcos do Brasil e do mundo." />
+      <section className="container grid gap-8 pb-24 lg:grid-cols-2">
+        {videos.map((id) => (
+          <div key={id}>
+            <YouTube id={id} />
+          </div>
         ))}
       </section>
     </InstitutionalLayout>
