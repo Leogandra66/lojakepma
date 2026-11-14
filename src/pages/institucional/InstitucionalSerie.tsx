@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { InstitutionalLayout, useSeries } from "./shared";
 import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
 import { SERIES_TEXTS } from "./seriesTexts";
@@ -65,35 +66,35 @@ function Gallery({ images, name }: { images: string[]; name: string }) {
   if (!n) return <p className="text-sm text-background/50">Fotos em breve.</p>;
 
   return (
-    <div>
-      <div className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-background/5">
-        <button onClick={() => setZoom(true)} className="h-full w-full cursor-zoom-in" aria-label="Ampliar imagem">
-          <img src={images[i]} alt={name} className="h-full w-full object-contain p-6" />
-        </button>
+    <div className="w-full min-w-0 max-w-full">
+      <div className="group relative aspect-square w-full overflow-hidden rounded-lg bg-background/5">
+        <Button variant="ghost" onClick={() => setZoom(true)} className="h-full w-full cursor-zoom-in p-0 hover:bg-transparent" aria-label="Ampliar imagem">
+          <img src={images[i]} alt={name} className="h-full w-full min-w-0 object-contain p-3 sm:p-6" />
+        </Button>
         <ZoomIn className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-background/50" />
         {n > 1 && (
           <>
-            <button onClick={() => go(-1)} aria-label="Anterior" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-foreground/60 p-2 text-background opacity-0 transition group-hover:opacity-100"><ChevronLeft className="h-5 w-5" /></button>
-            <button onClick={() => go(1)} aria-label="Próxima" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-foreground/60 p-2 text-background opacity-0 transition group-hover:opacity-100"><ChevronRight className="h-5 w-5" /></button>
+            <Button variant="ghost" size="icon" onClick={() => go(-1)} aria-label="Anterior" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-foreground/60 text-background hover:bg-foreground/80 md:opacity-0 md:group-hover:opacity-100"><ChevronLeft /></Button>
+            <Button variant="ghost" size="icon" onClick={() => go(1)} aria-label="Próxima" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-foreground/60 text-background hover:bg-foreground/80 md:opacity-0 md:group-hover:opacity-100"><ChevronRight /></Button>
           </>
         )}
       </div>
       {n > 1 && (
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain px-1 py-1">
           {images.map((src, idx) => (
-            <button key={src} onClick={() => setI(idx)} aria-label={`Foto ${idx + 1}`}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-background/5 transition ${idx === i ? "ring-2 ring-primary" : "opacity-50 hover:opacity-100"}`}>
+            <Button variant="ghost" key={src} onClick={() => setI(idx)} aria-label={`Foto ${idx + 1}`} aria-pressed={idx === i}
+              className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-background/5 p-0 hover:bg-background/10 sm:h-16 sm:w-16 ${idx === i ? "ring-2 ring-primary" : "opacity-50 hover:opacity-100"}`}>
               <img src={src} alt="" loading="lazy" className="h-full w-full object-contain p-1" />
-            </button>
+            </Button>
           ))}
         </div>
       )}
       {zoom && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/95 p-4" onClick={() => setZoom(false)}>
-          <button aria-label="Fechar" className="absolute right-5 top-5 text-background/70 hover:text-background"><X className="h-7 w-7" /></button>
-          {n > 1 && <button onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Anterior" className="absolute left-4 text-background/70 hover:text-background"><ChevronLeft className="h-10 w-10" /></button>}
-          <img src={images[i]} alt={name} onClick={(e) => e.stopPropagation()} className="max-h-[92vh] max-w-[92vw] object-contain" />
-          {n > 1 && <button onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Próxima" className="absolute right-4 text-background/70 hover:text-background"><ChevronRight className="h-10 w-10" /></button>}
+          <Button variant="ghost" size="icon" aria-label="Fechar" onClick={() => setZoom(false)} className="absolute right-3 top-3 text-background/70 hover:bg-background/10 hover:text-background"><X /></Button>
+          {n > 1 && <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Anterior" className="absolute left-2 z-10 bg-foreground/60 text-background/70 hover:bg-background/10 hover:text-background"><ChevronLeft /></Button>}
+          <img src={images[i]} alt={name} onClick={(e) => e.stopPropagation()} className="max-h-[calc(100dvh-5rem)] max-w-full object-contain" />
+          {n > 1 && <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Próxima" className="absolute right-2 z-10 bg-foreground/60 text-background/70 hover:bg-background/10 hover:text-background"><ChevronRight /></Button>}
         </div>
       )}
     </div>
@@ -119,16 +120,16 @@ export default function InstitucionalSerie() {
 
   return (
     <InstitutionalLayout title={s ? `Série ${s.name}` : "Série"}>
-      <div className="container max-w-6xl py-16">
+      <div className="container w-full min-w-0 max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
         <Link to="/institucional#series" className="text-sm text-background/60 hover:text-background">← Todas as séries</Link>
         {isLoading ? <p className="mt-8 text-background/60">Carregando…</p> : !s ? <p className="mt-8">Série não encontrada.</p> : (
-          <section className="mt-10 grid gap-12 md:grid-cols-2 md:items-start">
-            <div className="md:sticky md:top-24">
-              {good === null ? <div className="aspect-square w-full animate-pulse rounded-2xl bg-background/5" /> : <Gallery images={good} name={s.name} />}
+          <section className="mt-6 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 md:mt-10 md:grid-cols-2 md:items-start md:gap-12">
+            <div className="w-full min-w-0 max-w-full md:sticky md:top-24">
+              {good === null ? <div className="aspect-square w-full animate-pulse rounded-lg bg-background/5" /> : <Gallery images={good} name={s.name} />}
             </div>
-            <div>
+            <div className="min-w-0 [overflow-wrap:anywhere]">
               <p className="text-xs uppercase tracking-[0.4em] text-primary">Série</p>
-              <h1 className="mt-2 font-display text-4xl font-bold md:text-5xl">{s.name}</h1>
+              <h1 className="mt-2 font-display text-3xl font-bold sm:text-4xl md:text-5xl">{s.name}</h1>
               {curatedText ? curatedText.map((b, i) => (
                 <div key={`${b.heading ?? "p"}-${i}`}>
                   {b.heading && <h2 className="mt-8 font-display text-lg font-semibold text-background">{b.heading}</h2>}
@@ -140,9 +141,9 @@ export default function InstitucionalSerie() {
                   <h2 className="mt-10 text-xs uppercase tracking-[0.3em] text-background/50">Ficha técnica</h2>
                   <dl className="mt-3 divide-y divide-background/10 border-y border-background/10">
                     {common.map((c) => (
-                      <div key={c.label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
-                        <dt className="text-background/50">{c.label}</dt>
-                        <dd>{c.value}</dd>
+                      <div key={c.label} className="grid min-w-0 grid-cols-1 gap-1 py-3 text-sm sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-4">
+                        <dt className="min-w-0 text-background/50">{c.label}</dt>
+                        <dd className="min-w-0">{c.value}</dd>
                       </div>
                     ))}
                   </dl>

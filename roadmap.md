@@ -42,3 +42,4 @@
 - [x] Retirar fotos rejeitadas das galerias F1, F0B Fênix e EC Plus do institucional
 - [x] Retirar fotos 2, 5, 8, 9, 10 e 12 da galeria FC Mini do institucional
 - [x] Substituir o texto editorial da série FC Mini no institucional
+- [x] Ajustar e verificar as páginas das séries institucionais no celular, sem alterar outras páginas
