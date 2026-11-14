@@ -15,6 +15,7 @@ import f0b3 from "@/assets/f0b-fenix-3.webp.asset.json";
 import f0b4 from "@/assets/f0b-fenix-4.webp.asset.json";
 import f0b5 from "@/assets/f0b-fenix-5.webp.asset.json";
 import f0b6 from "@/assets/f0b-fenix-6.webp.asset.json";
+import kepmaBag from "@/assets/kepma-bag.webp.asset.json";
 import f1D from "@/assets/f1-dreadnought-oficial.webp.asset.json";
 import f1Ga from "@/assets/f1-grand-auditorium-oficial.jpg.asset.json";
 import f1OmBs from "@/assets/f1-orchestra-sunburst.jpg.asset.json";
@@ -27,7 +28,9 @@ export const EXTRA_SERIES_IMAGES: Record<string, string[]> = {
   A1: [a1Ga.url, a1Om.url],
   B1: [b1D.url],
   G1S: [g1sGaCores.url, g1sDWa.url, g1sDN.url, g1sDNat.url],
-  "F0B Fênix": [f0b1.url, f0b2.url, f0b3.url, f0b4.url, f0b5.url, f0b6.url],
+  "F0B Fênix": [f0b1.url, f0b2.url, f0b3.url, f0b4.url, f0b5.url, f0b6.url, kepmaBag.url],
+  "F0 Pro": [kepmaBag.url],
+  "EC Plus": [kepmaBag.url],
   F1: [f1D.url, f1Ga.url, f1OmBs.url, f1OmN.url],
 };
 

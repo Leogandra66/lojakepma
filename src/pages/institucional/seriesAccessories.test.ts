@@ -37,7 +37,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(9);
     expect(applyGalleryCuration("F1", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES.F1, ...retained]);
-    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual([...EXTRA_SERIES_IMAGES["F0 Pro"], ...removed]);
   });
 
   it("removes the six selected F0B Fênix photos without excluding them from other series", () => {
@@ -47,7 +47,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(9);
     expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES["F0B Fênix"], ...retained]);
-    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual([...EXTRA_SERIES_IMAGES["F0 Pro"], ...removed]);
   });
 
   it("removes the five selected EC Plus photos without excluding them from other series", () => {
@@ -61,8 +61,8 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
       "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218304473-0.png",
     ];
     expect(removed).toHaveLength(5);
-    expect(applyGalleryCuration("EC Plus", [...removed, ...retained])).toEqual(retained);
-    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+    expect(applyGalleryCuration("EC Plus", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES["EC Plus"], ...retained]);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual([...EXTRA_SERIES_IMAGES["F0 Pro"], ...removed]);
   });
 
   it("removes the six selected FC Mini photos without excluding them from other series", () => {
@@ -77,7 +77,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
     ];
     expect(removed).toHaveLength(6);
     expect(applyGalleryCuration("FC Mini", [...removed, ...retained])).toEqual(retained);
-    expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
+    expect(applyGalleryCuration("F0 Pro", removed)).toEqual([...EXTRA_SERIES_IMAGES["F0 Pro"], ...removed]);
   });
 
   it("A1, B1 and F1 list the three body shapes", () => {
