@@ -63,12 +63,15 @@ export const F1_EXCLUDED_GALLERY_URLS = new Set([
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/dc1b5cf2-8c27-4f0a-a2de-38d46d51c5bf/1776995589524-0-08t6jj.webp",
 ]);
 
-// Seleção F0B Fênix: retirar as fotos 3, 4, 7, 8, 9 e 10 da galeria exibida.
+// Seleção F0B Fênix: retirar as fotos 3, 4, 7, 8, 9 e 10; depois, com as 6 fotos tratadas no início, retirar também 7, 8 e 10.
 export const F0B_FENIX_EXCLUDED_GALLERY_URLS = new Set([
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/6f68123c-75b5-416e-902e-a0bacea315d7/1776689573367-0.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/103c8fb1-f1d4-427e-b1be-fcd56fa32bfa/1778615694398-0-dq5yr1.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/103c8fb1-f1d4-427e-b1be-fcd56fa32bfa/1778615571932-0-gt7bs3.jpg",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463326000-0-pvbgny.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463255862-0-4y1fa7.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463868707-0-y1u8pp.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463661785-1-x731u5.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/0529e3a9-4c63-4526-b7df-2b9cf07d03e5/1777463362174-0-u2ejh1.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/6f68123c-75b5-416e-902e-a0bacea315d7/1777463425712-0-9rmtee.webp",
 ]);
