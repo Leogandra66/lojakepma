@@ -86,6 +86,9 @@ export const F0B_FENIX_EXCLUDED_GALLERY_URLS = new Set([
 
 // Seleção EC Plus: retirar as fotos 2, 4, 6, 8 e 11 da galeria exibida.
 export const EC_PLUS_EXCLUDED_GALLERY_URLS = new Set([
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/106f549e-9a16-4456-86c1-c3c38017f27a/1780320411212-0-0pqty4.jpg",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/f10e3015-e9b9-4daa-928d-8a26fd5b84d4/1780943008989-0-b7gl7d.webp",
+  "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/93b926b8-e66d-462e-8a0f-5712646646ff/1779399848940-0-el6h0t.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/a6b19162-a230-4409-9882-9ddc0c0f9cd6/1776218246584-0.png",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/9490a176-c6db-41e9-a2f2-aeec095a9e53/1780942772681-0-uj60pq.webp",
   "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/ef1cd4aa-3b8a-4e9e-b890-d670d0e620e2/1779398964888-0-rwld8l.webp",
