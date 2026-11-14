@@ -49,7 +49,7 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
       "https://futrahzhqdvqwvuxlbqf.supabase.co/storage/v1/object/public/product-images/872d0f8f-18f6-49ef-adb6-9b8fb91ed0e7/1777463661785-1-x731u5.webp",
     ];
     expect(removed).toHaveLength(6);
-    expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual(retained);
+    expect(applyGalleryCuration("F0B Fênix", [...removed, ...retained])).toEqual([...EXTRA_SERIES_IMAGES["F0B Fênix"], ...retained]);
     expect(applyGalleryCuration("F0 Pro", removed)).toEqual(removed);
   });
 
