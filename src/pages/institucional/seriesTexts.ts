@@ -31,6 +31,33 @@ export function applyNeckJointNote(rows: Spec[]): Spec[] {
 // Descrição técnica curada por série (exibida somente na página institucional da série,
 // no lugar da descrição vinda do catálogo). Não altera produtos na loja B2C, no B2B nem no Bling.
 export const SERIES_DESCRIPTIONS: Record<string, string> = {
+  // Os formatos da A1 são exibidos pela linha "Shapes de corpo" já curada para a série.
+  A1: `Tampo: Sitka Spruce maciço de grau AAA (quarter sawn selecionado - serrado)
+Fundo & lados: Mogno africano maciço de grau AAA
+Sistema de travessas: X escalopadas
+Espessura do tampo: 3,2 mm ± 0,2 mm
+Braço: Mogno africano / formato C
+Usinagem do braço: Todo usinado por máquina CNC
+Reforço do braço: Hastes duplas de fibra de carbono
+Tecnologia: Trastes PLEK®
+Escala & ponte: Ébano africano
+Ponte & pinos da ponte: Ébano
+Marcações da escala: Golfinhos em madrepérola
+Filetes: Maple com rosewood
+Roseta: Madrepérola
+Tarraxas: Kepma advanced douradas 1:18
+Pestana & rastilho: TUSQ® (marfim artificial)
+Cordas: Elixir® Acoustic 80/20 Bronze com NANOWEB 012-053
+Tensor: Ajustável de 2 vias
+Headstock Overlay: Ébano de 2 mm
+Inlay do headstock: Madrepérola
+Comprimento de escala: 647,25 mm
+Largura da pestana: 43 mm
+Largura no 14º traste: 54 mm
+Número de trastes: 20
+Material do traste: Albata (1,0 × 2,0 mm)
+Estojo: Estojo rígido de luxo TKL
+Kit de boas-vindas: Gratuito — pano de microfibra + chave Allen + 2 palhetas + 2 pinos de ponte`,
   "F0B Fênix": `Corpo: Grand Auditorium
 Top: HTT AA Stika Spruce Maciço
 Fundo & lados: Laminado de mogno africano
