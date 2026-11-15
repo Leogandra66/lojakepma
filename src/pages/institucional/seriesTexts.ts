@@ -53,6 +53,28 @@ Cordas: Wild bee Phosphor Bronze 012
 Tarraxas: Diecast cromadas
 Eletrônica: KEPMA K10 Pro com efeitos e App - Kepma K11
 Gig Bag: Kepma Gig bag`,
+  "F0 Pro": `Corpo: Grand Auditorium
+Top: HTT AA Stika Spruce Maciço
+Fundo & lados: Laminado de mogno africano
+Braço: Mogno C/shape
+Acabamento: Smooth Satin - Fosco
+Headstock Overlay: HPL
+Pestana & rastilho: Osso com compensador triplo
+Escala & ponte: Rosewood
+Tecnologia: Plek
+Comprimento de escala: 647.25mm
+Bracing: X Bracing
+Roseta: ABS
+Number of Frets: 20
+Marcações da escala: Acrylic
+Filetes: ABS preto e branco
+Pinos de ponte: ABS
+Tensor: Dupla ação
+Finish: Tampo Brilhante e fundo & lados foscos
+Escudo: Tortoise
+Cordas: D'Addario XS
+Tarraxas: Diecast cromadas
+Gig Bag: Kepma Deluxe Bag`,
 };
 
 export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {

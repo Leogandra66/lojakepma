@@ -61,6 +61,21 @@ describe("curated institutional series descriptions", () => {
     expect(f0b.split("\n")).not.toContain(NECK_JOINT_NOTE);
   });
 
+  it("states the F0 Pro specifications given by the brand", () => {
+    const f0pro = SERIES_DESCRIPTIONS["F0 Pro"];
+    expect(f0pro).toBeDefined();
+    const lines = f0pro.split("\n");
+    expect(lines).toContain("Corpo: Grand Auditorium");
+    expect(lines).toContain("Acabamento: Smooth Satin - Fosco");
+    expect(lines).toContain("Tecnologia: Plek");
+    expect(lines).toContain("Comprimento de escala: 647.25mm");
+    expect(lines).toContain("Cordas: D'Addario XS");
+    expect(lines).toContain("Gig Bag: Kepma Deluxe Bag");
+    expect(lines).toHaveLength(22);
+    expect(f0pro).not.toContain("fudo");
+    expect(f0pro).not.toContain(NECK_JOINT_NOTE);
+  });
+
   it("does not override descriptions of other series", () => {
     expect(SERIES_DESCRIPTIONS["FC Mini"]).toBeUndefined();
     expect(SERIES_DESCRIPTIONS["EC Plus"]).toBeUndefined();
