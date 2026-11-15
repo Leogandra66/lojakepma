@@ -76,6 +76,31 @@ describe("curated institutional series descriptions", () => {
     expect(f0pro).not.toContain(NECK_JOINT_NOTE);
   });
 
+  it("states the F1 specifications given by the brand", () => {
+    const f1 = SERIES_DESCRIPTIONS.F1;
+    expect(f1).toBeDefined();
+    const lines = f1.split("\n");
+    expect(lines).toHaveLength(15);
+    expect(lines).toContain("Tampo: Abeto Sitka maciço de grau AA (quarter sawn selecionado)");
+    expect(lines).toContain("Espessura do tampo: 3,2 mm ± 0,2 mm");
+    expect(lines).toContain("Fundo & lados: Mogno africano laminado");
+    expect(lines).toContain("Sistema de travessas: Padrão X recortado");
+    expect(lines).toContain("Braço: Mogno africano / formato C");
+    expect(lines).toContain("Usinagem do braço: Todo usinado por máquina CNC");
+    expect(lines).toContain("Escala & ponte: Rosewood");
+    expect(lines).toContain("Tecnologia: Plek");
+    expect(lines).toContain("Pestana & rastilho: Osso");
+    expect(lines).toContain("Comprimento de escala: 647,25 mm");
+    expect(lines).toContain("Largura da porca: 43 mm");
+    expect(lines).toContain("Largura no 14º traste: 54 mm");
+    expect(lines).toContain("Número de trastes: 20");
+    expect(lines).toContain("Material do traste: Albata (1,0 × 2,0 mm)");
+    expect(lines).toContain("Tarraxas: Fundidas sob pressão KEPMA de alta qualidade");
+    expect(f1).not.toContain("Tarrachas");
+    // O encaixe do braço entra automaticamente na linha "Braço", não como parágrafo solto.
+    expect(f1.split("\n")).not.toContain(NECK_JOINT_NOTE);
+  });
+
   it("does not override descriptions of other series", () => {
     expect(SERIES_DESCRIPTIONS["FC Mini"]).toBeUndefined();
     expect(SERIES_DESCRIPTIONS["EC Plus"]).toBeUndefined();

@@ -75,6 +75,22 @@ Escudo: Tortoise
 Cordas: D'Addario XS
 Tarraxas: Diecast cromadas
 Gig Bag: Kepma Deluxe Bag`,
+  // O "Corpo" da F1 é exibido pela linha "Shapes de corpo" (seriesAccessories.SERIES_BODY_SHAPES).
+  F1: `Tampo: Abeto Sitka maciço de grau AA (quarter sawn selecionado)
+Espessura do tampo: 3,2 mm ± 0,2 mm
+Fundo & lados: Mogno africano laminado
+Sistema de travessas: Padrão X recortado
+Braço: Mogno africano / formato C
+Usinagem do braço: Todo usinado por máquina CNC
+Escala & ponte: Rosewood
+Tecnologia: Plek
+Pestana & rastilho: Osso
+Comprimento de escala: 647,25 mm
+Largura da porca: 43 mm
+Largura no 14º traste: 54 mm
+Número de trastes: 20
+Material do traste: Albata (1,0 × 2,0 mm)
+Tarraxas: Fundidas sob pressão KEPMA de alta qualidade`,
 };
 
 export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {

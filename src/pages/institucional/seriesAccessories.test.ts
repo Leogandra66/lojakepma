@@ -78,7 +78,8 @@ describe("institutional gallery curation (case TKL, sem bag)", () => {
   });
 
   it("A1, B1 and F1 list the three body shapes", () => {
-    for (const k of ["A1", "B1", "F1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
+    for (const k of ["A1", "B1"]) expect(SERIES_BODY_SHAPES[k]).toBe("Dreadnought, Grand Auditorium e Orchestra");
+    expect(SERIES_BODY_SHAPES.F1).toBe("Grand Auditorium (GA), Dreadnought (D) e Orchestra (OM)");
   });
 
   it("G1S lists Grand Auditorium and Dreadnought in colors N, BS and WA, with four curated photos", () => {

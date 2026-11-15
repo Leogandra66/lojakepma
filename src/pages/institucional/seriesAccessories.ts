@@ -43,7 +43,7 @@ export const EXTRA_SERIES_IMAGES: Record<string, string[]> = {
 export const SERIES_BODY_SHAPES: Record<string, string> = {
   A1: "Dreadnought, Grand Auditorium e Orchestra",
   B1: "Dreadnought, Grand Auditorium e Orchestra",
-  F1: "Dreadnought, Grand Auditorium e Orchestra",
+  F1: "Grand Auditorium (GA), Dreadnought (D) e Orchestra (OM)",
   G1S: "Grand Auditorium e Dreadnought, nas cores N, BS e WA",
 };
 
