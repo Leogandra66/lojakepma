@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstitutionalLayout, useSeries } from "./shared";
 import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
-import { SERIES_TEXTS } from "./seriesTexts";
+import { SERIES_DESCRIPTIONS, SERIES_TEXTS } from "./seriesTexts";
 
 type Spec = { label: string; value: string };
 
@@ -106,7 +106,13 @@ export default function InstitucionalSerie() {
   const { data = [], isLoading } = useSeries();
   const s = data.find((x) => x.slug === slug);
 
-  const parsed = (s?.products ?? []).map((p) => ({ p, ...parseDescription(p.description) }));
+  // Descrição curada da série (institucional apenas) substitui a descrição do catálogo
+  const curatedDescription = s ? SERIES_DESCRIPTIONS[s.name] : undefined;
+  const parsed = (
+    curatedDescription
+      ? [curatedDescription]
+      : (s?.products ?? []).map((p) => p.description ?? "")
+  ).map((d) => parseDescription(d));
   const baseCommon: Spec[] = parsed.length
     ? parsed[0].specs.filter((sp) => parsed.every((x) => x.specs.some((o) => o.label === sp.label && o.value === sp.value)))
     : [];

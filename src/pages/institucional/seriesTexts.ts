@@ -3,6 +3,34 @@
 
 export type SeriesTextBlock = { heading?: string; body: string };
 
+// Descrição técnica curada por série (exibida somente na página institucional da série,
+// no lugar da descrição vinda do catálogo). Não altera produtos na loja B2C, no B2B nem no Bling.
+export const SERIES_DESCRIPTIONS: Record<string, string> = {
+  "F0B Fênix": `Corpo: Grand Auditorium
+Top: HTT AA Stika Spruce Maciço
+Fundo & lados: Laminado de mogno africano
+Braço: Mogno C/shape
+Braço parafusado (Kepma developed NC neck joint)
+Acabamento: Fosco - Verniz a base de água ultrafino
+Headstock Overlay: HPL
+Pestana & rastilho: Osso com compensador triplo
+Escala & ponte: Rosewood
+Comprimento de escala: 647.25mm
+Bracing: X Bracing
+Roseta: ABS
+Number of Frets: 20
+Marcações da escala: Acrylic
+Filetes: ABS preto e branco
+Pinos de ponte: ABS
+Tensor: Dupla ação
+Finish: Tampo Brilhante e fundo & lados foscos
+Escudo: Tortoise
+Cordas: Wild bee Phosphor Bronze 012
+Tarraxas: Diecast cromadas
+Eletrônica: KEPMA K10 Pro com efeitos e App - Kepma K11
+Gig Bag: Kepma Gig bag`,
+};
+
 export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
   "FC Mini": [
     {
