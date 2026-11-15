@@ -44,3 +44,4 @@
 - [x] Substituir o texto editorial da série FC Mini no institucional
 - [x] Ajustar e verificar as páginas das séries institucionais no celular, sem alterar outras páginas
 - [x] Trocar a descrição da série F0B Fênix no institucional pela ficha técnica curada
+- [x] Complementar a especificação Braço com o braço parafusado NC em todas as séries do institucional

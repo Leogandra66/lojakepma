@@ -3,6 +3,31 @@
 
 export type SeriesTextBlock = { heading?: string; body: string };
 
+export type Spec = { label: string; value: string };
+
+// Diferenciação de construção dos violões Kepma, complementando a especificação do braço
+// em todas as séries do institucional.
+export const NECK_JOINT_NOTE = "Braço parafusado (Kepma developed NC neck joint)";
+
+export function applyNeckJointNote(rows: Spec[]): Spec[] {
+  const i = rows.findIndex((r) => /^bra[çc]o$/i.test(r.label.trim()));
+  if (i === -1) {
+    const anchor = rows.findIndex((r) => /fundo\s*&\s*lados/i.test(r.label));
+    const at = anchor === -1 ? 0 : anchor + 1;
+    return [...rows.slice(0, at), { label: "Braço", value: NECK_JOINT_NOTE }, ...rows.slice(at)];
+  }
+  const material = rows[i].value
+    .replace(/parafusado\s*\([^)]*\)/gi, "")
+    .replace(/[\s—–-]+$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return [
+    ...rows.slice(0, i),
+    { ...rows[i], value: material ? `${material} — ${NECK_JOINT_NOTE}` : NECK_JOINT_NOTE },
+    ...rows.slice(i + 1),
+  ];
+}
+
 // Descrição técnica curada por série (exibida somente na página institucional da série,
 // no lugar da descrição vinda do catálogo). Não altera produtos na loja B2C, no B2B nem no Bling.
 export const SERIES_DESCRIPTIONS: Record<string, string> = {
@@ -10,7 +35,6 @@ export const SERIES_DESCRIPTIONS: Record<string, string> = {
 Top: HTT AA Stika Spruce Maciço
 Fundo & lados: Laminado de mogno africano
 Braço: Mogno C/shape
-Braço parafusado (Kepma developed NC neck joint)
 Acabamento: Fosco - Verniz a base de água ultrafino
 Headstock Overlay: HPL
 Pestana & rastilho: Osso com compensador triplo

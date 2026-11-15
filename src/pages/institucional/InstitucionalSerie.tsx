@@ -4,9 +4,7 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstitutionalLayout, useSeries } from "./shared";
 import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
-import { SERIES_DESCRIPTIONS, SERIES_TEXTS } from "./seriesTexts";
-
-type Spec = { label: string; value: string };
+import { applyNeckJointNote, SERIES_DESCRIPTIONS, SERIES_TEXTS, type Spec } from "./seriesTexts";
 
 // Só exibe fotos com resolução suficiente para uma boa apresentação
 const MIN_SIDE = 900;
@@ -117,9 +115,9 @@ export default function InstitucionalSerie() {
     ? parsed[0].specs.filter((sp) => parsed.every((x) => x.specs.some((o) => o.label === sp.label && o.value === sp.value)))
     : [];
   const shapes = s ? SERIES_BODY_SHAPES[s.name] : undefined;
-  const common: Spec[] = shapes
+  const common: Spec[] = applyNeckJointNote(shapes
     ? [{ label: "Shapes de corpo", value: shapes }, ...baseCommon.filter((c) => !/shape|formato do corpo|corpo$/i.test(c.label))]
-    : baseCommon;
+    : baseCommon);
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
   const curatedText = s ? SERIES_TEXTS[s.name] : undefined;
   const good = useQualityImages(s?.images ?? []);
