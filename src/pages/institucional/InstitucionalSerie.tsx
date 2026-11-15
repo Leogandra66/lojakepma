@@ -155,7 +155,7 @@ export default function InstitucionalSerie() {
                     <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg bg-background/5">
                       <iframe
                         className="h-full w-full"
-                        src="https://www.youtube.com/embed/wUuv9AU51TM?start=213&rel=0"
+                        src="https://www.youtube.com/embed/wUuv9AU51TM?start=0&rel=0"
                         title="Vídeo da série F1 Kepma"
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
