@@ -59,7 +59,7 @@ export function InstitutionalLayout({ children, title }: { children: ReactNode; 
               <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => isActive ? "text-background" : "text-background/60 hover:text-background transition-colors"}>{l.label}</NavLink>
             ))}
           </nav>
-          <Link to="/" className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Ir para a loja</Link>
+          <a href="https://loja.kepmabrasil.com.br" className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Ir para a loja</a>
         </div>
         <nav className="container flex gap-5 overflow-x-auto pb-3 text-sm md:hidden">
           {links.map((l) => (
@@ -69,7 +69,7 @@ export function InstitutionalLayout({ children, title }: { children: ReactNode; 
       </header>
       <main className="pt-24 md:pt-16">{children}</main>
       <footer className="border-t border-background/10 py-10 text-center text-sm text-background/50">
-        © {new Date().getFullYear()} Kepma Brasil · <Link to="/" className="underline">Loja oficial</Link>
+        © {new Date().getFullYear()} Kepma Brasil · <a href="https://loja.kepmabrasil.com.br" className="underline">Loja oficial</a>
       </footer>
     </div>
   );
