@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyNeckJointNote, NECK_JOINT_NOTE, SERIES_DESCRIPTIONS, SERIES_TEXTS } from "./seriesTexts";
+import { applyNeckJointNote, NECK_JOINT_NOTE, SERIES_DESCRIPTIONS, SERIES_TEXTS, SERIES_VIDEOS } from "./seriesTexts";
 
 describe("curated institutional series texts", () => {
   const fcMini = SERIES_TEXTS["FC Mini"];
@@ -137,5 +137,28 @@ describe("neck joint complement on every institutional series", () => {
     ]);
     expect(rows.map((r) => r.label)).toEqual(["Corpo", "Fundo & lados", "Braço", "Acabamento"]);
     expect(rows[2].value).toBe(NECK_JOINT_NOTE);
+  });
+});
+
+describe("institutional series videos", () => {
+  it("plays the B1 video from the beginning below the spec sheet", () => {
+    expect(SERIES_VIDEOS["B1"]).toEqual({
+      id: "w9hKxSY0qgI",
+      start: 0,
+      title: "Vídeo da série B1 Kepma",
+    });
+  });
+
+  it("keeps the F1 video starting from zero", () => {
+    expect(SERIES_VIDEOS["F1"].id).toBe("wUuv9AU51TM");
+    expect(SERIES_VIDEOS["F1"].start).toBe(0);
+  });
+
+  it("only lists curated series with a usable youtube id", () => {
+    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["B1", "F1"]);
+    for (const v of Object.values(SERIES_VIDEOS)) {
+      expect(v.id).toMatch(/^[A-Za-z0-9_-]{11}$/);
+      expect(v.start).toBeGreaterThanOrEqual(0);
+    }
   });
 });

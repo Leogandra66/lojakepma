@@ -164,3 +164,14 @@ export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
     },
   ],
 };
+
+/**
+ * Vídeos institucionais exibidos logo abaixo da ficha técnica da série.
+ * `start` é o segundo inicial do vídeo; 0 significa começar do zero.
+ */
+export type SeriesVideo = { id: string; start: number; title: string };
+
+export const SERIES_VIDEOS: Record<string, SeriesVideo> = {
+  "B1": { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
+  "F1": { id: "wUuv9AU51TM", start: 0, title: "Vídeo da série F1 Kepma" },
+};

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstitutionalLayout, useSeries } from "./shared";
 import { CURATED_URLS, SERIES_BODY_SHAPES } from "./seriesAccessories";
-import { applyNeckJointNote, SERIES_DESCRIPTIONS, SERIES_TEXTS, type Spec } from "./seriesTexts";
+import { applyNeckJointNote, SERIES_DESCRIPTIONS, SERIES_TEXTS, SERIES_VIDEOS, type Spec } from "./seriesTexts";
 
 // Só exibe fotos com resolução suficiente para uma boa apresentação
 const MIN_SIDE = 900;
@@ -121,6 +121,8 @@ export default function InstitucionalSerie() {
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
   const curatedText = s ? SERIES_TEXTS[s.name] : undefined;
   const good = useQualityImages(s?.images ?? []);
+  // Vídeo institucional da série, exibido abaixo da ficha técnica
+  const video = s ? SERIES_VIDEOS[s.name] : undefined;
 
   return (
     <InstitutionalLayout title={s ? `Série ${s.name}` : "Série"}>
@@ -151,12 +153,12 @@ export default function InstitucionalSerie() {
                       </div>
                     ))}
                   </dl>
-                  {s.name === "F1" && (
+                  {video && (
                     <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg bg-background/5">
                       <iframe
                         className="h-full w-full"
-                        src="https://www.youtube.com/embed/wUuv9AU51TM?start=0&rel=0"
-                        title="Vídeo da série F1 Kepma"
+                        src={`https://www.youtube.com/embed/${video.id}?start=${video.start}&rel=0`}
+                        title={video.title}
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
                         loading="lazy"
