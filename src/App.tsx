@@ -41,6 +41,16 @@ import B2BLogin from "./pages/B2BLogin";
 import B2BDashboard from "./pages/B2BDashboard";
 import AdminB2B from "./pages/admin/AdminB2B";
 
+const INSTITUTIONAL_HOSTS = ["kepmabrasil.com.br", "www.kepmabrasil.com.br"];
+
+// Domínio institucional abre direto em /institucional; demais domínios seguem na loja
+function HomeByDomain() {
+  if (INSTITUTIONAL_HOSTS.includes(window.location.hostname.toLowerCase())) {
+    return <Navigate to="/institucional" replace />;
+  }
+  return <Index />;
+}
+
 // Componente para rolar ao topo quando a rota muda
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -65,7 +75,7 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<HomeByDomain />} />
               <Route path="/historia" element={<HistoriaKepma />} />
               <Route path="/institucional" element={<InstitucionalHome />} />
               <Route path="/institucional/series/:slug" element={<InstitucionalSerie />} />
