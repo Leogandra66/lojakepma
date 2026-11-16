@@ -154,8 +154,16 @@ describe("institutional series videos", () => {
     expect(SERIES_VIDEOS["F1"].start).toBe(0);
   });
 
+  it("plays the A1 video from the beginning below the spec sheet", () => {
+    expect(SERIES_VIDEOS["A1"]).toEqual({
+      id: "1vMM4QSHg3U",
+      start: 0,
+      title: "Vídeo da série A1 Kepma",
+    });
+  });
+
   it("only lists curated series with a usable youtube id", () => {
-    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["B1", "F1"]);
+    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["A1", "B1", "F1"]);
     for (const v of Object.values(SERIES_VIDEOS)) {
       expect(v.id).toMatch(/^[A-Za-z0-9_-]{11}$/);
       expect(v.start).toBeGreaterThanOrEqual(0);

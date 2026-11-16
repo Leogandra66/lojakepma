@@ -172,6 +172,7 @@ export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
 export type SeriesVideo = { id: string; start: number; title: string };
 
 export const SERIES_VIDEOS: Record<string, SeriesVideo> = {
+  "A1": { id: "1vMM4QSHg3U", start: 0, title: "Vídeo da série A1 Kepma" },
   "B1": { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
   "F1": { id: "wUuv9AU51TM", start: 0, title: "Vídeo da série F1 Kepma" },
 };
