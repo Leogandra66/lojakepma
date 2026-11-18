@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Concluído
+- [x] Criar a página institucional NC Neck com o texto e as quatro imagens enviadas
+- [x] Adicionar o acesso NC Neck ao menu institucional e validar em computador e celular
 - [x] Criar página pública de estoque para representantes
 - [x] Incluir busca por nome e código Bling
 - [x] Exportar catálogo filtrado para Excel

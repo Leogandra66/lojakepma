@@ -42,6 +42,7 @@ const links = [
   { to: "/institucional", label: "Início", end: true },
   { to: "/institucional/historia", label: "História" },
   { to: "/institucional/fabrica", label: "Fábrica" },
+  { to: "/institucional/nc-neck", label: "NC Neck" },
   { to: "/institucional/artistas", label: "Artistas" },
 ];
 

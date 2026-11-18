@@ -13,6 +13,7 @@ import ConhecaFabrica from "./pages/ConhecaFabrica";
 import InstitucionalHome from "./pages/institucional/InstitucionalHome";
 import InstitucionalSerie from "./pages/institucional/InstitucionalSerie";
 import InstitucionalDas from "./pages/institucional/InstitucionalDas";
+import InstitucionalNcNeck from "./pages/institucional/InstitucionalNcNeck";
 import { InstitucionalArtistas, InstitucionalFabrica, InstitucionalHistoria } from "./pages/institucional/InstitucionalPages";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/institucional" element={<InstitucionalHome />} />
               <Route path="/institucional/series/:slug" element={<InstitucionalSerie />} />
               <Route path="/institucional/das" element={<InstitucionalDas />} />
+              <Route path="/institucional/nc-neck" element={<InstitucionalNcNeck />} />
               <Route path="/institucional/historia" element={<InstitucionalHistoria />} />
               <Route path="/institucional/fabrica" element={<InstitucionalFabrica />} />
               <Route path="/institucional/artistas" element={<InstitucionalArtistas />} />
