@@ -20,7 +20,7 @@ const benefits: [string, string][] = [
 
 const VIDEOS = [
   {
-    src: "https://player.bilibili.com/player.html?bvid=BV1SgeF6NEGB&autoplay=0&danmaku=0&high_quality=1",
+    src: "https://player.bilibili.com/player.html?isOutside=true&bvid=BV1SgeF6NEGB&autoplay=0&danmaku=0&high_quality=1",
     title: "Kepma DAS — vídeo do Bilibili",
     caption: "",
   },
