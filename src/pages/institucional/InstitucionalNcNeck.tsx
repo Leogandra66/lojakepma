@@ -48,7 +48,7 @@ export default function InstitucionalNcNeck() {
             <h2 className="mt-3 font-display text-3xl font-bold md:text-5xl">Como funciona o sistema</h2>
           </div>
 
-          <figure className="mt-10 overflow-hidden rounded-3xl border border-background/10 bg-foreground">
+          <figure className="mx-auto mt-10 w-full overflow-hidden rounded-3xl border border-background/10 bg-foreground lg:w-1/2">
             <video
               src={"/videos/nc-neck-angulacao.mp4"}
               className="aspect-[3/1] w-full object-cover"
