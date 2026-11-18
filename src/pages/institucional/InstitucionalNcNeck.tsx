@@ -48,6 +48,20 @@ export default function InstitucionalNcNeck() {
             <h2 className="mt-3 font-display text-3xl font-bold md:text-5xl">Como funciona o sistema</h2>
           </div>
 
+          <figure className="mt-10 overflow-hidden rounded-3xl border border-background/10 bg-foreground">
+            <video
+              src={"/videos/nc-neck-angulacao.mp4"}
+              className="aspect-[3/1] w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-label="Movimento de angulação do braço no sistema NC Neck"
+            />
+            <figcaption className="px-5 py-3 text-sm text-background/60">Ajuste de ângulo do braço com o sistema NC Neck.</figcaption>
+          </figure>
+
           <div className="mt-12 space-y-16 md:mt-16 md:space-y-24">
             <article className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
               <div className="min-w-0">
