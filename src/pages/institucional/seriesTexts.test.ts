@@ -142,31 +142,43 @@ describe("neck joint complement on every institutional series", () => {
 
 describe("institutional series videos", () => {
   it("plays the B1 video from the beginning below the spec sheet", () => {
-    expect(SERIES_VIDEOS["B1"]).toEqual({
-      id: "w9hKxSY0qgI",
-      start: 0,
-      title: "Vídeo da série B1 Kepma",
-    });
+    expect(SERIES_VIDEOS["B1"]).toEqual([
+      { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
+    ]);
   });
 
-  it("keeps the F1 video starting from zero", () => {
-    expect(SERIES_VIDEOS["F1"].id).toBe("wUuv9AU51TM");
-    expect(SERIES_VIDEOS["F1"].start).toBe(0);
+  it("keeps both F1 videos, each starting from zero", () => {
+    expect(SERIES_VIDEOS["F1"].map((v) => v.id)).toEqual(["wUuv9AU51TM", "cKANBJe84yc"]);
+    expect(SERIES_VIDEOS["F1"].every((v) => v.start === 0)).toBe(true);
   });
 
   it("plays the A1 video from the beginning below the spec sheet", () => {
-    expect(SERIES_VIDEOS["A1"]).toEqual({
-      id: "1vMM4QSHg3U",
-      start: 0,
-      title: "Vídeo da série A1 Kepma",
-    });
+    expect(SERIES_VIDEOS["A1"]).toEqual([
+      { id: "1vMM4QSHg3U", start: 0, title: "Vídeo da série A1 Kepma" },
+    ]);
   });
 
-  it("only lists curated series with a usable youtube id", () => {
-    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["A1", "B1", "F1"]);
-    for (const v of Object.values(SERIES_VIDEOS)) {
-      expect(v.id).toMatch(/^[A-Za-z0-9_-]{11}$/);
-      expect(v.start).toBeGreaterThanOrEqual(0);
+  it("plays the F0 Pro, F0B Fênix and FC Mini videos from the beginning", () => {
+    expect(SERIES_VIDEOS["F0 Pro"]).toEqual([
+      { id: "dDyvXkfzABY", start: 0, title: "Vídeo da série F0 Pro Kepma" },
+    ]);
+    expect(SERIES_VIDEOS["F0B Fênix"]).toEqual([
+      { id: "Hb7jglTAyXA", start: 0, title: "Vídeo da série F0B Fênix Kepma" },
+    ]);
+    expect(SERIES_VIDEOS["FC Mini"]).toEqual([
+      { id: "CMysHFQhVdw", start: 0, title: "Vídeo da série FC Mini Kepma" },
+    ]);
+  });
+
+  it("only lists curated series with usable youtube ids", () => {
+    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["A1", "B1", "F0 Pro", "F0B Fênix", "F1", "FC Mini"]);
+    for (const list of Object.values(SERIES_VIDEOS)) {
+      expect(list.length).toBeGreaterThan(0);
+      for (const v of list) {
+        expect(v.id).toMatch(/^[A-Za-z0-9_-]{11}$/);
+        expect(v.start).toBeGreaterThanOrEqual(0);
+        expect(v.title.length).toBeGreaterThan(0);
+      }
     }
   });
 });

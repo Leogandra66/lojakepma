@@ -166,13 +166,19 @@ export const SERIES_TEXTS: Record<string, SeriesTextBlock[]> = {
 };
 
 /**
- * Vídeos institucionais exibidos logo abaixo da ficha técnica da série.
+ * Vídeos institucionais exibidos logo abaixo da ficha técnica da série, na ordem listada.
  * `start` é o segundo inicial do vídeo; 0 significa começar do zero.
  */
 export type SeriesVideo = { id: string; start: number; title: string };
 
-export const SERIES_VIDEOS: Record<string, SeriesVideo> = {
-  "A1": { id: "1vMM4QSHg3U", start: 0, title: "Vídeo da série A1 Kepma" },
-  "B1": { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
-  "F1": { id: "wUuv9AU51TM", start: 0, title: "Vídeo da série F1 Kepma" },
+export const SERIES_VIDEOS: Record<string, SeriesVideo[]> = {
+  "A1": [{ id: "1vMM4QSHg3U", start: 0, title: "Vídeo da série A1 Kepma" }],
+  "B1": [{ id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" }],
+  "F0 Pro": [{ id: "dDyvXkfzABY", start: 0, title: "Vídeo da série F0 Pro Kepma" }],
+  "F0B Fênix": [{ id: "Hb7jglTAyXA", start: 0, title: "Vídeo da série F0B Fênix Kepma" }],
+  "F1": [
+    { id: "wUuv9AU51TM", start: 0, title: "Vídeo da série F1 Kepma" },
+    { id: "cKANBJe84yc", start: 0, title: "Vídeo adicional da série F1 Kepma" },
+  ],
+  "FC Mini": [{ id: "CMysHFQhVdw", start: 0, title: "Vídeo da série FC Mini Kepma" }],
 };

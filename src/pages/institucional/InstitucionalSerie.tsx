@@ -121,8 +121,8 @@ export default function InstitucionalSerie() {
   const lineText = parsed.find((x) => x.text.length)?.text ?? [];
   const curatedText = s ? SERIES_TEXTS[s.name] : undefined;
   const good = useQualityImages(s?.images ?? []);
-  // Vídeo institucional da série, exibido abaixo da ficha técnica
-  const video = s ? SERIES_VIDEOS[s.name] : undefined;
+  // Vídeos institucionais da série, exibidos abaixo da ficha técnica
+  const videos = s ? SERIES_VIDEOS[s.name] ?? [] : [];
 
   return (
     <InstitutionalLayout title={s ? `Série ${s.name}` : "Série"}>
@@ -153,18 +153,18 @@ export default function InstitucionalSerie() {
                       </div>
                     ))}
                   </dl>
-                  {video && (
-                    <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg bg-background/5">
+                  {videos.map((v) => (
+                    <div key={v.id} className="mt-6 aspect-video w-full overflow-hidden rounded-lg bg-background/5">
                       <iframe
                         className="h-full w-full"
-                        src={`https://www.youtube.com/embed/${video.id}?start=${video.start}&rel=0`}
-                        title={video.title}
+                        src={`https://www.youtube.com/embed/${v.id}?start=${v.start}&rel=0`}
+                        title={v.title}
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
                         loading="lazy"
                       />
                     </div>
-                  )}
+                  ))}
                 </>
               )}
             </div>
