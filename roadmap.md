@@ -46,3 +46,4 @@
 - [x] Trocar a descrição da série F0B Fênix no institucional pela ficha técnica curada
 - [x] Complementar a especificação Braço com o braço parafusado NC em todas as séries do institucional
 - [x] Curar a descrição da série F0 Pro no institucional com a ficha técnica enviada
+- [x] Exibir o vídeo do Bilibili da página DAS somente no computador
