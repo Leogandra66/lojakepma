@@ -18,16 +18,19 @@ const benefits: [string, string][] = [
   ["Menos intervenções invasivas", "ajuste o ângulo do braço sem precisar desmontar sua fixação ou recorrer imediatamente a modificações no rastilho."],
 ];
 
-const VIDEOS = [
+export const VIDEOS = [
   {
     src: "https://player.bilibili.com/player.html?isOutside=true&bvid=BV1SgeF6NEGB&autoplay=0&danmaku=0&high_quality=1",
     title: "Kepma DAS — vídeo do Bilibili",
     caption: "",
+    // O player do Bilibili bloqueia o vídeo em celulares fora da China.
+    desktopOnly: true,
   },
   {
     src: "https://www.youtube-nocookie.com/embed/IxGz_OEcu4o?rel=0",
     title: "Kepma DAS — vídeo do YouTube",
     caption: "",
+    desktopOnly: false,
   },
 ];
 
@@ -112,7 +115,7 @@ export default function InstitucionalDas() {
       <section className="container max-w-3xl pb-24">
         <h2 className="font-display text-2xl font-bold text-center">Veja o DAS em ação</h2>
         {VIDEOS.map((v) => (
-          <div key={v.src} className="mt-8">
+          <div key={v.src} className={v.desktopOnly ? "mt-8 hidden md:block" : "mt-8"}>
             <div className="overflow-hidden rounded-3xl border border-background/15 bg-background/5">
               <iframe
                 src={v.src}
