@@ -76,10 +76,10 @@ export function InstitutionalLayout({ children, title }: { children: ReactNode; 
   );
 }
 
-export function YouTube({ id }: { id: string }) {
+export function YouTube({ id, start = 0 }: { id: string; start?: number }) {
   return (
     <div className="aspect-video w-full overflow-hidden rounded-2xl bg-background/5">
-      <iframe className="h-full w-full" src={`https://www.youtube.com/embed/${id}?rel=0`} title="Vídeo institucional Kepma" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="lazy" />
+      <iframe className="h-full w-full" src={`https://www.youtube.com/embed/${id}?start=${start}&rel=0`} title="Vídeo institucional Kepma" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="lazy" />
     </div>
   );
 }

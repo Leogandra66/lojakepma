@@ -22,14 +22,18 @@ export function InstitucionalHistoria() {
 }
 
 export function InstitucionalFabrica() {
-  const videos = ["l1AfcPzCqik", "JCjSxSSqRqs"];
+  const videos: { id: string; start?: number }[] = [
+    { id: "l1AfcPzCqik" },
+    { id: "JCjSxSSqRqs" },
+    { id: "bo_VljQ3o5A", start: 32 },
+  ];
   return (
     <InstitutionalLayout title="A Fábrica">
       <Hero kicker="A fábrica" title="Tecnologia de ponta, controle total" text="Cada etapa — da seleção da madeira ao acabamento — acontece dentro da própria Kepma." />
       <section className="container grid gap-8 pb-24 lg:grid-cols-2">
-        {videos.map((id) => (
-          <div key={id}>
-            <YouTube id={id} />
+        {videos.map((v) => (
+          <div key={v.id}>
+            <YouTube id={v.id} start={v.start} />
           </div>
         ))}
       </section>
@@ -38,7 +42,17 @@ export function InstitucionalFabrica() {
 }
 
 export function InstitucionalArtistas() {
-  const videos = ["MbO_cLrgD9A", "0BgPGJqk6Vk", "ipZRrvkYSGw", "MggRYVv_2Pk"];
+  const videos = [
+    "MbO_cLrgD9A",
+    "0BgPGJqk6Vk",
+    "ipZRrvkYSGw",
+    "MggRYVv_2Pk",
+    "p4HqWS3gyb0",
+    "YfTx6fqBN8k",
+    "MPeu1YNRNgg",
+    "rW_OS8TASfE",
+    "hLAe0LBzOn0",
+  ];
   return (
     <InstitutionalLayout title="Artistas">
       <Hero kicker="Artistas" title="Quem toca Kepma" text="Artistas que levam a Kepma aos palcos do Brasil e do mundo." />

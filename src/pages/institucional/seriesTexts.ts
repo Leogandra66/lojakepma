@@ -173,7 +173,11 @@ export type SeriesVideo = { id: string; start: number; title: string };
 
 export const SERIES_VIDEOS: Record<string, SeriesVideo[]> = {
   "A1": [{ id: "1vMM4QSHg3U", start: 0, title: "Vídeo da série A1 Kepma" }],
-  "B1": [{ id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" }],
+  "B1": [
+    { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
+    { id: "p4HqWS3gyb0", start: 0, title: "Vídeo adicional da série B1 Kepma" },
+  ],
+  "EC Plus": [{ id: "L1DdQASIeCA", start: 0, title: "Vídeo da série EC Plus Kepma" }],
   "F0 Pro": [{ id: "dDyvXkfzABY", start: 0, title: "Vídeo da série F0 Pro Kepma" }],
   "F0B Fênix": [{ id: "Hb7jglTAyXA", start: 0, title: "Vídeo da série F0B Fênix Kepma" }],
   "F1": [

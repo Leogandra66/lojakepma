@@ -144,6 +144,7 @@ describe("institutional series videos", () => {
   it("plays the B1 video from the beginning below the spec sheet", () => {
     expect(SERIES_VIDEOS["B1"]).toEqual([
       { id: "w9hKxSY0qgI", start: 0, title: "Vídeo da série B1 Kepma" },
+      { id: "p4HqWS3gyb0", start: 0, title: "Vídeo adicional da série B1 Kepma" },
     ]);
   });
 
@@ -168,10 +169,13 @@ describe("institutional series videos", () => {
     expect(SERIES_VIDEOS["FC Mini"]).toEqual([
       { id: "CMysHFQhVdw", start: 0, title: "Vídeo da série FC Mini Kepma" },
     ]);
+    expect(SERIES_VIDEOS["EC Plus"]).toEqual([
+      { id: "L1DdQASIeCA", start: 0, title: "Vídeo da série EC Plus Kepma" },
+    ]);
   });
 
   it("only lists curated series with usable youtube ids", () => {
-    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["A1", "B1", "F0 Pro", "F0B Fênix", "F1", "FC Mini"]);
+    expect(Object.keys(SERIES_VIDEOS).sort()).toEqual(["A1", "B1", "EC Plus", "F0 Pro", "F0B Fênix", "F1", "FC Mini"]);
     for (const list of Object.values(SERIES_VIDEOS)) {
       expect(list.length).toBeGreaterThan(0);
       for (const v of list) {

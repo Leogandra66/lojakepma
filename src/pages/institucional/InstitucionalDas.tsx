@@ -32,6 +32,12 @@ export const VIDEOS = [
     caption: "",
     desktopOnly: false,
   },
+  {
+    src: "https://www.youtube-nocookie.com/embed/aqe4lUSKYWM?rel=0",
+    title: "Kepma DAS — vídeo adicional do YouTube",
+    caption: "",
+    desktopOnly: false,
+  },
 ];
 
 export default function InstitucionalDas() {
